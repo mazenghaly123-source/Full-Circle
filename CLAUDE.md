@@ -5,11 +5,11 @@ See [AGENTS.md](./AGENTS.md) for this repository's agent instructions, including
 
 Full Circle is a Cairo end-to-end clothing development and manufacturing partner
 (design support → patterns → sourcing → sampling → bulk → QC → delivery) for brands
-that are starting or scaling. Owner of the site work: Mazen (design lead). Client
-contact / approver: Faris.
+that are starting or scaling. Owner of the site work: Mazen (design lead).
 
-The production build plan, and the questions still open on it, are in
-[docs/production-plan.md](./docs/production-plan.md).
+The production build plan (decisions, phases, open questions) is in
+[docs/production-plan.md](./docs/production-plan.md); decisions that are hard to reverse are
+in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT.md).
 
 ## What's in this repo
 - `prototype/index.html`: the approved, fully working prototype (single file, 7 pages
@@ -19,6 +19,8 @@ The production build plan, and the questions still open on it, are in
 - `prototype/img/`: the compressed web photos the prototype loads (slot name = file name).
 - `assets/logos/`: real logo SVGs (horizontal, mark, stacked; bone + carbon).
 - `assets/photos-raw/`: full-size originals of the photos.
+- The production site (Astro, static): `src/` and `tests/`, described under *Site code* below.
+  Deploying: [docs/deploy.md](./docs/deploy.md).
 
 ## Design system (V4.1 "Raw Editorial"): do not drift
 - Colours: Obsidian #11110F (bg), Bone #E8E2D8 (text), Charcoal #292925, Raw Cotton #D8D0C3,
@@ -60,8 +62,25 @@ The production build plan, and the questions still open on it, are in
 
 ## Still TBC (marked with a dashed TBC tag in the prototype)
 Working hours, bulk lead time, fabrics/weights per category, techniques, sample pricing,
-who answers requests and how fast, team names/roles/portraits, notification channel,
-domain. Real photos missing: atelier-1..5, about-floor, team-1..4.
+who answers requests and how fast, team names/roles/portraits, domain. Real photos missing:
+atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
+
+## Site code
+- **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at
+  1440×900, 390×844 and 375×667; a change that moves pixels the prototype did not is a regression.
+  Run the parity, behaviour and CSS suites (`package.json` scripts) after any visual or script change.
+- `src/styles/global.css` is the prototype's CSS in its original order (later blocks override
+  earlier ones). Edit rules in place and append new ones under *production additions*. Write
+  `-webkit-backdrop-filter` before `backdrop-filter`; `tests/css.spec.ts` checks the minifier kept
+  every rule.
+- Browser scripts load once (Astro ClientRouter). Each feature in `src/scripts/` is a `Feature`
+  (`core/lifecycle.ts`): `mount(signal)` binds to the live page and stops when the signal aborts;
+  `prepare(doc)` writes carried-over state into the incoming page so nothing replays. A page you
+  come back to looks as you left it, as in the one-document prototype.
+- Content (stages, categories, FAQ, contacts, request options) lives once in `src/data/site.ts`;
+  photos are registered by slot in `src/data/photos.ts`.
+- three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Fonts
+  come from the `@fontsource` packages through Astro's local font provider, so builds need no network.
 
 ## Work rules
 - Confirm the plan with Mazen before large builds; don't build unrequested versions.
