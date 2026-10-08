@@ -1,0 +1,50 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import { Font } from 'astro:assets';
+import Sprite from '../components/Sprite.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { WHATSAPP_URL, type PageKey } from '../data/site';
+import '../styles/global.css';
+
+interface Props {
+  page: PageKey;
+  title: string;
+  description: string;
+}
+
+const { page, title, description } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{title}</title>
+<meta name="description" content={description}>
+<meta name="theme-color" content="#11110F">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style is:inline>[hidden]{display:none!important}body{margin:0}</style>
+<Font cssVariable="--font-saira-condensed" preload />
+<Font cssVariable="--font-geist" preload={[{ weight: '400' }, { weight: '500' }]} />
+<Font cssVariable="--font-plex-mono" preload={[{ weight: '400' }]} />
+<ClientRouter fallback="swap" />
+</head>
+<body data-page={page}>
+<Sprite />
+<Header current={page} />
+
+<main>
+<slot />
+</main>
+
+<Footer />
+<div class="mbar" id="mbar" transition:persist="mbar"><button class="btn btn-red go" id="mbarGo">Request a sample</button><a href={WHATSAPP_URL} target="_blank" rel="noopener" class="btn btn-line">WhatsApp</a></div>
+<div class="wipe" id="wipe" aria-hidden="true" transition:persist="wipe"><svg class="wipe-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" pathLength="100"/></svg><svg class="wipe-mark" viewBox="0 0 256.86 262.30"><use href="#fc-mark"/></svg></div>
+<div class="c-ring" id="cRing" hidden transition:persist="c-ring"></div><div class="c-dot" id="cDot" hidden transition:persist="c-dot"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" transition:persist="toast"></div>
+<script>
+  import '../scripts/main';
+</script>
+</body>
+</html>

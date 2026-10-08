@@ -1,0 +1,21 @@
+---
+// The header block of every inner page (.phero): drifting light, crumb, title and lead.
+interface Props {
+  crumb: string;
+  title: string;
+  lead: string;
+  /** The light's own gradient (each page has its own). */
+  light: string;
+  titleId?: string;
+  leadId?: string;
+}
+
+const { crumb, title, lead, light, titleId, leadId } = Astro.props;
+---
+<section class="phero grain"><slot name="bg" /><div class="light" style={`background:${light}`}></div>
+  <div class="wrap"><div class="crumb mono"><a href="/">Home</a><span>/</span><span>{crumb}</span></div>
+    <h1 class="camp" id={titleId}>{title}</h1>
+    <p class="lead" id={leadId}>{lead}</p>
+    <slot />
+  </div>
+</section>

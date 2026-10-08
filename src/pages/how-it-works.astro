@@ -1,0 +1,148 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { ROUTES, STAGES, pad } from '../data/site';
+
+// the demo order's ring: a tick per stage, and a label button between ticks
+const yoTicks = STAGES.map((_, i) => {
+  const a = (i / 8 * 360 - 90) * Math.PI / 180;
+  return { x1: 300 + 204 * Math.cos(a), y1: 300 + 204 * Math.sin(a), x2: 300 + 224 * Math.cos(a), y2: 300 + 224 * Math.sin(a) };
+});
+const yoLabels = STAGES.map((g, i) => {
+  const a = ((i / 8 + 1 / 16) * 360 - 90) * Math.PI / 180;
+  return { left: 50 + 45 * Math.cos(a), top: 50 + 45 * Math.sin(a), n: pad(i + 1), s: g.s, label: `Go to stage ${i + 1}, ${g.n}` };
+});
+---
+<Base page="how" title="How it works / Full Circle" description="Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.">
+<PageHero crumb="How it works" title="Eight stages. One partner." lead="Every stage ends with something you can see and a decision you make. Below, a demo order moves through all eight. Scroll, make the decisions, and watch what happens when you skip one." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(50% 60% at 60% 90%,#243E8F,transparent 72%)">
+    <div class="minirail" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="in"></i><i></i><i></i><i></i></div>
+</PageHero>
+<section class="yo" id="yo">
+  <div class="yo-stations">
+    <div class="yo-st" data-i="0">
+      <div class="yo-top mono"><span>01 / Research</span><span class="dim">Your order <b id="yoC1">FC-0000</b></span></div>
+      <h2 class="camp">You have an idea.</h2>
+      <p class="yo-big">This page is a demo order. Scroll, and it moves through the same eight stages a real one does. Watch the red dot.</p>
+      <p>We start by studying the brand, the customer and the market the product is going into.</p>
+      <dl class="kv2"><dt>You receive</dt><dd>Brief, category, target price</dd><dt>You approve</dt><dd class="ap">The brief</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+    </div>
+    <div class="yo-st" data-i="1">
+      <div class="yo-top mono"><span>02 / Design support</span><span class="dim">Tech pack</span></div>
+      <h2 class="camp">Where is the brand?</h2>
+      <div class="yo-paths" role="group" aria-label="Brand stage">
+        <button class="yo-pb" data-yopath="Starting" aria-pressed="false"><span class="camp">Starting</span><span>An idea or a sketch, no factory yet.</span></button>
+        <button class="yo-pb" data-yopath="Scaling" aria-pressed="false"><span class="camp">Scaling</span><span>Already selling. The last run did not match the sample.</span></button>
+      </div>
+      <p id="yoPathLine">Pick one. Sketches then become technical drawings with measurements, trims and construction notes.</p>
+      <dl class="kv2"><dt>You receive</dt><dd>Tech pack</dd><dt>You approve</dt><dd class="ap">Tech pack sign-off</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+    </div>
+    <div class="yo-st" data-i="2">
+      <div class="yo-top mono"><span>03 / Sourcing</span><span class="dim">Fabric + trims</span></div>
+      <h2 class="camp">Pick the product.</h2>
+      <div class="opts" role="group" aria-label="Product" id="yoProducts"><button class="opt" aria-pressed="true">Shirts</button><button class="opt" aria-pressed="false">Hoodies</button><button class="opt" aria-pressed="false">Tees</button><button class="opt" aria-pressed="false">Denim</button><button class="opt" aria-pressed="false">Outerwear</button></div>
+      <div class="yo-sws" role="group" aria-label="Fabric" id="yoFabrics">
+        <button class="yo-sw" data-fab="denim" data-name="Denim 12 oz" aria-pressed="true"><i class="tx-denim"></i><span class="mono">Denim 12 oz</span></button>
+        <button class="yo-sw" data-fab="fleece" data-name="Fleece 380 gsm" aria-pressed="false"><i class="tx-fleece"></i><span class="mono">Fleece 380</span></button>
+        <button class="yo-sw" data-fab="jersey" data-name="Jersey 220 gsm" aria-pressed="false"><i class="tx-jersey"></i><span class="mono">Jersey 220</span></button>
+        <button class="yo-sw" data-fab="twill" data-name="Cotton twill" aria-pressed="false"><i class="tx-twill"></i><span class="mono">Twill</span></button>
+      </div>
+      <p>Fabric and trims are sourced against the brief. You approve the swatches before anything is cut.</p>
+      <dl class="kv2"><dt>You receive</dt><dd>Swatches + trim cards</dd><dt>You approve</dt><dd class="ap">Fabric selection</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+    </div>
+    <div class="yo-st" data-i="3">
+      <div class="yo-top mono"><span>04 / Development</span><span class="dim">Scaling brands enter here</span></div>
+      <h2 class="camp">Paper first.</h2>
+      <p class="yo-big">Every piece is drawn, cut in paper and graded before fabric is touched.</p>
+      <dl class="kv2"><dt>Base size</dt><dd>M</dd><dt>Grade</dt><dd>XS / S / M / L / XL</dd><dt>You receive</dt><dd>Base-size pattern + fit notes</dd><dt>You approve</dt><dd class="ap">Pattern sign-off</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+    </div>
+    <div class="yo-st" data-i="4">
+      <div class="yo-top mono"><span style="color:var(--red)">05 / Sampling / the gate</span><span class="dim">Bulk waits for this</span></div>
+      <h2 class="camp">Approve the sample.</h2>
+      <p class="yo-big">The sample you sign becomes the contract. Bulk is measured against it, piece by piece.</p>
+      <p>Production does not move until you approve. Try scrolling past without approving.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn btn-red" id="yoApprove">Approve sample 03</button><span class="mono dim" id="yoAt"></span></div>
+      <dl class="kv2"><dt>You receive</dt><dd>A physical sample, fitted</dd><dt>You approve</dt><dd class="ap">Sample approval</dd><dt>Typical time</dt><dd>7–25 days, denim longest</dd></dl>
+    </div>
+    <div class="yo-st" data-i="5">
+      <div class="yo-top mono"><span>06 / Production</span><span class="dim">Bulk</span></div>
+      <h2 class="camp">Then it repeats.</h2>
+      <div class="yo-gate" id="yoGate"><span class="d"></span><span>Your order is waiting at sampling. Approve the sample to release bulk.</span><button class="btn btn-line" data-yoapprove style="margin-left:auto;padding:9px 12px">Approve</button></div>
+      <div><div class="yo-num"><span id="yoUnits">000</span><small>/ 300 units</small></div><span class="mono dim">Cut and sewn against sample 03 / demo numbers</span></div>
+      <dl class="kv2"><dt>You receive</dt><dd>Progress at each checkpoint</dd><dt>You approve</dt><dd class="ap">Quantity + delivery date</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+    </div>
+    <div class="yo-st" data-i="6">
+      <div class="yo-top mono"><span>07 / QC</span><span class="dim">Inspection</span></div>
+      <h2 class="camp">Checked before packed.</h2>
+      <ul class="yo-checks" id="yoChecks">
+        <li><span class="bx"></span><span>Measurements against the sample</span><span class="mono">±0.5 cm</span></li>
+        <li><span class="bx"></span><span>Seams and stitch density</span><span class="mono">Pass</span></li>
+        <li><span class="bx"></span><span>Colour against the approved swatch</span><span class="mono">Match</span></li>
+        <li><span class="bx"></span><span>Labels and care</span><span class="mono">Pass</span></li>
+        <li><span class="bx"></span><span>Packing count</span><span class="mono">300</span></li>
+      </ul>
+      <div><button class="btn btn-line" id="yoPhoto">Request a photo of this stage</button></div>
+    </div>
+    <div class="yo-st" data-i="7">
+      <div class="yo-top mono"><span>08 / Delivery</span><span class="dim">Circle closed</span></div>
+      <h2 class="camp">Make it real.</h2>
+      <div class="yo-receipt" id="yoReceipt"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-red" id="yoReal">Turn this into a real request</button><a href={ROUTES.track} class="btn btn-line">See the client portal</a></div>
+      <p>Your choices carry over to the sample request, so you only add your name and contact.</p>
+    </div>
+  </div>
+  <aside class="yo-viz" aria-label="Your demo order">
+    <div class="yo-inst">
+      <svg class="yo-ring" viewBox="0 0 600 600" aria-hidden="true">
+        <g transform="rotate(-90 300 300)"><circle class="bg" cx="300" cy="300" r="214"/><circle class="sc" id="yoArcS" cx="300" cy="300" r="214" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/><circle class="od" id="yoArcO" cx="300" cy="300" r="214" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></g>
+        <g id="yoTicks">{yoTicks.map((t) => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} class="tick"/>)}</g>
+      </svg>
+      <div id="yoLabels">{yoLabels.map((l) => <button class="yo-lbl" style={`left:${l.left}%;top:${l.top}%`} aria-label={l.label}><b>{l.n}</b>{l.s}</button>)}</div>
+      <div class="yo-you" id="yoYou"></div>
+      <div class="yo-tag" id="yoTag">FC-0000</div>
+      <div class="yo-center">
+        <svg class="yo-gar" id="yoGar" data-s="1" viewBox="0 0 300 300" role="img" aria-label="Your garment at the current stage">
+          <defs>
+            <pattern id="f-denim" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#24324f"/><line x1="0" y1="0" x2="0" y2="6" stroke="rgba(232,226,216,.25)" stroke-width="1"/></pattern>
+            <pattern id="f-fleece" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#3a3a35"/><circle cx="3" cy="3" r="0.9" fill="rgba(232,226,216,.3)"/></pattern>
+            <pattern id="f-jersey" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#cfc6b7"/><line x1="0" y1="2" x2="4" y2="2" stroke="rgba(17,17,15,.15)" stroke-width="0.8"/></pattern>
+            <pattern id="f-twill" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-60)"><rect width="5" height="5" fill="#6f705b"/><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(17,17,15,.3)" stroke-width="1"/></pattern>
+          </defs>
+          <g class="ghost"><path transform="translate(18,-14)" d="M108 70 L192 70 L232 92 L250 172 L222 178 L206 126 L204 250 L96 250 L94 126 L78 178 L50 172 L68 92 Z"/><path transform="translate(36,-28)" d="M108 70 L192 70 L232 92 L250 172 L222 178 L206 126 L204 250 L96 250 L94 126 L78 178 L50 172 L68 92 Z"/></g>
+          <g>
+            <path class="pc pcL" d="M108 70 L68 92 L50 172 L78 178 L94 126 Z"/>
+            <path class="pc pcR" d="M192 70 L232 92 L250 172 L222 178 L206 126 Z"/>
+            <path class="pc pcB" d="M108 70 L192 70 L206 126 L204 250 L96 250 L94 126 Z"/>
+            <path class="pc pcC" d="M126 70 L150 96 L174 70 L166 62 L150 78 L134 62 Z"/>
+            <g class="detail"><line x1="150" y1="96" x2="150" y2="250"/><rect x="116" y="118" width="24" height="28"/><rect x="160" y="118" width="24" height="28"/><circle cx="150" cy="120" r="1.6"/><circle cx="150" cy="150" r="1.6"/><circle cx="150" cy="180" r="1.6"/><circle cx="150" cy="210" r="1.6"/></g>
+            <g class="stitch"><path d="M101 244 L199 244"/><path d="M73 172 L56 168"/><path d="M227 172 L244 168"/><rect x="119" y="121" width="18" height="22"/><rect x="163" y="121" width="18" height="22"/></g>
+          </g>
+          <g class="anno"><line x1="174" y1="66" x2="246" y2="40" stroke="rgba(232,226,216,.5)"/><text x="248" y="42">Camp collar</text><line x1="116" y1="132" x2="30" y2="232" stroke="rgba(232,226,216,.5)"/><text x="0" y="244">Patch pocket x2</text><line x1="204" y1="246" x2="258" y2="270" stroke="rgba(232,226,216,.5)"/><text x="232" y="282">Straight hem</text></g>
+          <g class="notch"><text x="54" y="210">Sleeve x2</text><text x="128" y="282">Body / cut 2</text><text x="128" y="28">Collar</text></g>
+          <g class="meas"><line x1="94" y1="104" x2="206" y2="104"/><text x="112" y="100">Chest 56.0 ✓</text><line x1="216" y1="70" x2="216" y2="250"/><text x="222" y="160">74.0 ✓</text></g>
+          <g class="box"><rect x="30" y="34" width="240" height="236"/><text x="38" y="290" id="yoBox">FC-0000 / 300 units / Cairo</text></g>
+          <g class="stampg"><rect x="168" y="196" width="112" height="34"/><text x="178" y="218">APPROVED</text></g>
+        </svg>
+      </div>
+    </div>
+  </aside>
+</section>
+<div class="yo-ticket" id="yoTicket" role="status" aria-live="polite">
+  <div class="yo-segs" id="yoSegs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="yo-tk">
+    <div class="yo-f"><span class="mono dim">Your order</span><span class="yo-code" id="yoCode">FC-0000</span></div>
+    <div class="yo-f hide-s"><span class="mono dim">Stage</span><span id="yoStage">01 / Research</span></div>
+    <div class="yo-f hide-s"><span class="mono dim">Brief</span><span id="yoBrief">—</span></div>
+    <div class="yo-f"><span class="mono dim">Next decision</span><span class="yo-next" id="yoNext">Choose your path</span></div>
+    <a href={ROUTES.start} class="btn btn-red" id="yoTkGo" style="padding:11px 14px">Request</a>
+  </div>
+</div>
+<section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
+  <div class="sh"><h2 class="camp">Where you enter</h2><p>You do not have to start at stage 01. We start from wherever the product is.</p></div>
+  <div class="enter">
+    <div><span class="mono dim">Starting a brand</span><h3 class="camp">Stage <span data-count="1">01</span></h3><div class="minirail"><i class="in"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>From an idea or a mood board. We do the research and design support, and build the tech pack with you.</p><a class="btn btn-red" href={`${ROUTES.start}?path=Starting`} style="justify-self:start">Start a new brand</a></div>
+    <div><span class="mono dim">Scaling a brand</span><h3 class="camp">Stage <span data-count="4">04</span></h3><div class="minirail"><i class="on"></i><i class="on"></i><i class="on"></i><i class="in"></i><i></i><i></i><i></i><i></i></div><p>From a garment you already sell. We rebuild the pattern, lock the sample and move to bulk.</p><a class="btn btn-red" href={`${ROUTES.start}?path=Scaling`} style="justify-self:start">Move production to us</a></div>
+  </div>
+</section>
+<CtaBand title="See it on your order." text="Every client gets a tracking page with the stage, the next decision and photos on request."><div style="display:flex;gap:10px;flex-wrap:wrap"><a href={ROUTES.start} class="btn btn-red" style="padding:16px 22px">Request a sample</a><a href={ROUTES.track} class="btn btn-line" style="padding:16px 22px">See the portal</a></div></CtaBand>
+</Base>

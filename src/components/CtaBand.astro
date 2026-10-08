@@ -1,0 +1,10 @@
+---
+// The closing call to action at the foot of a page (.ctaband).
+interface Props {
+  title: string;
+  text: string;
+}
+
+const { title, text } = Astro.props;
+---
+<section class="ctaband grain"><div class="light"></div><div class="wrap"><div><h2 class="camp">{title}</h2><p>{text}</p></div><slot /></div></section>

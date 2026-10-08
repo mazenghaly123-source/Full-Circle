@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import { REQUEST_QUESTIONS } from '../data/site';
+---
+<Base page="start" title="Request a sample / Full Circle" description="Four quick picks and your contact. Full Circle replies with a first call, a price range and the next decision. No commitment.">
+<PageHero crumb="Request a sample" title="Request a sample." lead="Four quick picks and your contact. We reply with a first call, a price range and the next decision. No commitment." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%)" />
+<section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
+  <div class="start">
+    <div id="qs">
+      {REQUEST_QUESTIONS.map((q) => (
+        <div class="q" data-k={q.k}><div class="q-h"><span class="mono">{q.label}</span><span class="mono dim">{q.hint}</span></div>
+          <div class="opts">{q.options.map((o) => <button class="opt" aria-pressed="false">{o}</button>)}</div>
+          {q.k === 'qty' && <div class="warn" id="qtyWarn">Our minimum is 60 pieces per colour for most products and 150 for denim. Send the request anyway: we will suggest the closest option on the call.</div>}
+        </div>
+      ))}
+    </div>
+    <aside class="summary" id="summary">
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="mono">Your request</span><span class="mono dim" id="reqCode">FC-NEW</span></div>
+      <div class="meter" id="meter"><i></i><i></i><i></i><i></i></div>
+      <div id="srows">{REQUEST_QUESTIONS.map((q) => <div class="srow"><span class="dim">{q.summary}</span><span class="empty">—</span></div>)}</div>
+      <div class="form-box" style="display:grid;gap:12px">
+        <input class="field" id="fBrand" placeholder="Brand name" autocomplete="organization" aria-label="Brand name">
+        <input class="field" id="fContact" placeholder="Email or WhatsApp" autocomplete="email" aria-label="Email or WhatsApp">
+        <textarea class="field" id="fNote" placeholder="Anything we should know (optional)" style="min-height:64px" aria-label="Anything we should know (optional)"></textarea>
+        <label class="file"><input type="file" id="fFile" multiple accept="image/*,.pdf"><span class="mono">+</span><span id="fFileT">Add a sketch, tech pack or photo (optional)</span></label>
+        <button class="btn btn-red" id="send">Request a sample</button>
+        <span class="mono" id="err" style="color:var(--red);min-height:1em" role="alert"></span>
+      </div>
+      <div class="sent-box"><h3 class="camp">Received.</h3><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p></div>
+    </aside>
+  </div>
+  <div class="next3">
+    <div><span class="mono dim">01 / Within one working day <span class="tbc">TBC</span></span><b>First call</b><p>We go through the product, the quantity and where you are now.</p></div>
+    <div><span class="mono dim">02 / After the call</span><b>Price range</b><p>A sample price and a range for bulk, before you commit to anything.</p></div>
+    <div><span class="mono dim">03 / You approve</span><b>Your order code</b><p>Your order opens on the tracking page, at the stage where you enter.</p></div>
+  </div>
+</section>
+</Base>

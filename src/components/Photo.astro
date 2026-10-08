@@ -1,0 +1,41 @@
+---
+// A photo slot (.ph): the tinted placeholder, the photo on top when one is published, and the caption.
+import { Picture } from 'astro:assets';
+import { PHOTOS, PHOTO_FOCUS, photoWidths } from '../data/photos';
+
+interface Props {
+  /** Photo slot name, e.g. cat-denim (the prototype's data-img). */
+  img: string;
+  /** Caption spans, left to right. A "Photo" span is hidden once a photo is shown, as in the prototype. */
+  caption?: string[];
+  tone?: string;
+  /** CSS sizes for the generated srcset. */
+  sizes: string;
+  class?: string;
+  style?: string;
+  eager?: boolean;
+}
+
+const { img: slot, caption = [], tone, sizes, class: cls, style = '', eager = false } = Astro.props;
+const photo = PHOTOS[slot];
+const css = [tone ? `--tone:${tone}` : '', style].filter(Boolean).join(';');
+---
+<div class:list={['ph', cls]} data-img={slot} style={css || undefined}>
+  {photo && (
+    <Picture
+      src={photo}
+      formats={['avif', 'webp']}
+      widths={photoWidths(photo)}
+      sizes={sizes}
+      alt=""
+      class="fill"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      style={PHOTO_FOCUS[slot] ? `object-position:${PHOTO_FOCUS[slot]}` : undefined}
+    />
+  )}
+  {caption.length > 0 && (
+    <div class="cap mono">{caption.map((t) => <span hidden={!!photo && t === 'Photo'}>{t}</span>)}</div>
+  )}
+  <slot />
+</div>

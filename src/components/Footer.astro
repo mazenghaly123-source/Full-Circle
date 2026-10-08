@@ -1,0 +1,15 @@
+---
+import { EMAIL, INSTAGRAM_URL, PHONE, PHONE_URL, ROUTES, WHATSAPP_URL } from '../data/site';
+---
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div><a href={ROUTES.home} class="word" aria-label="Full Circle home"><svg class="logo-h" viewBox="0 0 889.35 147.50" aria-hidden="true"><use href="#fc-h"/></svg></a><p class="dim" style="margin:14px 0 0;max-width:34ch;font-size:15px">Fashion development and manufacturing for brands that are starting or scaling.</p></div>
+      <div><span class="mono dim">Company</span><ul><li><a href={ROUTES.how}>How it works</a></li><li><a href={ROUTES.make}>What we make</a></li><li><a href={ROUTES.about}>About</a></li><li><a href={ROUTES.contact}>Contact</a></li></ul></div>
+      <div><span class="mono dim">Clients</span><ul><li><a href={ROUTES.start}>Request a sample</a></li><li><a href={ROUTES.track}>Track order</a></li><li><a href="/#faq">FAQ</a></li></ul></div>
+      <div><span class="mono dim">Reach us</span><ul><li><a href={INSTAGRAM_URL} target="_blank" rel="noopener">Instagram</a></li><li><a href={WHATSAPP_URL} target="_blank" rel="noopener">WhatsApp</a></li><li><a href={PHONE_URL}>{PHONE}</a></li><li><a href={`mailto:${EMAIL}`}>Email</a></li></ul></div>
+    </div>
+    <svg class="logo-big" viewBox="0 0 889.35 147.50" role="img" aria-label="Full Circle"><use href="#fc-h"/></svg>
+    <div class="foot-bottom mono dim"><span>Full Circle / Cairo, Egypt</span><span>English / العربية soon</span><span>© {new Date().getFullYear()}</span></div>
+  </div>
+</footer>

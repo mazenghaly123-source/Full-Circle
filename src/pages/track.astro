@@ -1,0 +1,86 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import { getImage } from 'astro:assets';
+import { PHOTOS, PHOTO_FOCUS } from '../data/photos';
+import { STAGES, ring } from '../data/site';
+
+// order ring: stage labels just outside the ring
+const oLabels = STAGES.map((g, i) => {
+  const [x, y] = ring(200, 200, 182, i / 8 + 1 / 16);
+  return { x, y, t: g.s };
+});
+
+// The order view builds its stage photos in the browser, so it gets their URLs from here.
+const STAGE_SIZES = '(max-width: 860px) 31vw, 190px';
+const stagePhotos: Record<string, { avif: string; webp: string; src: string; focus?: string }> = {};
+for (const [slot, img] of Object.entries(PHOTOS)) {
+  if (!slot.startsWith('stage-')) continue;
+  const widths = [240, 360, 480].filter((w) => w <= img.width);
+  const [avif, webp, jpg] = await Promise.all([
+    getImage({ src: img, widths, format: 'avif' }),
+    getImage({ src: img, widths, format: 'webp' }),
+    getImage({ src: img, width: 480, format: 'jpg' }),
+  ]);
+  stagePhotos[slot] = { avif: avif.srcSet.attribute, webp: webp.srcSet.attribute, src: jpg.src, focus: PHOTO_FOCUS[slot] };
+}
+---
+<Base page="track" title="Track order / Full Circle" description="Sign in with the email or WhatsApp number on your order to see every order, its stage, the next decision, photos and the full approval log.">
+<PageHero crumb="Track order" title="Track your order." lead="Sign in with the email or WhatsApp number on your order. You will see every order, its stage, the next decision, photos and the full approval log." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" titleId="tTitle" leadId="tLead" />
+<section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)" data-stage-photos={JSON.stringify(stagePhotos)} data-stage-sizes={STAGE_SIZES} id="tSection">
+  <!-- login -->
+  <div id="tLogin">
+    <div class="login">
+      <span class="mono dim" id="tStep">Step 1 of 2</span>
+      <h2 class="camp" id="tLoginH">Sign in</h2>
+      <div id="tA" style="display:grid;gap:12px">
+        <input class="field" id="tId" placeholder="Email or WhatsApp number" autocomplete="username" aria-label="Email or WhatsApp number">
+        <button class="btn btn-red" id="tSendCode">Send me a code</button>
+      </div>
+      <div id="tB" hidden style="display:grid;gap:12px">
+        <input class="field" id="tCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" aria-label="6-digit code" style="font-family:var(--f-mono);letter-spacing:0.4em;font-size:22px">
+        <button class="btn btn-red" id="tVerify">Sign in</button>
+        <button class="btn" id="tBack" style="padding:6px 0;justify-self:start;text-decoration:underline;text-underline-offset:4px">Use a different email or number</button>
+      </div>
+      <span class="mono" id="tErr" style="color:var(--red);min-height:1em" role="alert"></span>
+      <p class="demo-note" style="margin:0">Demo: type anything, then any 6 digits. Or <button class="btn" id="tDemo" style="padding:0;text-decoration:underline;text-underline-offset:4px;font-size:13px">open the demo account</button>.</p>
+    </div>
+  </div>
+  <!-- orders -->
+  <div id="tOrders" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:20px"><span class="mono dim">Signed in / Demo Studio</span><button class="btn btn-line" id="tOut">Sign out</button></div>
+    <div class="orders" id="tList"></div>
+  </div>
+  <!-- order -->
+  <div id="tOrder" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="btn btn-line" id="tAll">All orders</button>
+      <span class="chipst mono" id="tChip" style="border-color:var(--line)"><i></i><span id="tChipT"></span></span>
+    </div>
+    <div class="op">
+      <div class="op-ring" aria-hidden="true">
+        <svg viewBox="0 0 400 400">
+          <g transform="rotate(-90 200 200)"><circle class="bg" cx="200" cy="200" r="150"/><circle class="fg" id="oArc" cx="200" cy="200" r="150" pathLength="100" stroke-dashoffset="100"/></g>
+          <g id="oLabels">{oLabels.map((l) => <text x={l.x} y={l.y} text-anchor="middle" class="st">{l.t}</text>)}</g>
+          <circle class="dot" id="oDot" r="9" cx="200" cy="50"/>
+          <text class="big" id="oNum" x="200" y="226" text-anchor="middle">05</text>
+          <text class="sub" id="oSub" x="200" y="256" text-anchor="middle">Sampling</text>
+        </svg>
+      </div>
+      <div style="display:grid;gap:22px;min-width:0">
+        <div><span class="mono dim" id="oMeta"></span><h2 class="camp" style="font-size:clamp(56px,6vw,96px);margin-top:8px" id="oName"></h2></div>
+        <div class="decision" id="oDecision">
+          <span class="mono" style="color:var(--red)" id="oDecT">Your decision</span>
+          <h3 class="camp" id="oDecH"></h3>
+          <p style="margin:0;color:var(--cotton)" id="oDecP"></p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="oDecBtns"><button class="btn btn-red" id="oApprove">Approve</button><button class="btn btn-line" id="oChanges">Ask for changes</button></div>
+        </div>
+        <div class="tabs2" role="tablist"><button role="tab" aria-selected="true" data-tab="photos">Photos</button><button role="tab" aria-selected="false" data-tab="specs">Specs</button><button role="tab" aria-selected="false" data-tab="log">Approval log</button></div>
+        <div data-panel="photos"><div class="photos" id="oPhotos"></div><div style="margin-top:12px"><button class="btn btn-line" id="oPhoto">Request a photo of this stage</button></div></div>
+        <div data-panel="specs" hidden><table class="spec2" id="oSpecs"></table></div>
+        <div data-panel="log" hidden><div style="overflow-x:auto"><table class="log2"><thead><tr><th>Date</th><th>Decision</th><th>By</th></tr></thead><tbody id="oLog"></tbody></table></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+</Base>

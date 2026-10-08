@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Photo from '../components/Photo.astro';
+import { MAKE, ROUTES, pad } from '../data/site';
+---
+<Base page="make" title="What we make / Full Circle" description="Cut-and-sew clothing in knit and woven fabrics, developed and produced in Cairo: denim, tees, hoodies, shirts, jackets and knitwear, with the minimum per colour and sampling time for each.">
+<PageHero crumb="What we make" title="What we make." lead="Cut-and-sew clothing in knit and woven fabrics, developed and produced in Cairo. Each category below lists the minimum per colour and how long a sample takes." light="radial-gradient(40% 50% at 80% 30%,#243E8F,transparent 70%),radial-gradient(40% 50% at 10% 90%,#C96832,transparent 72%)">
+    <div class="catnav" id="catNav">{MAKE.map((m) => <button class="opt" data-cat={m.id}>{m.n}</button>)}</div>
+</PageHero>
+<section class="wrap" id="catPanels">{MAKE.map((m, i) => (
+  <article class="catpanel" id={`cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[`${pad(i + 1)} / ${m.n}`, 'Photo']} sizes="(max-width: 860px) 100vw, 40vw" /><div><span class="mono dim"><span data-count={i + 1}>{pad(i + 1)}</span> / {pad(MAKE.length)}</span><h2 class="camp" style="margin-top:8px">{m.n}</h2><p>{m.line}</p><table class="spec2"><tbody><tr><th>Garments</th><td>{m.items}</td></tr><tr><th>Minimum</th><td set:html={m.moq} /></tr><tr><th>Sampling</th><td>{m.samp}</td></tr><tr><th>Fabrics</th><td>— <span class="tbc">TBC</span></td></tr><tr><th>Bulk lead time</th><td>— <span class="tbc">TBC</span></td></tr></tbody></table><div class="actions"><a class="btn btn-red" href={`${ROUTES.start}?product=${encodeURIComponent(m.product)}`}>Request a sample for this</a></div></div></article>
+))}</section>
+<section class="wrap" style="padding-top:clamp(72px,8vw,120px)">
+  <div class="sh"><h2 class="camp">What sets us apart</h2><p>Three things brands come to us for, that most local factories cannot offer.</p></div>
+  <div class="techs">
+    <div><b>Denim is our speciality</b><span>Jeans and denim jackets from pattern to wash, from 150 pieces per colour.</span></div>
+    <div><b>Fabrics not on the local market</b><span>We import denims and fabrics you will not find in Cairo, so your product does not look like everyone else's.</span></div>
+    <div><b>Imported trims + accessories</b><span>New buttons, rivets, zips and labels brought in from abroad, not the same trims every brand in town uses.</span></div>
+  </div>
+</section>
+<section class="wrap sec">
+  <div class="sh"><h2 class="camp">Techniques + finishing</h2><p>Available across categories. Ask on the first call for anything not listed.</p></div>
+  <div class="techs">
+    <div><b>Screen print</b><span>Water-based and plastisol, up to 6 colours <span class="tbc">TBC</span></span></div>
+    <div><b>Embroidery</b><span>Flat and 3D puff, chain stitch</span></div>
+    <div><b>Garment dye</b><span>Washed, faded and pigment finishes</span></div>
+    <div><b>Labels + packaging</b><span>Woven labels, care labels, hangtags, polybags</span></div>
+  </div>
+  <div class="limits" style="margin-top:clamp(48px,6vw,80px)">
+    <div><span class="mono dim">We are honest about limits</span><p>If a product is outside what we do well, we say so on the first call and point you somewhere better.</p></div>
+    <div><span class="mono dim">Not in scope <span class="tbc">TBC</span></span><p>Footwear, leather goods, bags and accessories.</p></div>
+    <div><span class="mono dim">Bring what you have</span><p>A mood board, a sketch, a tech pack or a garment you want made better.</p></div>
+  </div>
+</section>
+<CtaBand title="Not on the list?" text="Tell us what you want to make. If it is not something we do well, we will say so."><a href={ROUTES.start} class="btn btn-red" style="padding:16px 22px">Request a sample</a></CtaBand>
+</Base>
