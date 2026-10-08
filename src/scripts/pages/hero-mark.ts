@@ -11,13 +11,13 @@ import { arrival } from '../core/nav';
 let gl = false;
 try { const c = document.createElement('canvas'); gl = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { /* no WebGL */ }
 
-let ready = false, building: Promise<void> | null = null, swept = false;
+let ready = false, failed = false, building: Promise<void> | null = null;
 let canvas: HTMLCanvasElement | null = null, rw: HTMLElement | null = null;
 let io: IntersectionObserver | null = null, loop: () => void = () => {};
 
 function ensureBuilt() {
   if (!gl) return Promise.resolve();
-  building ??= build().catch((err) => { console.warn('[hero mark] 3D unavailable, showing the flat mark', err); building = null; });
+  building ??= build().catch((err) => { console.warn('[hero mark] 3D unavailable, showing the flat mark', err); failed = true; });
   return building;
 }
 
@@ -103,19 +103,20 @@ export const heroMarkFeature: Feature = {
   prepare(doc) {
     const wrap = doc.querySelector<HTMLElement>('.hero .ringwrap'); if (!wrap) return;
     if (ready) wrap.classList.add('m3on');
-    else if (swept) wrap.classList.add('swept');
   },
   mount(signal) {
     const wrap = document.querySelector<HTMLElement>('.hero .ringwrap');
     if (!wrap) return;
     if (ready) { attach(wrap); return; }
-    if (!gl) { swept = true; return; }
+    // no WebGL, or the 3D mark already failed: the flat mark draws itself (again on each visit,
+    // as the prototype's CSS sweep restarted whenever Home came back)
+    if (!gl || failed) { wrap.classList.remove('m3wait'); return; }
     // wait briefly for the 3D version, otherwise draw the flat one
     if (!canvas) canvas = wrap.querySelector('canvas.mark3');
     wrap.classList.add('m3wait');
     // building the mesh is heavy, so after a page change it waits for the wipe to finish
     const delay = arrival === 'load' ? 0 : WIPE_MS;
-    const fallback = setTimeout(() => { if (!wrap.classList.contains('m3on')) { wrap.classList.remove('m3wait'); swept = true; } }, 2600 + delay);
+    const fallback = setTimeout(() => { if (!wrap.classList.contains('m3on')) wrap.classList.remove('m3wait'); }, 2600 + delay);
     const start = setTimeout(() => ensureBuilt().then(() => { if (ready && !signal.aborted && wrap.isConnected && wrap.classList.contains('m3wait')) attach(wrap); }), delay);
     signal.addEventListener('abort', () => { clearTimeout(fallback); clearTimeout(start); }, { once: true });
   },

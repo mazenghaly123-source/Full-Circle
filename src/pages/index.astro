@@ -8,8 +8,10 @@ import { FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, 
 // hero ring: stage labels just outside the ring, between the ticks
 const heroLabels = STAGES.map((g, i) => {
   const [x, y] = ring(200, 200, 186, i / 8 + 1 / 16);
-  return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : ''), t: g.s };
+  return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : '') + (i < 1 ? ' on' : ''), t: g.s };
 });
+// the ring is drawn at its first stage, where the prototype's script put it before the first paint
+const [heroDotX, heroDotY] = ring(200, 200, 150, 1 / 8);
 // how it works ring: one tick per stage
 const howTicks = STAGES.map((_, i) => {
   const [x1, y1] = ring(200, 200, 160, i / 8), [x2, y2] = ring(200, 200, 180, i / 8);
@@ -36,13 +38,26 @@ const ATELIER = [
     </div>
     <div class="ringwrap">
       <svg viewBox="0 0 400 400">
-        <g transform="rotate(-90 200 200)"><circle class="bg" cx="200" cy="200" r="150"/><circle class="fg" id="heroArc" cx="200" cy="200" r="150" pathLength="100" stroke-dashoffset="100"/></g>
+        <g transform="rotate(-90 200 200)"><circle class="bg" cx="200" cy="200" r="150"/><circle class="fg" id="heroArc" cx="200" cy="200" r="150" pathLength="100" stroke-dashoffset="100" style="stroke-dashoffset:87.5"/></g>
         <g id="heroLabels">{heroLabels.map((l) => <text x={l.x} y={l.y} text-anchor="middle" class={l.cls}>{l.t}</text>)}</g>
-        <circle class="reddot" id="heroDot" r="7" cx="200" cy="50"/>
+        <circle class="reddot" id="heroDot" r="7" cx={heroDotX} cy={heroDotY}/>
       </svg>
       <svg class="heromark" viewBox="0 0 256.86 262.30" aria-hidden="true"><use href="#fc-mark"/></svg>
       <canvas class="mark3" id="mark3" aria-hidden="true"></canvas>
     </div>
+    <script is:inline>
+      // before the first paint, as in the prototype: hold the flat mark back while the 3D one loads,
+      // and with reduced motion show the ring complete
+      (function () {
+        var w = document.currentScript.previousElementSibling;
+        if (!w || !w.classList.contains('ringwrap')) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          w.querySelector('#heroArc').style.strokeDashoffset = '14';
+          w.querySelectorAll('#heroLabels text').forEach(function (t) { t.classList.add('on'); });
+        }
+        try { var c = document.createElement('canvas'); if (c.getContext('webgl2') || c.getContext('webgl')) w.classList.add('m3wait'); } catch (e) {}
+      })();
+    </script>
   </div>
   <div class="wrap">
     <div class="facts">

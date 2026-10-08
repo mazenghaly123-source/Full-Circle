@@ -68,13 +68,13 @@ test('client-side navigation runs the ring wipe, keeps the shell and updates the
   expect(errors).toEqual([]);
 });
 
-test('a link to the page you are on scrolls to the top without a wipe', async ({ page }) => {
-  await page.goto('/about');
-  await scrollToY(page, 1200);
-  await page.locator('footer a[href="/about"]').click();
+test('a link to the page you are on does nothing, as in the prototype', async ({ page }) => {
+  await page.goto('/request-a-sample?product=Denim');
+  await scrollToY(page, 600);
+  await page.locator('footer a[href="/request-a-sample"]').click();
+  await page.waitForTimeout(700);
   await expect(page.locator('#wipe')).toHaveClass(/^wipe$/);
-  await expect.poll(() => page.evaluate(() => scrollY), { timeout: 10_000 }).toBeLessThan(5);
-  expect(new URL(page.url()).pathname).toBe('/about');
+  expect(await page.evaluate(() => Math.round(scrollY))).toBeGreaterThan(400);
 });
 
 test('a link to an anchor on another page lands on it', async ({ page }) => {
@@ -238,7 +238,26 @@ test('request a sample: checks, counts picks, and confirms with a code', async (
   await page.locator('#send').click();
   await expect(page.locator('.sent-box')).toBeVisible();
   await expect(page.locator('#sentCode')).toHaveText(/^FC-\d{4}$/);
-  if (isPhone(info)) await expect(page.locator('#mbar')).not.toHaveClass(/show/);
+  if (isPhone(info)) {
+    // the bar reads "Request sent" until the next scroll, then slides away
+    await expect(page.locator('#mbarGo')).toHaveText('Request sent');
+    await expect(page.locator('#mbar')).toHaveClass(/show/);
+    await scrollBy(page, 120, 3);
+    await expect(page.locator('#mbar')).not.toHaveClass(/show/);
+  }
+});
+
+test('request a sample: only real options are taken from the link', async ({ page }) => {
+  let dialog = false;
+  page.on('dialog', (d) => { dialog = true; d.dismiss(); });
+  await page.goto('/request-a-sample?product=%3Cimg%20src%3Dx%20onerror%3D%22alert(1)%22%3E&path=Martian');
+  await page.waitForTimeout(800);
+  expect(dialog).toBe(false);
+  await expect(page.locator('#srows .srow .empty')).toHaveCount(4);
+  await expect(page.locator('#srows img')).toHaveCount(0);
+  await page.goto('/request-a-sample?path=Scaling&product=Knitwear');
+  await expect(page.locator('#srows')).toContainText('Scaling');
+  await expect(page.locator('#srows')).toContainText('Knitwear');
 });
 
 test('request a sample: picks and typing survive a trip to another page', async ({ page }, info) => {
@@ -304,4 +323,94 @@ test('reduced motion: no wipe, and the hero ring is shown complete', async ({ br
   await page.waitForURL('**/about');
   await expect(page.locator('#wipe')).toBeHidden();
   await ctx.close();
+});
+
+test.describe('pages you come back to (the prototype was one document)', () => {
+  test('home is drawn at the first stage before any script runs', async ({ browser }, info) => {
+    const ctx = await browser.newContext({ viewport: info.project.use.viewport, javaScriptEnabled: false });
+    const page = await ctx.newPage();
+    await page.goto(`${info.project.use.baseURL}/`);
+    await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '87.5px');
+    await expect(page.locator('#heroLabels .st.on')).toHaveCount(1);
+    await ctx.close();
+  });
+
+  test('the flat mark shows straight away on a return when three.js is unavailable', async ({ page }, info) => {
+    await page.goto('/');
+    await expect(page.locator('.hero .ringwrap')).not.toHaveClass(/m3wait/, { timeout: 6000 });
+    await openNav(page, '/about', isPhone(info));
+    await page.waitForURL('**/about');
+    await page.locator('header a.word').click();
+    await page.waitForURL((u) => u.pathname === '/');
+    await expect(page.locator('.hero .ringwrap')).not.toHaveClass(/m3wait/, { timeout: 1500 });
+  });
+
+  test('reveals replay, FAQ answers stay open, carousels keep their place', async ({ page }, info) => {
+    await page.goto('/');
+    const fact = page.locator('.facts > div').first();
+    await fact.scrollIntoViewIfNeeded();
+    await expect(fact).toHaveClass(/rv in/);
+    await page.locator('#faqList summary').nth(1).click();
+    await expect(page.locator('#faqList details').nth(1)).toHaveAttribute('open', '');
+    if (isPhone(info)) await page.locator('#makeGrid').evaluate((r) => { r.scrollLeft = 300; });
+    await page.waitForTimeout(300);
+    await openNav(page, '/contact', isPhone(info));
+    await page.waitForURL('**/contact');
+    await page.locator('header a.word').click();
+    await page.waitForURL((u) => u.pathname === '/');
+    await expect(fact).toHaveClass(/rv in/);
+    await expect(page.locator('#faqList details').nth(1)).toHaveAttribute('open', '');
+    if (isPhone(info)) expect(await page.locator('#makeGrid').evaluate((r) => r.scrollLeft)).toBeGreaterThan(150);
+  });
+
+  test('the demo count-up finishes even if you leave mid-way', async ({ page }, info) => {
+    await page.goto('/how-it-works');
+    await page.locator('#yoApprove').click();
+    // stage 06 is current when its top is above the middle of the screen and stage 07's is not
+    await page.locator('.yo-st[data-i="5"]').evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - innerHeight * 0.45, behavior: 'instant' }));
+    await scrollBy(page, 20, 2);
+    await expect(page.locator('#yoStage')).toHaveText('06 / Production');
+    await expect(page.locator('#yoUnits')).not.toHaveText('000');
+    await openNav(page, '/about', isPhone(info));
+    await page.waitForURL('**/about');
+    await page.goBack();
+    await page.waitForURL('**/how-it-works');
+    await expect(page.locator('#yoUnits')).toHaveText('300', { timeout: 6000 });
+  });
+
+  test('a reload starts at the top, without scrolling through the page', async ({ page }) => {
+    await page.goto('/how-it-works');
+    await page.locator('.yo-st[data-i="7"]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.waitForTimeout(800);
+    await page.reload();
+    await page.waitForTimeout(1500);
+    expect(await page.evaluate(() => scrollY)).toBeLessThan(5);
+    await expect(page.locator('#toast')).not.toHaveClass(/show/);
+  });
+});
+
+test('request and track: files, errors and a pending photo survive a trip to another page', async ({ page }, info) => {
+  await page.goto('/request-a-sample');
+  await page.locator('#fFile').setInputFiles([{ name: 'sketch.png', mimeType: 'image/png', buffer: Buffer.from('x') }, { name: 'pack.pdf', mimeType: 'application/pdf', buffer: Buffer.from('y') }]);
+  await page.locator('#send').click();
+  await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
+  await openNav(page, '/about', isPhone(info));
+  await page.waitForURL('**/about');
+  await page.goBack();
+  await page.waitForURL((u) => u.pathname === '/request-a-sample');
+  await expect(page.locator('#fFileT')).toHaveText('sketch.png, pack.pdf');
+  expect(await page.locator('#fFile').evaluate((i: HTMLInputElement) => i.files?.length)).toBe(2);
+  await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
+
+  await page.goto('/track');
+  await page.locator('#tDemo').click();
+  await page.locator('#tList .ord').first().click();
+  await page.locator('#oPhoto').click();
+  await openNav(page, '/about', isPhone(info));
+  await page.waitForURL('**/about');
+  await page.waitForTimeout(2600);
+  await page.goBack();
+  await page.waitForURL('**/track');
+  await expect(page.locator('#oPhotos .ph')).toHaveCount(4);
+  await expect(page.locator('#oPhoto')).toBeEnabled();
 });

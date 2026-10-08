@@ -29,6 +29,22 @@ const { page, title, description } = Astro.props;
 <Font cssVariable="--font-geist" preload={[{ weight: '400' }, { weight: '500' }]} />
 <Font cssVariable="--font-plex-mono" preload={[{ weight: '400' }]} />
 <script is:inline>
+  // Loading a page never smooth-scrolls (the page's smooth scrolling is for in-page links), and a
+  // reload starts at the top, as the prototype did, instead of scrolling back down the page.
+  (function () {
+    var r = document.documentElement;
+    r.style.scrollBehavior = 'auto';
+    document.addEventListener('DOMContentLoaded', function () { requestAnimationFrame(function () { r.style.scrollBehavior = ''; }); });
+    try {
+      var n = performance.getEntriesByType('navigation')[0];
+      if (n && n.type === 'reload' && !location.hash) {
+        history.scrollRestoration = 'manual';
+        if (history.state) history.replaceState(Object.assign({}, history.state, { scrollX: 0, scrollY: 0 }), '');
+      }
+    } catch (e) {}
+  })();
+</script>
+<script is:inline>
   // Pages swap under the ring wipe at 480ms, as in the prototype. Hide the browser's own view
   // transition from the router so it swaps straight away, instead of first freezing the page to
   // snapshot it (which only delays the swap and stalls the wipe on slower devices).

@@ -24,13 +24,14 @@ addEventListener('scroll', () => {
   lastY = y; updBar();
 }, { passive: true });
 
-// A link to the page you are on scrolls back to the top instead of reloading it (as the prototype did).
+// A link to the page you are on does nothing but close the menu, as in the prototype (where it
+// changed nothing in the address bar).
 document.addEventListener('click', (e) => {
   const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
   if (!a || a.target || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const to = new URL(a.href, location.href);
-  if (to.origin !== location.origin || to.pathname !== location.pathname || to.search !== location.search || to.hash) return;
-  e.preventDefault(); setMenu(false); scrollTo(0, 0);
+  if (to.origin !== location.origin || to.pathname !== location.pathname || to.hash) return;
+  e.preventDefault(); setMenu(false);
 }, true);
 
 export const headerFeature: Feature = {

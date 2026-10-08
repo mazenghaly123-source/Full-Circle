@@ -9,6 +9,9 @@ export const request = {
   brand: '',
   contact: '',
   note: '',
+  files: [] as File[],
+  /** the error line under the form, kept when the page comes back */
+  err: '',
 };
 
 export const picked = () => Object.values(request.sel).filter(Boolean).length;
@@ -27,4 +30,5 @@ export const yo = {
   checked: false,
   visible: false,
   photoAsked: false,
+  photoPending: false,
 };

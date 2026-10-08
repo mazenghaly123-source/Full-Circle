@@ -75,8 +75,9 @@ atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
   every rule.
 - Browser scripts load once (Astro ClientRouter). Each feature in `src/scripts/` is a `Feature`
   (`core/lifecycle.ts`): `mount(signal)` binds to the live page and stops when the signal aborts;
-  `prepare(doc)` writes carried-over state into the incoming page so nothing replays. A page you
-  come back to looks as you left it, as in the one-document prototype.
+  `prepare(doc)` writes carried-over state into the incoming page before it shows. The prototype
+  was one document: a page you come back to keeps its state (picks, demo progress, open FAQ,
+  carousel positions, errors) and replays its CSS entrances, but no transition jumps.
 - Content (stages, categories, FAQ, contacts, request options) lives once in `src/data/site.ts`;
   photos are registered by slot in `src/data/photos.ts`.
 - three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Fonts

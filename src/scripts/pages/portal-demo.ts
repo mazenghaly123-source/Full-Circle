@@ -15,11 +15,11 @@ function render(doc: Document) {
   [...rail.children].forEach((d, k) => { const i = d.querySelector('i')!; i.className = k <= t ? 'done' : ''; i.innerHTML = k === t ? '<b></b>' : ''; (d as HTMLElement).style.opacity = k > t ? '0.45' : '1'; });
 }
 
-/** The whole log, for a page coming back (entries do not replay their entrance). */
+/** The whole log, for a page coming back (entries replay their entrance, as the prototype's did). */
 function renderLog(doc: Document) {
   const L = doc.getElementById('pLog'); if (!L) return;
   L.hidden = !demo.log.length;
-  L.innerHTML = demo.log.map((e) => `<div style="animation:none"><span>${e.stamp} / ${e.txt}</span><span>${e.tail}</span></div>`).join('');
+  L.innerHTML = demo.log.map((e) => `<div><span>${e.stamp} / ${e.txt}</span><span>${e.tail}</span></div>`).join('');
   (doc.getElementById('pPhoto') as HTMLButtonElement).disabled = demo.photoPending;
 }
 

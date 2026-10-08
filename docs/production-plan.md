@@ -47,6 +47,9 @@ decisions below were confirmed by Mazen; the ones that are hard to reverse are r
 - *Behaviour:* navigation and the wipe, back/forward, anchors, header hiding, the phone menu and
   bar, the scroll ring, the sample gate, carry-over into the request form, both forms, the track
   demo, the 3D mark (and its flat fallback) and reduced motion.
+- *Review:* independent reviewers compared each area with the prototype by hand (interactions,
+  timing, states after moving between pages). Their confirmed findings are fixed and covered by
+  tests, including one security bug: a crafted link could inject HTML into the request summary.
 - *CSS:* every rule of the source stylesheet is compared with the built one. This caught a minifier
   bug that dropped `backdrop-filter` and broke the phone menu in Chrome. It also showed that the blur
   needs its `-webkit-` version for iPhones on iOS 15–17.
@@ -55,6 +58,11 @@ Small, deliberate differences from the prototype: links that start a request are
 demo's "Outerwear" opens the form on "Jackets" (the prototype passed a product the form does not
 have); with reduced motion the hero ring shows complete (the prototype meant to, but left only the
 first stage lit); Back returns to where you were on the page.
+
+**Prototype bugs kept for now** (the build matches the prototype; fixed when the real form and
+portal replace the demos in phases 2–3): after a request is sent, the form stays visible under
+"Received." and sending again makes a new code; on Track, the line under the order code does not
+update after Approve.
 
 **Found while building, for later:** the 3D logo mesh has about 724,000 vertices, and building it
 takes about 0.6 s on the main thread on a fast computer, more on phones. The prototype has the same

@@ -5,7 +5,7 @@
    - photo slots hold a <picture>, so img.fill rules use a descendant selector
    - -webkit-backdrop-filter comes before backdrop-filter (the CSS minifier keeps only the last of
      the pair, and Chromium needs the unprefixed one)
-   - the additions at the end (marked) carry page state across client-side navigations */
+   - one addition at the end (marked) for client-side page swaps */
 /* Layout: a working homepage in Brands Factory order of clarity (one action, how it works, what we make, proof, contact) dressed in Full Circle V4.1. Single dark look by choice; one Bone section for tracking. */
 :root{
   --bg:#11110F; --raise:#1A1A17; --bone:#E8E2D8; --cotton:#D8D0C3; --charcoal:#292925; --red:#C5322B;
@@ -916,7 +916,5 @@ a.copy{color:inherit;text-decoration:none}
 @media (prefers-reduced-motion:reduce){.hero .light::before,.hero .light::after{animation:none}}
 
 /* ===== production additions ===== */
-/* the hero mark has already swept in on an earlier visit: show it drawn, without replaying */
-.ringwrap.swept svg.heromark{animation:none;--sweep:360deg}
 /* page swaps happen under the ring wipe; if a browser view transition ever runs, it must not animate */
 ::view-transition-group(root),::view-transition-old(root),::view-transition-new(root){animation:none}

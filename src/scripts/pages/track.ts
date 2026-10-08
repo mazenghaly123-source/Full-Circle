@@ -1,7 +1,6 @@
 // Track order. Phase 1 keeps the prototype's demo: any sign-in works and shows three sample orders.
 // Phase 3 replaces this with real sign-in codes (email or WhatsApp) and the client's own orders.
 import type { Feature } from '../core/lifecycle';
-import { later } from '../core/lifecycle';
 import { $, nowStamp, pad, ring, rm, toast, vib } from '../core/util';
 import { STAGES } from '../../data/site';
 import { bindPhoto, isLoaded } from '../shell/images';
@@ -11,6 +10,8 @@ type Order = {
   specs: [string, string][]; log: [string, string][];
   /** photos asked for since the order view was last drawn (stage index) */
   extra: number[];
+  /** log rows added since the order view was last drawn (they keep their entrance animation) */
+  fresh?: number;
 };
 
 const ORDERS: Order[] = [
@@ -32,6 +33,10 @@ const T = {
   id: '',
   code: '',
   tab: 'photos',
+  /** the sign-in error line, kept when the page comes back */
+  err: '',
+  /** a photo asked for and not arrived yet (it arrives even if you leave the page, as in the prototype) */
+  photoPending: null as Order | null,
   /** log rows added in this session, newest first (dates as shown) */
   stamps: new Map<Order, string[]>(),
 };
@@ -40,10 +45,10 @@ const LOGIN_LEAD = 'Sign in with the email or WhatsApp number on your order. You
 type StagePhoto = { avif: string; webp: string; src: string; focus?: string };
 let photoUrls: Record<string, StagePhoto> | null = null;
 let photoSizes = '';
-const stagePhoto = (doc: Document, slot: string) => {
+const stagePhoto = (doc: Document, slot: string, instant: boolean) => {
   if (!photoUrls) { const s = doc.getElementById('tSection')!; photoUrls = JSON.parse(s.dataset.stagePhotos!); photoSizes = s.dataset.stageSizes!; }
   const p = photoUrls![slot]; if (!p) return '';
-  return `<picture><source type="image/avif" srcset="${p.avif}" sizes="${photoSizes}"><source type="image/webp" srcset="${p.webp}" sizes="${photoSizes}"><img src="${p.src}" alt="" class="fill${isLoaded(p.src) ? ' ok' : ''}" loading="lazy" decoding="async"${p.focus ? ` style="object-position:${p.focus}"` : ''}></picture>`;
+  return `<picture><source type="image/avif" srcset="${p.avif}" sizes="${photoSizes}"><source type="image/webp" srcset="${p.webp}" sizes="${photoSizes}"><img src="${p.src}" alt="" class="fill${instant && isLoaded(p.src) ? ' ok' : ''}" loading="lazy" decoding="async"${p.focus ? ` style="object-position:${p.focus}"` : ''}></picture>`;
 };
 
 function tView(doc: Document) {
@@ -58,19 +63,21 @@ function renderLogin(doc: Document) {
   g('tA').hidden = T.codeStep; g('tB').hidden = !T.codeStep;
   g('tStep').textContent = T.codeStep ? 'Step 2 of 2' : 'Step 1 of 2'; g('tLoginH').textContent = T.codeStep ? 'Enter the code' : 'Sign in';
   (g('tId') as HTMLInputElement).value = T.id; (g('tCode') as HTMLInputElement).value = T.code;
+  g('tErr').textContent = T.err;
 }
 
 function renderList(doc: Document) {
   doc.getElementById('tList')!.innerHTML = ORDERS.map((o, i) => `<button class="ord" data-o="${i}"><span class="code">${o.code}</span><span>${o.name}<br><span class="mono dim">${o.meta}</span></span><span class="mono">${pad(o.stage + 1)} / ${STAGES[o.stage].n}</span><span class="mono ${o.decH ? 'need' : 'dim'}">${o.need}</span><span class="arrow">→</span></button>`).join('');
 }
 
-const photoTile = (doc: Document, s: number, k: number) => {
+const photoTile = (doc: Document, s: number, k: number, instant: boolean) => {
   const i = Math.max(0, s - k), slot = `stage-${pad(i + 1)}`;
-  return `<div class="ph" data-img="${slot}" style="--tone:radial-gradient(70% 60% at ${30 + k * 20}% 40%,${STAGES[i].tone},#1b1b18 72%)">${stagePhoto(doc, slot)}<div class="cap mono"><span>${STAGES[i].s}</span><span>${k === 0 ? 'Latest' : ''}</span></div></div>`;
+  return `<div class="ph" data-img="${slot}" style="--tone:radial-gradient(70% 60% at ${30 + k * 20}% 40%,${STAGES[i].tone},#1b1b18 72%)">${stagePhoto(doc, slot, instant)}<div class="cap mono"><span>${STAGES[i].s}</span><span>${k === 0 ? 'Latest' : ''}</span></div></div>`;
 };
 const extraTile = (s: number) => `<div class="ph" style="--tone:radial-gradient(70% 60% at 50% 40%,${STAGES[s].tone},#1b1b18 72%)"><div class="cap mono"><span>${STAGES[s].s}</span><span style="color:var(--red)">New</span></div></div>`;
 
-function renderOrder(doc: Document) {
+/** instant: a page coming back shows photos already seen without fading them in again */
+function renderOrder(doc: Document, instant = false) {
   const o = T.cur!, s = o.stage, g = (id: string) => doc.getElementById(id)!;
   g('oArc').style.strokeDashoffset = String(100 - ((s + 0.5) / 8) * 100);
   const [x, y] = ring(200, 200, 150, (s + 0.5) / 8); g('oDot').setAttribute('cx', String(x)); g('oDot').setAttribute('cy', String(y));
@@ -84,10 +91,11 @@ function renderOrder(doc: Document) {
   g('oDecH').textContent = need ? o.decH : STAGES[s].ok;
   g('oDecP').textContent = need ? o.decP : 'Nothing needed from you right now. We will message you when the next decision is ready.';
   g('oDecBtns').hidden = !need;
-  g('oPhotos').innerHTML = o.extra.map(extraTile).join('') + [0, 1, 2].map((k) => photoTile(doc, s, k)).join('');
+  g('oPhotos').innerHTML = o.extra.map(extraTile).join('') + [0, 1, 2].map((k) => photoTile(doc, s, k, instant)).join('');
+  (g('oPhoto') as HTMLButtonElement).disabled = T.photoPending === o;
   g('oSpecs').innerHTML = o.specs.map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('');
-  const stamps = T.stamps.get(o) ?? [];
-  g('oLog').innerHTML = o.log.map(([d, by], k) => `<tr><td>${k >= o.log.length - stamps.length ? stamps[o.log.length - 1 - k] : pad(1 + k * 3) + ' Oct'}</td><td>${d}</td><td>${by}</td></tr>`).reverse().join('');
+  const stamps = T.stamps.get(o) ?? [], fresh = o.fresh ?? 0;
+  g('oLog').innerHTML = o.log.map(([d, by], k) => `<tr${k >= o.log.length - fresh ? ' class="new"' : ''}><td>${k >= o.log.length - stamps.length ? stamps[o.log.length - 1 - k] : pad(1 + k * 3) + ' Oct'}</td><td>${d}</td><td>${by}</td></tr>`).reverse().join('');
 }
 
 function renderTabs(doc: Document) {
@@ -99,7 +107,7 @@ function restore(doc: Document) {
   if (!doc.getElementById('tLogin')) return;
   renderLogin(doc);
   if (T.view !== 'login') renderList(doc);
-  if (T.cur) renderOrder(doc);
+  if (T.cur) renderOrder(doc, true);
   renderTabs(doc);
   tView(doc);
 }
@@ -113,32 +121,38 @@ export const trackFeature: Feature = {
     const bindList = () => $('tList').querySelectorAll<HTMLElement>('.ord').forEach((b) => b.addEventListener('click', () => openOrder(+b.dataset.o!), { signal }));
     bindList(); bindPhotos();
     const showList = () => { renderList(document); bindList(); T.view = 'orders'; tView(document); };
-    function openOrder(i: number) { T.cur = ORDERS[i]; T.cur.extra = []; renderOrder(document); bindPhotos(); T.view = 'order'; tView(document); scrollTo({ top: 0, behavior: rm ? 'auto' : 'smooth' }); }
+    function openOrder(i: number) { T.cur = ORDERS[i]; T.cur.extra = []; T.cur.fresh = 0; renderOrder(document); bindPhotos(); T.view = 'order'; tView(document); scrollTo({ top: 0, behavior: rm ? 'auto' : 'smooth' }); }
     const addLog = (txt: string) => {
       const o = T.cur!, stamp = nowStamp(), tr = document.createElement('tr'); tr.className = 'new';
       tr.innerHTML = `<td>${stamp}</td><td>${txt}</td><td>You</td>`; $('oLog').prepend(tr);
-      o.log.push([txt, 'You']); T.stamps.set(o, [stamp, ...(T.stamps.get(o) ?? [])]);
+      o.log.push([txt, 'You']); o.fresh = (o.fresh ?? 0) + 1; T.stamps.set(o, [stamp, ...(T.stamps.get(o) ?? [])]);
     };
     $('oApprove').addEventListener('click', () => {
       const o = T.cur!; vib(); addLog(o.decH + ' / approved'); toast(o.code + ' / approved');
-      o.decH = ''; o.need = 'None / next stage'; if (o.stage < 7) o.stage += 1; o.extra = []; renderOrder(document); bindPhotos(); renderList(document); bindList();
+      o.decH = ''; o.need = 'None / next stage'; if (o.stage < 7) o.stage += 1; o.extra = []; o.fresh = 0; renderOrder(document); bindPhotos(); renderList(document); bindList();
     }, { signal });
     $('oChanges').addEventListener('click', () => { vib(); addLog(T.cur!.decH + ' / changes requested'); toast('Changes sent to the team'); }, { signal });
     $('oPhoto').addEventListener('click', () => {
-      const o = T.cur!, b = $<HTMLButtonElement>('oPhoto'); vib(); b.disabled = true; toast('Photo requested / floor notified'); addLog('Photo requested / ' + STAGES[o.stage].n);
-      later(signal, () => { o.extra.unshift(o.stage); const d = document.createElement('div'); d.innerHTML = extraTile(o.stage); $('oPhotos').prepend(d.firstElementChild!); b.disabled = false; toast('Photo received'); }, 2200);
+      const o = T.cur!; vib(); $<HTMLButtonElement>('oPhoto').disabled = true; T.photoPending = o; toast('Photo requested / floor notified'); addLog('Photo requested / ' + STAGES[o.stage].n);
+      setTimeout(() => {
+        T.photoPending = null; o.extra.unshift(o.stage); toast('Photo received');
+        const photos = document.getElementById('oPhotos'), b = document.getElementById('oPhoto') as HTMLButtonElement | null;
+        if (photos && T.cur === o) { const d = document.createElement('div'); d.innerHTML = extraTile(o.stage); photos.prepend(d.firstElementChild!); }
+        if (b && T.cur === o) b.disabled = false;
+      }, 2200);
     }, { signal });
     document.querySelectorAll<HTMLElement>('.tabs2 [role=tab]').forEach((t) => t.addEventListener('click', () => { T.tab = t.dataset.tab!; renderTabs(document); }, { signal }));
     const signIn = () => { showList(); toast('Signed in / demo account'); };
     $('tId').addEventListener('input', (e) => { T.id = (e.target as HTMLInputElement).value; }, { signal });
     $('tCode').addEventListener('input', (e) => { T.code = (e.target as HTMLInputElement).value; }, { signal });
+    const setErr = (msg: string) => { T.err = msg; $('tErr').textContent = msg; };
     $('tSendCode').addEventListener('click', () => {
-      if ($<HTMLInputElement>('tId').value.trim().length < 4) { $('tErr').textContent = 'Add the email or WhatsApp number on your order'; return; }
-      $('tErr').textContent = ''; T.codeStep = true; renderLogin(document); $('tCode').focus(); toast('Code sent');
+      if ($<HTMLInputElement>('tId').value.trim().length < 4) return setErr('Add the email or WhatsApp number on your order');
+      setErr(''); T.codeStep = true; renderLogin(document); $('tCode').focus(); toast('Code sent');
     }, { signal });
     $('tVerify').addEventListener('click', () => {
-      if (!/^\d{6}$/.test($<HTMLInputElement>('tCode').value)) { $('tErr').textContent = 'Enter the 6 digits from the message'; return; }
-      $('tErr').textContent = ''; signIn();
+      if (!/^\d{6}$/.test($<HTMLInputElement>('tCode').value)) return setErr('Enter the 6 digits from the message');
+      setErr(''); signIn();
     }, { signal });
     const back = () => { T.codeStep = false; renderLogin(document); };
     $('tBack').addEventListener('click', back, { signal });

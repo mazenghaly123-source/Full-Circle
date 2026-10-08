@@ -2,7 +2,8 @@
 import type { Feature } from '../core/lifecycle';
 import { ring, rm } from '../core/util';
 
-let heroI = 0;
+// starts at stage 1, as the page is rendered (the prototype stepped to 1 before the first paint)
+let heroI = 1;
 
 function apply(doc: Document) {
   const arc = doc.getElementById('heroArc'), dot = doc.getElementById('heroDot'), labels = doc.getElementById('heroLabels');
@@ -23,7 +24,7 @@ function apply(doc: Document) {
 function heroStep() { heroI = (heroI + 1) % 9; apply(document); }
 
 // the ring keeps time on every page, so it is where you left it when you come back
-if (!rm) { setInterval(heroStep, 1100); heroStep(); }
+if (!rm) setInterval(heroStep, 1100);
 
 export const heroRingFeature: Feature = {
   prepare: apply,

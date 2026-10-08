@@ -7,6 +7,7 @@ import { heroRingFeature } from './pages/hero-ring';
 import { heroMarkFeature } from './pages/hero-mark';
 import { howScrollFeature } from './pages/how-scroll';
 import { portalDemoFeature } from './pages/portal-demo';
+import { faqFeature } from './pages/faq';
 import { demoOrderFeature } from './pages/demo-order';
 import { makeFeature } from './pages/make';
 import { requestFeature } from './pages/request';
@@ -21,7 +22,7 @@ import { ROUTES } from '../data/site';
 // Links from the single-file prototype (/#how, /#cat-denim) land on the real pages.
 const old = decodeURIComponent(location.hash.slice(1));
 if (location.pathname === '/' && old) {
-  if (old in ROUTES) location.replace(ROUTES[old as keyof typeof ROUTES]);
+  if (Object.hasOwn(ROUTES, old)) location.replace(ROUTES[old as keyof typeof ROUTES]);
   else if (old.startsWith('cat-')) location.replace(`${ROUTES.make}#${old}`);
 }
 
@@ -32,6 +33,7 @@ start([
   heroMarkFeature,
   howScrollFeature,
   portalDemoFeature,
+  faqFeature,
   demoOrderFeature,
   makeFeature,
   requestFeature,

@@ -15,6 +15,29 @@ const PATH_LINE = {
   Scaling: 'Your order enters at development. Bring a garment; we rebuild the pattern and lock it for bulk.',
 } as Record<string, string>;
 
+// The count-up and a photo request carry on if you leave the page, as they did in the one-document
+// prototype; they update the page only while it is on screen.
+let unitsRaf = 0;
+function yoUnits() {
+  if (unitsRaf) return; const t0 = performance.now(), from = Y.units;
+  const step = (now: number) => {
+    const p = rm ? 1 : Math.min(1, (now - t0) / 1800), e = 1 - Math.pow(1 - p, 3);
+    Y.units = Math.round(from + (300 - from) * e);
+    const el = document.getElementById('yoUnits'); if (el) el.textContent = String(Y.units).padStart(3, '0');
+    unitsRaf = p < 1 ? requestAnimationFrame(step) : 0;
+  };
+  unitsRaf = requestAnimationFrame(step);
+}
+
+function askPhoto() {
+  Y.photoPending = true; toast('Photo requested / floor notified');
+  setTimeout(() => {
+    Y.photoPending = false; Y.photoAsked = true; toast('Photo received / ' + STAGES[yoOrder()].n);
+    const b = document.getElementById('yoPhoto') as HTMLButtonElement | null;
+    if (b) { b.disabled = false; b.textContent = 'Request another photo'; }
+  }, 2200);
+}
+
 function yoRender(doc: Document) {
   const g = (id: string) => doc.getElementById(id)!;
   const os = yoOrder(), waiting = !Y.ok && Y.here > 4;
@@ -50,6 +73,7 @@ function restore(doc: Document) {
   [...g('yoFabrics').children].forEach((x) => x.setAttribute('aria-pressed', String((x as HTMLElement).dataset.fab === Y.fab)));
   if (Y.ok) { const b = g('yoApprove') as HTMLButtonElement; b.disabled = true; b.textContent = 'Sample approved'; g('yoAt').textContent = 'Signed ' + Y.at + ' / bulk released'; }
   if (Y.photoAsked) g('yoPhoto').textContent = 'Request another photo';
+  (g('yoPhoto') as HTMLButtonElement).disabled = Y.photoPending;
   g('yoUnits').textContent = String(Y.units).padStart(3, '0');
   if (Y.checked) [...g('yoChecks').children].forEach((li) => li.classList.add('ok'));
   yoRender(doc);
@@ -59,13 +83,6 @@ export const demoOrderFeature: Feature = {
   prepare: restore,
   mount(signal) {
     if (!document.getElementById('yo')) return;
-    let yoRaf = 0;
-    signal.addEventListener('abort', () => cancelAnimationFrame(yoRaf), { once: true });
-    function yoUnits() {
-      if (yoRaf) return; const t0 = performance.now(), from = Y.units;
-      const step = (now: number) => { const p = rm ? 1 : Math.min(1, (now - t0) / 1800), e = 1 - Math.pow(1 - p, 3); Y.units = Math.round(from + (300 - from) * e); $('yoUnits').textContent = String(Y.units).padStart(3, '0'); if (p < 1) yoRaf = requestAnimationFrame(step); else yoRaf = 0; };
-      yoRaf = requestAnimationFrame(step);
-    }
     function render() {
       yoRender(document);
       if (Y.here === 5 && Y.ok && Y.units < 300) yoUnits();
@@ -80,10 +97,7 @@ export const demoOrderFeature: Feature = {
     $('yoFabrics').addEventListener('click', (e) => { const c = (e.target as Element).closest<HTMLElement>('.yo-sw'); if (!c) return; vib(); Y.fab = c.dataset.fab!; Y.fabName = c.dataset.name!; [...$('yoFabrics').children].forEach((x) => x.setAttribute('aria-pressed', String(x === c))); render(); }, { signal });
     const yoApprove = () => { if (Y.ok) return; vib(); Y.ok = true; const d = new Date(); Y.at = pad(d.getHours()) + ':' + pad(d.getMinutes()); const b = $<HTMLButtonElement>('yoApprove'); b.disabled = true; b.textContent = 'Sample approved'; $('yoAt').textContent = 'Signed ' + Y.at + ' / bulk released'; toast(Y.code + ' / sample 03 approved'); render(); };
     $('yoApprove').addEventListener('click', yoApprove, { signal }); document.querySelectorAll('[data-yoapprove]').forEach((b) => b.addEventListener('click', yoApprove, { signal }));
-    $('yoPhoto').addEventListener('click', () => {
-      vib(); const b = $<HTMLButtonElement>('yoPhoto'); b.disabled = true; toast('Photo requested / floor notified');
-      later(signal, () => { toast('Photo received / ' + STAGES[yoOrder()].n); b.disabled = false; b.textContent = 'Request another photo'; Y.photoAsked = true; }, 2200);
-    }, { signal });
+    $('yoPhoto').addEventListener('click', () => { vib(); $<HTMLButtonElement>('yoPhoto').disabled = true; askPhoto(); }, { signal });
     $('yoReal').addEventListener('click', () => {
       // the request form calls outerwear "Jackets" (the prototype passed "Outerwear", which matched no option)
       const product = Y.product === 'Outerwear' ? 'Jackets' : Y.product;
@@ -103,6 +117,8 @@ export const demoOrderFeature: Feature = {
     }
     addEventListener('scroll', yoMeasure, { passive: true, signal }); addEventListener('resize', yoMeasure, { signal });
     restore(document);
+    // a count-up interrupted by leaving picks up again when you come back to stage 06
+    if (Y.here === 5 && Y.ok && Y.units < 300) yoUnits();
     later(signal, yoMeasure, 50);
   },
 };

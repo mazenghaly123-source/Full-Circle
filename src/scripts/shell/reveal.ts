@@ -1,25 +1,35 @@
-// Reveal on scroll and count-up numbers. Each element plays once per session, as in the prototype
-// (where a page you came back to was still the same document).
+// Reveal on scroll and count-up numbers. As in the prototype (one document whose pages were hidden
+// and shown again): an element reveals and counts once per session, and a page you come back to
+// replays the reveal of what had already risen (CSS animations restart when a page reappears),
+// while numbers stay at their final value.
 import type { Feature } from '../core/lifecycle';
 import { pad, rm } from '../core/util';
 
-const REVEAL = '.sh,.facts>div,.who-card,.cat,.step,.howring,.vs,.portal,.proof>.ph,.q,.summary,.faq details,.contact>div,.logos,.srow2,.catpanel,.techs>div,.enter>div,.chain>div,.team>div,.rules>div,.next3>div,.ord';
-const revealed = new Set<string>(), counted = new Set<string>();
+const REVEAL = '.sh,.facts>div,.who-card,.cat,.step,.howring,.vs,.portal,.proof>.ph,.q,.summary,.faq details,.contact>div,.logos,.srow2,.catpanel,.techs>div,.enter>div,.chain>div,.team>div,.rules>div,.next3>div';
+/** Seen by the observer (done either way), and of those, the ones that played the rise. */
+const revealed = new Set<string>(), risen = new Set<string>(), counted = new Set<string>();
 const keyOf = new WeakMap<Element, string>();
+const pageOf = (doc: Document) => doc.body.dataset.page;
 
 export const revealFeature: Feature = {
+  prepare(doc) {
+    if (rm) return;
+    const pg = pageOf(doc);
+    doc.querySelectorAll(REVEAL).forEach((el, i) => { if (risen.has(`${pg}|${i}`)) el.classList.add('rv', 'in'); });
+  },
   mount(signal) {
     if (!('IntersectionObserver' in window)) return;
-    const path = location.pathname;
+    const pg = pageOf(document);
     if (!rm) {
       const io = new IntersectionObserver((es) => es.forEach((en) => {
         if (!en.isIntersecting) return;
-        revealed.add(keyOf.get(en.target)!);
-        if (en.boundingClientRect.top > 0) en.target.classList.add('rv', 'in');
+        const k = keyOf.get(en.target)!;
+        revealed.add(k);
+        if (en.boundingClientRect.top > 0) { en.target.classList.add('rv', 'in'); risen.add(k); }
         io.unobserve(en.target);
       }), { threshold: 0.12 });
       document.querySelectorAll(REVEAL).forEach((el, i) => {
-        const k = path + '|' + i; if (revealed.has(k)) return;
+        const k = `${pg}|${i}`; if (revealed.has(k)) return;
         keyOf.set(el, k); io.observe(el);
       });
       signal.addEventListener('abort', () => io.disconnect(), { once: true });
@@ -33,7 +43,7 @@ export const revealFeature: Feature = {
       requestAnimationFrame(tick);
     }), { threshold: 0.6 });
     document.querySelectorAll('[data-count]').forEach((el, i) => {
-      const k = path + '|c' + i; if (counted.has(k)) return;
+      const k = `${pg}|c${i}`; if (counted.has(k)) return;
       keyOf.set(el, k); cio.observe(el);
     });
     signal.addEventListener('abort', () => cio.disconnect(), { once: true });
