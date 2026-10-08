@@ -8,6 +8,7 @@ import { defineConfig, fontProviders } from 'astro/config';
  * @param {string} pkg  e.g. '@fontsource/geist'
  * @param {number[]} weights
  * @param {string[]} subsets  e.g. ['latin', 'latin-ext']
+ * @returns {{ variants: [any, ...any[]] }}
  */
 function fontsource(pkg, weights, subsets) {
   const variants = [];
@@ -23,7 +24,7 @@ function fontsource(pkg, weights, subsets) {
     }
   }
   if (!variants.length) throw new Error(`No font files found for ${pkg}`);
-  return { variants };
+  return { variants: /** @type {[any, ...any[]]} */ (variants) };
 }
 
 const SUBSETS = ['latin', 'latin-ext'];

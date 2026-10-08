@@ -30,7 +30,7 @@ for (const { key, route } of PAGES) {
       const style = await page.addStyleTag({ content: HIDE_MEDIA });
       await page.waitForTimeout(300);
       const layout = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' });
-      await style.evaluate((s) => s.remove());
+      await style.evaluate((s) => (s as Element).remove());
       shots[side] = { layout, visual };
       await ctx.close();
     }
