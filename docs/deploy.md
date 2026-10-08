@@ -35,6 +35,14 @@ The site then answers on `full-circle.<your-subdomain>.workers.dev`.
 5. In the Cloudflare dashboard for the domain, turn off **Web Analytics** (Cloudflare switches it on
    by default; the plan uses Umami instead).
 
+## Share link on Vercel (until Cloudflare is connected)
+
+To share the site before Cloudflare is set up, it is also deployed on Vercel (team "Mazen's
+projects", project `full-circle`), built from this branch. `vercel.json` only applies there: it
+serves the clean URLs (`/about` → `about.html`), copies the headers from `public/_headers`, and
+marks the whole copy `noindex` so search engines never index it. Cloudflare stays the host
+(ADR 0002); delete the Vercel project and `vercel.json` once the Cloudflare site is live.
+
 ## Locally
 
 ```sh
