@@ -18,9 +18,10 @@ import { dotsFeature } from './shell/dots';
 import { imagesFeature } from './shell/images';
 import { mbarFeature } from './shell/mbar';
 import { ROUTES } from '../data/site';
+import { decode } from './core/util';
 
 // Links from the single-file prototype (/#how, /#cat-denim) land on the real pages.
-const old = decodeURIComponent(location.hash.slice(1));
+const old = decode(location.hash.slice(1));
 if (location.pathname === '/' && old) {
   if (Object.hasOwn(ROUTES, old)) location.replace(ROUTES[old as keyof typeof ROUTES]);
   else if (old.startsWith('cat-')) location.replace(`${ROUTES.make}#${old}`);

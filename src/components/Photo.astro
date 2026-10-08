@@ -6,7 +6,7 @@ import { PHOTOS, PHOTO_FOCUS, photoWidths } from '../data/photos';
 interface Props {
   /** Photo slot name, e.g. cat-denim (the prototype's data-img). */
   img: string;
-  /** Caption spans, left to right. A "Photo" span is hidden once a photo is shown, as in the prototype. */
+  /** Caption spans, left to right. A "Photo" span hides once the photo has loaded, as in the prototype. */
   caption?: string[];
   tone?: string;
   /** CSS sizes for the generated srcset. */
@@ -35,7 +35,7 @@ const css = [tone ? `--tone:${tone}` : '', style].filter(Boolean).join(';');
     />
   )}
   {caption.length > 0 && (
-    <div class="cap mono">{caption.map((t) => <span hidden={!!photo && t === 'Photo'}>{t}</span>)}</div>
+    <div class="cap mono">{caption.map((t) => <span>{t}</span>)}</div>
   )}
   <slot />
 </div>

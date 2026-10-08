@@ -29,5 +29,8 @@ export const nowStamp = () => {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 };
 
+/** decodeURIComponent that leaves a malformed string (a stray % in the address) as it is. */
+export const decode = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
+
 /** A demo order code, as the prototype makes them (real codes will come from the server). */
 export const demoCode = () => 'FC-' + (1000 + Math.floor(Math.random() * 8999));

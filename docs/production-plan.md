@@ -54,10 +54,20 @@ decisions below were confirmed by Mazen; the ones that are hard to reverse are r
   bug that dropped `backdrop-filter` and broke the phone menu in Chrome. It also showed that the blur
   needs its `-webkit-` version for iPhones on iOS 15–17.
 
-Small, deliberate differences from the prototype: links that start a request are real links; the
-demo's "Outerwear" opens the form on "Jackets" (the prototype passed a product the form does not
-have); with reduced motion the hero ring shows complete (the prototype meant to, but left only the
-first stage lit); Back returns to where you were on the page.
+Small, deliberate differences from the prototype:
+- Links that start a request are real links.
+- The demo's "Outerwear" opens the form on "Jackets" (the prototype passed a product the form does
+  not have).
+- With reduced motion the hero ring shows complete (the prototype meant to, but left only the first
+  stage lit).
+- Back returns to where you were on the page.
+- A new page is already at the top when the wipe opens. The prototype's page visibly scrolled up
+  during the reveal.
+- A link to an anchor lands on it directly instead of scrolling down from the top.
+- Keyboard focus starts again at the top of the new page, as on any page load.
+- Phone browsers tint their toolbar Obsidian.
+- The "Home" crumb on inner pages can be clicked; in the prototype the big title's text box covered
+  it.
 
 **Prototype bugs kept for now** (the build matches the prototype; fixed when the real form and
 portal replace the demos in phases 2–3): after a request is sent, the form stays visible under

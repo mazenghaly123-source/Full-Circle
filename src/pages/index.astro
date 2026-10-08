@@ -49,6 +49,7 @@ const ATELIER = [
       // before the first paint, as in the prototype: hold the flat mark back while the 3D one loads,
       // and with reduced motion show the ring complete
       (function () {
+        if (document.readyState !== 'loading') return; // after a page swap the scripts handle it
         var w = document.currentScript.previousElementSibling;
         if (!w || !w.classList.contains('ringwrap')) return;
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) {

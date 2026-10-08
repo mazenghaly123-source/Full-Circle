@@ -414,3 +414,62 @@ test('request and track: files, errors and a pending photo survive a trip to ano
   await expect(page.locator('#oPhotos .ph')).toHaveCount(4);
   await expect(page.locator('#oPhoto')).toBeEnabled();
 });
+
+test('links back to the page you are on: from an anchor, and on Home, go to the top', async ({ page }, info) => {
+  await page.goto('/');
+  await page.locator('#makeGrid a.cat').nth(3).click();
+  await page.waitForURL('**/what-we-make#cat-shirts');
+  await expect.poll(() => page.evaluate(() => scrollY), { timeout: 4000 }).toBeGreaterThan(300);
+  await page.locator('footer a[href="/what-we-make"]').click();
+  await expect.poll(() => page.evaluate(() => scrollY), { timeout: 10_000 }).toBeLessThan(5);
+  expect(new URL(page.url()).hash).toBe('');
+  await expect(page.locator('#wipe')).toHaveClass(/^wipe$/);
+  await page.goto('/');
+  await scrollToY(page, 1800);
+  if (isPhone(info)) { await page.locator('#burger').click(); await page.locator('.mmenu a[href="/"]').click(); }
+  else await page.locator('footer a.word').click();
+  await expect.poll(() => page.evaluate(() => scrollY), { timeout: 10_000 }).toBeLessThan(5);
+});
+
+test('a page opened while a smooth scroll is running starts at the top', async ({ page }, info) => {
+  test.skip(isPhone(info), 'checked once, on desktop');
+  await page.goto('/what-we-make');
+  await page.locator('#catNav [data-cat="knit"]').click();
+  await page.waitForTimeout(120);
+  await page.locator('header .hdr-r a.btn-red').click();
+  await page.waitForURL((u) => u.pathname === '/request-a-sample');
+  await expect(page.locator('#wipe')).toHaveClass(/^wipe$/, { timeout: 4000 });
+  expect(await page.evaluate(() => scrollY)).toBeLessThan(5);
+});
+
+test('a stray % in the address does not stop the page', async ({ page }, info) => {
+  const errors = watchErrors(page);
+  await page.goto('/about#%');
+  await page.waitForTimeout(500);
+  if (isPhone(info)) { await page.locator('#burger').click(); await expect(page.locator('#hdr')).toHaveClass(/open/); }
+  expect(errors).toEqual([]);
+});
+
+test('contact: the error line is kept when you come back', async ({ page }, info) => {
+  await page.goto('/contact');
+  await page.locator('#cName').fill('Sara');
+  await page.locator('#cForm button[type=submit]').click();
+  await expect(page.locator('#cErr')).toHaveText('Fill in your name, contact and message');
+  await openNav(page, '/about', isPhone(info));
+  await page.waitForURL('**/about');
+  await page.goBack();
+  await page.waitForURL('**/contact');
+  await expect(page.locator('#cErr')).toHaveText('Fill in your name, contact and message');
+  await expect(page.locator('#cName')).toHaveValue('Sara');
+});
+
+test('a photo slot reads "Photo" until its photo has loaded', async ({ page }) => {
+  let release!: () => void;
+  const gate = new Promise<void>((r) => { release = r; });
+  await page.route(/\/_astro\/cat-denim[^/]*\.(avif|webp|jpg)$/, async (route) => { await gate; await route.continue(); });
+  await page.goto('/what-we-make', { waitUntil: 'domcontentloaded' });
+  const cap = page.locator('#cat-denim .cap span', { hasText: 'Photo' });
+  await expect(cap).toBeVisible();
+  release();
+  await expect(cap).toBeHidden({ timeout: 10_000 });
+});

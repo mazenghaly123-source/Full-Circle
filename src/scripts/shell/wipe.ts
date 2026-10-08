@@ -1,6 +1,6 @@
 // Page transition: a ring wipe grows from the click point, the page swaps underneath, the ring
 // draws, then the wipe closes to the centre. Same timings as the prototype.
-import { $, rm } from '../core/util';
+import { $, decode, rm } from '../core/util';
 import { pointer } from './pointer';
 import { setMenu } from './header';
 import { arrival } from '../core/nav';
@@ -23,14 +23,18 @@ document.addEventListener('astro:before-preparation', (e) => {
 
 document.addEventListener('astro:before-swap', (e) => {
   // land on #anchors instantly under the wipe, not with the page's smooth scrolling
-  const swap = e.swap;
-  e.swap = () => { swap(); document.documentElement.style.scrollBehavior = 'auto'; };
+  const swap = e.swap, root = document.documentElement;
+  e.swap = () => {
+    // a smooth scroll still running on the old page would carry on into the new one
+    root.style.scrollBehavior = 'auto'; scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
+    swap(); root.style.scrollBehavior = 'auto';
+  };
 });
 
 document.addEventListener('astro:after-swap', () => {
   // A link to /page#anchor lands on the anchor, as the prototype's router did. (Back and forward
   // keep the position the browser restored.)
-  const target = arrival === 'push' && location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+  const target = arrival === 'push' && location.hash ? document.getElementById(decode(location.hash.slice(1))) : null;
   requestAnimationFrame(() => { target?.scrollIntoView({ behavior: 'auto' }); document.documentElement.style.scrollBehavior = ''; });
   if (!covering) return;
   covering = false;

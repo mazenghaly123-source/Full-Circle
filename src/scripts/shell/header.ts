@@ -1,6 +1,6 @@
 // Header: hides on scroll down, full-screen menu on phones.
 import type { Feature } from '../core/lifecycle';
-import { $ } from '../core/util';
+import { $, rm } from '../core/util';
 import { updBar } from './mbar';
 
 let hdr: HTMLElement | null = null, burger: HTMLElement | null = null;
@@ -24,14 +24,18 @@ addEventListener('scroll', () => {
   lastY = y; updBar();
 }, { passive: true });
 
-// A link to the page you are on does nothing but close the menu, as in the prototype (where it
-// changed nothing in the address bar).
+// A link to the page you are on, as the prototype's hash router behaved for the same URL: from an
+// anchor (/what-we-make#cat-denim) or on Home (where the prototype's address had no hash) it goes
+// back to the top; on an inner page it does nothing. The menu closes either way; no wipe.
 document.addEventListener('click', (e) => {
   const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
   if (!a || a.target || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const to = new URL(a.href, location.href);
   if (to.origin !== location.origin || to.pathname !== location.pathname || to.hash) return;
   e.preventDefault(); setMenu(false);
+  if (location.hash) history.replaceState(history.state, '', location.pathname + location.search);
+  else if (location.pathname !== '/') return;
+  scrollTo({ top: 0, behavior: rm ? 'auto' : 'smooth' });
 }, true);
 
 export const headerFeature: Feature = {
