@@ -1,6 +1,6 @@
 // Behaviour of the production build: navigation, motion that carries meaning, the phone
 // experience, the demos and the forms. Runs at 1440×900, 390×844 and 375×667.
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { PAGES, isPhone, watchErrors } from './helpers';
 
 // Software WebGL in headless Chromium needs seconds to draw the 3D hero mark and blocks the page
@@ -15,6 +15,21 @@ const scrollToY = (page: Page, y: number) => page.evaluate((top) => window.scrol
 /** Scrolls in steps, so scroll listeners see a real scroll. */
 async function scrollBy(page: Page, dy: number, steps = 8) {
   for (let i = 0; i < steps; i++) { await page.evaluate((d) => window.scrollBy({ top: d, behavior: 'instant' }), dy / steps); await page.waitForTimeout(40); }
+}
+
+/**
+ * Clicks an element once it is still: centred (clear of the phone bar) and done with the motion
+ * that scrolling it into view sets off (the reveal rise, the bars sliding). Clicking mid-motion can
+ * press one element and release on another, and the click then goes to their shared parent.
+ */
+async function clickStill(target: Locator) {
+  await target.evaluate(async (el) => {
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    await new Promise((r) => setTimeout(r, 120));
+    const finite = document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity);
+    await Promise.all(finite.map((a) => a.finished.catch(() => {})));
+  });
+  await target.click();
 }
 
 async function openNav(page: Page, href: string, phone: boolean) {
@@ -165,8 +180,11 @@ test('home: portal demo approves and resets', async ({ page }) => {
 
 test('how it works: the sample gate holds production until you approve', async ({ page }, info) => {
   await page.goto('/how-it-works');
-  await page.locator('.yo-st[data-i="5"]').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  // stage 06 sits a little above the line that picks the current stage (the count-up runs only
+  // there); aligned to the top, a short stage 06 on a phone could hand over to stage 07
+  await page.locator('.yo-st[data-i="5"]').evaluate((el) => scrollTo({ top: scrollY + el.getBoundingClientRect().top - innerHeight * 0.4, behavior: 'instant' }));
   await scrollBy(page, 60, 2);
+  await expect(page.locator('#yoLabels > *').nth(5)).toHaveClass(/here/);
   await expect(page.locator('#toast')).toHaveText('Production is waiting on your approval');
   await expect(page.locator('#yoGate')).toBeVisible();
   await expect(page.locator('#yoNext')).toHaveText('Approve sample 03');
@@ -227,7 +245,7 @@ test('request a sample: checks, counts picks, and confirms with a code', async (
   if (isPhone(info)) await expect(page.locator('#mbarGo')).toHaveText('Continue / 0 of 4 picked');
   await page.locator('#send').click();
   await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
-  for (const [k, v] of [['path', 'Starting'], ['product', 'Denim'], ['qty', '60–150'], ['have', 'A sketch']]) await page.locator(`.q[data-k="${k}"] .opt`, { hasText: v }).click();
+  for (const [k, v] of [['path', 'Starting'], ['product', 'Denim'], ['qty', '60–150'], ['have', 'A sketch']]) await clickStill(page.locator(`.q[data-k="${k}"] .opt`, { hasText: v }));
   await expect(page.locator('#qtyWarn')).toBeVisible();
   await expect(page.locator('#meter i.on')).toHaveCount(4);
   if (isPhone(info)) await expect(page.locator('#mbarGo')).toHaveText('Add your details');
@@ -235,10 +253,8 @@ test('request a sample: checks, counts picks, and confirms with a code', async (
   await expect(page.locator('#err')).toHaveText('Add the brand name');
   await page.locator('#fBrand').fill('Acme Studio');
   await page.locator('#fContact').fill('hello@acme.test');
-  // let any scroll settle first: the next scroll after sending hides the phone bar
-  await page.locator('#send').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  await page.locator('#send').click();
+  // clicked once still: a scroll after sending hides the phone bar
+  await clickStill(page.locator('#send'));
   await expect(page.locator('.sent-box')).toBeVisible();
   await expect(page.locator('#sentCode')).toHaveText(/^FC-\d{4}$/);
   if (isPhone(info)) {
@@ -443,6 +459,17 @@ test('a page opened while a smooth scroll is running starts at the top', async (
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('#wipe')).toHaveClass(/^wipe$/, { timeout: 4000 });
   expect(await page.evaluate(() => scrollY)).toBeLessThan(5);
+});
+
+test('a new page can be scrolled at once, while the wipe is still going', async ({ page }, info) => {
+  test.skip(isPhone(info), 'checked once, on desktop');
+  await page.goto('/what-we-make');
+  await page.locator('header .hdr-r a.btn-red').click();
+  await page.waitForURL((u) => u.pathname === '/request-a-sample');
+  await expect(page.locator('#wipe')).toHaveClass(/ring/);
+  await page.mouse.wheel(0, 400);
+  await expect(page.locator('#wipe')).toHaveClass(/^wipe$/, { timeout: 4000 });
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
 });
 
 test('a stray % in the address does not stop the page', async ({ page }, info) => {

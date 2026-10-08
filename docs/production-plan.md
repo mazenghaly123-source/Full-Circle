@@ -62,7 +62,8 @@ Small, deliberate differences from the prototype:
   stage lit).
 - Back returns to where you were on the page.
 - A new page is already at the top when the wipe opens. The prototype's page visibly scrolled up
-  during the reveal.
+  during the reveal. If the old page is still scrolling (a category button, say) when you click a
+  link, it stops as the wipe starts to cover it.
 - A link to an anchor lands on it directly instead of scrolling down from the top.
 - Keyboard focus starts again at the top of the new page, as on any page load.
 - Phone browsers tint their toolbar Obsidian.

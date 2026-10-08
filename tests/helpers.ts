@@ -63,11 +63,12 @@ export async function serveThreeLocally(page: Page) {
 export async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => document.querySelectorAll<HTMLImageElement>('img[loading=lazy]').forEach((i) => { i.loading = 'eager'; }));
-  // every photo loaded, decoded and faded in (both sides mark a loaded photo with .ok)
-  await page.waitForFunction(() => [...document.images].every((i) => i.complete && (!i.naturalWidth || i.classList.contains('ok'))), null, { timeout: 30_000 });
+  // every photo loaded, decoded and faded in (both sides mark a loaded photo with .ok). Generous:
+  // on Home the software-WebGL 3D build holds the main thread, and the load handlers wait behind it.
+  await page.waitForFunction(() => [...document.images].every((i) => i.complete && (!i.naturalWidth || i.classList.contains('ok'))), null, { timeout: 90_000 });
   await page.evaluate(() => Promise.all([...document.images].map((i) => i.decode().catch(() => {}))));
   // the 3D hero mark is up (or has given up and drawn the flat mark)
-  await page.waitForFunction(() => { const w = document.querySelector('.hero .ringwrap'); return !w || w.classList.contains('m3on') || !w.classList.contains('m3wait'); }, null, { timeout: 30_000 });
+  await page.waitForFunction(() => { const w = document.querySelector('.hero .ringwrap'); return !w || w.classList.contains('m3on') || !w.classList.contains('m3wait'); }, null, { timeout: 90_000 });
   await page.waitForTimeout(4000);
   await page.evaluate(() => {
     ((window as any).__intervals as number[]).forEach((id) => clearInterval(id));
