@@ -235,6 +235,9 @@ test('request a sample: checks, counts picks, and confirms with a code', async (
   await expect(page.locator('#err')).toHaveText('Add the brand name');
   await page.locator('#fBrand').fill('Acme Studio');
   await page.locator('#fContact').fill('hello@acme.test');
+  // let any scroll settle first: the next scroll after sending hides the phone bar
+  await page.locator('#send').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
   await page.locator('#send').click();
   await expect(page.locator('.sent-box')).toBeVisible();
   await expect(page.locator('#sentCode')).toHaveText(/^FC-\d{4}$/);
