@@ -32,6 +32,8 @@ const SUBSETS = ['latin', 'latin-ext'];
 export default defineConfig({
   // site: set to the real domain once it is bought (needed for the sitemap and canonical URLs)
   prefetch: true,
+  // about.html rather than about/index.html: Workers then serves /about without a redirect to /about/
+  build: { format: 'file' },
   vite: {
     // Phones on iOS 15–17 are still common and need -webkit-backdrop-filter (header, phone bar,
     // demo ticket). With Vite's default targets (Safari 16.4+) the CSS minifier drops it.

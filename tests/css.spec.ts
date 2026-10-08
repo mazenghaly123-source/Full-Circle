@@ -51,7 +51,7 @@ const sameValue = (page: Page, prop: string, a: string, b: string) => page.evalu
 test('built CSS keeps every rule of the source CSS', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'not viewport-dependent; run once');
   const source = readFileSync('src/styles/global.css', 'utf8');
-  const dir = 'dist/_astro/';
+  const dir = `${process.env.OUT_DIR ?? 'dist'}/_astro/`;
   const builtFile = readdirSync(dir).find((f) => f.endsWith('.css'));
   expect(builtFile, 'built stylesheet').toBeTruthy();
   const built = readFileSync(dir + builtFile, 'utf8');

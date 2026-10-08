@@ -6,6 +6,7 @@
 import type { Feature } from '../core/lifecycle';
 import { $, demoCode, toast, vib } from '../core/util';
 import { picked, request } from '../core/state';
+import { arrival } from '../core/nav';
 import { REQUEST_QUESTIONS, type RequestKey } from '../../data/site';
 import { updBar, updGo } from '../shell/mbar';
 
@@ -38,10 +39,11 @@ export const requestFeature: Feature = {
   prepare: restore,
   mount(signal) {
     if (!document.getElementById('qs')) return;
-    // picks carried over from another page
-    const params = new URLSearchParams(location.search);
-    for (const k of ['path', 'product'] as const) { const v = params.get(k); if (v) request.sel[k] = v; }
-    if (params.has('path') || params.has('product')) history.replaceState(history.state, '', location.pathname + location.hash);
+    // picks carried over from another page (not on back/forward, which would undo a later pick)
+    if (arrival !== 'traverse') {
+      const params = new URLSearchParams(location.search);
+      for (const k of ['path', 'product'] as const) { const v = params.get(k); if (v) request.sel[k] = v; }
+    }
     restore(document);
     document.querySelectorAll<HTMLElement>('.q').forEach((q) => q.addEventListener('click', (e) => { const o = (e.target as Element).closest('.opt'); if (o) { vib(); choose(q.dataset.k as RequestKey, o.textContent!); } }, { signal }));
     $('fBrand').addEventListener('input', (e) => { request.brand = (e.target as HTMLInputElement).value; }, { signal });

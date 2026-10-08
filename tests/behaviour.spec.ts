@@ -41,11 +41,20 @@ test.describe('every page', () => {
 test('client-side navigation runs the ring wipe, keeps the shell and updates the page', async ({ page }, info) => {
   const errors = watchErrors(page);
   await page.goto('/');
-  await page.evaluate(() => { (window as any).__sameDocument = true; });
+  await page.evaluate(() => {
+    (window as any).__sameDocument = true;
+    const t: Record<string, number> = ((window as any).__t = {});
+    document.addEventListener('astro:before-preparation', () => { t.start = performance.now(); });
+    document.addEventListener('astro:after-swap', () => { t.swap = performance.now(); });
+  });
   await openNav(page, '/how-it-works', isPhone(info));
   await expect(page.locator('#wipe')).toHaveClass(/cover/);
   await page.waitForURL('**/how-it-works');
   await expect(page.locator('#wipe')).toHaveClass(/^wipe$/, { timeout: 4000 });
+  // the page swaps once the wipe has covered the screen (480ms), as in the prototype
+  const t = await page.evaluate(() => (window as any).__t as { start: number; swap: number });
+  expect(t.swap - t.start).toBeGreaterThanOrEqual(470);
+  expect(t.swap - t.start).toBeLessThan(1200);
   expect(await page.evaluate(() => (window as any).__sameDocument)).toBe(true);
   await expect(page).toHaveTitle('How it works / Full Circle');
   await expect(page.locator('#hdr')).not.toHaveClass(/open/);
@@ -64,7 +73,7 @@ test('a link to the page you are on scrolls to the top without a wipe', async ({
   await scrollToY(page, 1200);
   await page.locator('footer a[href="/about"]').click();
   await expect(page.locator('#wipe')).toHaveClass(/^wipe$/);
-  await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(5);
+  await expect.poll(() => page.evaluate(() => scrollY), { timeout: 10_000 }).toBeLessThan(5);
   expect(new URL(page.url()).pathname).toBe('/about');
 });
 
@@ -111,11 +120,13 @@ test('home: the How it works ring fills with scroll and closes as the mark', asy
     const t = document.getElementById('howScroll')!, pin = document.getElementById('howPin')!;
     window.scrollTo({ top: t.getBoundingClientRect().top + scrollY + (t.offsetHeight - pin.offsetHeight) * frac, behavior: 'instant' });
   }, f);
+  // the ring eases toward the scroll position frame by frame; software rendering in CI is slow
+  const slow = { timeout: 20_000 };
   await at(0.55);
-  await expect(page.locator('#howNum')).toHaveText('05');
+  await expect(page.locator('#howNum')).toHaveText('05', slow);
   await expect(page.locator('#steps .step').nth(4)).toHaveClass(/on/);
   await at(1);
-  await expect(page.locator('#h-how .howring')).toHaveClass(/done/);
+  await expect(page.locator('#h-how .howring')).toHaveClass(/done/, slow);
   await expect(page.locator('#howLbl')).toHaveText('Full circle');
 });
 
@@ -178,7 +189,20 @@ test('how it works: your demo choices carry over to the sample request', async (
   await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Scaling' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.q[data-k="product"] .opt', { hasText: 'Jackets' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#toast')).toHaveText('Your choices are carried over');
-  expect(new URL(page.url()).search).toBe('');
+});
+
+test('request a sample: back and forward keep a pick changed after arriving', async ({ page }, info) => {
+  await page.goto('/');
+  await page.locator('.who-card a', { hasText: 'Move production to us' }).click();
+  await page.waitForURL((u) => u.pathname === '/request-a-sample');
+  await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Scaling' })).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.q[data-k="path"] .opt', { hasText: 'Starting' }).click();
+  await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Starting' })).toHaveAttribute('aria-pressed', 'true');
+  await openNav(page, '/about', isPhone(info));
+  await page.waitForURL('**/about');
+  await page.goBack();
+  await page.waitForURL((u) => u.pathname === '/request-a-sample');
+  await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Starting' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('home and what we make: buttons start the request with the right pick', async ({ page }) => {

@@ -6,6 +6,7 @@
 // to Home shows the mark as you left it (no second settle, no fade), as in the prototype.
 import type { Feature } from '../core/lifecycle';
 import { fine, rm } from '../core/util';
+import { arrival } from '../core/nav';
 
 let gl = false;
 try { const c = document.createElement('canvas'); gl = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { /* no WebGL */ }
@@ -113,7 +114,7 @@ export const heroMarkFeature: Feature = {
     if (!canvas) canvas = wrap.querySelector('canvas.mark3');
     wrap.classList.add('m3wait');
     // building the mesh is heavy, so after a page change it waits for the wipe to finish
-    const delay = arrivedByNavigation ? WIPE_MS : 0;
+    const delay = arrival === 'load' ? 0 : WIPE_MS;
     const fallback = setTimeout(() => { if (!wrap.classList.contains('m3on')) { wrap.classList.remove('m3wait'); swept = true; } }, 2600 + delay);
     const start = setTimeout(() => ensureBuilt().then(() => { if (ready && !signal.aborted && wrap.isConnected && wrap.classList.contains('m3wait')) attach(wrap); }), delay);
     signal.addEventListener('abort', () => { clearTimeout(fallback); clearTimeout(start); }, { once: true });
@@ -122,5 +123,3 @@ export const heroMarkFeature: Feature = {
 
 /** How long the ring wipe takes to clear after the swap (ring 300ms + close 520ms). */
 const WIPE_MS = 850;
-let arrivedByNavigation = false;
-document.addEventListener('astro:after-swap', () => { arrivedByNavigation = true; });

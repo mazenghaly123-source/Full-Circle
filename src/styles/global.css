@@ -918,5 +918,5 @@ a.copy{color:inherit;text-decoration:none}
 /* ===== production additions ===== */
 /* the hero mark has already swept in on an earlier visit: show it drawn, without replaying */
 .ringwrap.swept svg.heromark{animation:none;--sweep:360deg}
-/* page swaps happen under the ring wipe, so the browser's own view transition is switched off */
+/* page swaps happen under the ring wipe; if a browser view transition ever runs, it must not animate */
 ::view-transition-group(root),::view-transition-old(root),::view-transition-new(root){animation:none}

@@ -3,14 +3,12 @@
 import { $, rm } from '../core/util';
 import { pointer } from './pointer';
 import { setMenu } from './header';
+import { arrival } from '../core/nav';
 
 const w = $('wipe');
 let covering = false, covered: Promise<void> = Promise.resolve(), t1 = 0, t2 = 0;
 
-let pushed = false;
-
 document.addEventListener('astro:before-preparation', (e) => {
-  pushed = e.navigationType !== 'traverse';
   setMenu(false);
   if (rm) return;
   if (!covering) {
@@ -32,7 +30,7 @@ document.addEventListener('astro:before-swap', (e) => {
 document.addEventListener('astro:after-swap', () => {
   // A link to /page#anchor lands on the anchor, as the prototype's router did. (Back and forward
   // keep the position the browser restored.)
-  const target = pushed && location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+  const target = arrival === 'push' && location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
   requestAnimationFrame(() => { target?.scrollIntoView({ behavior: 'auto' }); document.documentElement.style.scrollBehavior = ''; });
   if (!covering) return;
   covering = false;

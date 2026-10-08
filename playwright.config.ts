@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test';
 
 // Tests run against the production build (`astro preview`). The parity suite also opens the
-// prototype (prototype/index.html) and compares the two.
+// prototype (prototype/index.html) and compares the two. PORT runs them against another server.
+const port = process.env.PORT ?? '4321';
+
 export default defineConfig({
   testDir: 'tests',
   timeout: 120_000,
@@ -10,13 +12,13 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4321',
+    baseURL: `http://127.0.0.1:${port}`,
     // software WebGL, so the 3D hero mark renders in headless Chromium
     launchOptions: { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] },
   },
   webServer: {
-    command: 'npm run preview -- --port 4321 --host 127.0.0.1',
-    url: 'http://127.0.0.1:4321',
+    command: `npm run preview -- --port ${port} --host 127.0.0.1`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },
