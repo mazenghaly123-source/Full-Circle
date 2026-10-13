@@ -1,7 +1,7 @@
 // Track order. Phase 1 keeps the prototype's demo: any sign-in works and shows three sample orders.
 // Phase 3 replaces this with real sign-in codes (email or WhatsApp) and the client's own orders.
 import type { Feature } from '../core/lifecycle';
-import { $, nowStamp, pad, ring, rm, toast, vib } from '../core/util';
+import { $, focusHeading, markInvalid, nowStamp, pad, ring, rm, toast, vib } from '../core/util';
 import { STAGES } from '../../data/site';
 import { bindPhoto, isLoaded } from '../shell/images';
 
@@ -33,8 +33,9 @@ const T = {
   id: '',
   code: '',
   tab: 'photos',
-  /** the sign-in error line, kept when the page comes back */
+  /** the sign-in error line, kept when the page comes back, and the field it is about */
   err: '',
+  bad: [] as string[],
   /** a photo asked for and not arrived yet (it arrives even if you leave the page, as in the prototype) */
   photoPending: null as Order | null,
   /** log rows added in this session, newest first (dates as shown) */
@@ -63,11 +64,11 @@ function renderLogin(doc: Document) {
   g('tA').hidden = T.codeStep; g('tB').hidden = !T.codeStep;
   g('tStep').textContent = T.codeStep ? 'Step 2 of 2' : 'Step 1 of 2'; g('tLoginH').textContent = T.codeStep ? 'Enter the code' : 'Sign in';
   (g('tId') as HTMLInputElement).value = T.id; (g('tCode') as HTMLInputElement).value = T.code;
-  g('tErr').textContent = T.err;
+  g('tErr').textContent = T.err; markInvalid(doc, ['tId', 'tCode'], T.bad, 'tErr');
 }
 
 function renderList(doc: Document) {
-  doc.getElementById('tList')!.innerHTML = ORDERS.map((o, i) => `<button class="ord" data-o="${i}"><span class="code">${o.code}</span><span>${o.name}<br><span class="mono dim">${o.meta}</span></span><span class="mono">${pad(o.stage + 1)} / ${STAGES[o.stage].n}</span><span class="mono ${o.decH ? 'need' : 'dim'}">${o.need}</span><span class="arrow">→</span></button>`).join('');
+  doc.getElementById('tList')!.innerHTML = ORDERS.map((o, i) => `<button class="ord" data-o="${i}"><span class="code">${o.code}</span><span>${o.name}<br><span class="mono dim">${o.meta}</span></span><span class="mono">${pad(o.stage + 1)} / ${STAGES[o.stage].n}</span><span class="mono ${o.decH ? 'need' : 'dim'}">${o.need}</span><span class="arrow" aria-hidden="true">→</span></button>`).join('');
 }
 
 const photoTile = (doc: Document, s: number, k: number, instant: boolean) => {
@@ -99,7 +100,8 @@ function renderOrder(doc: Document, instant = false) {
 }
 
 function renderTabs(doc: Document) {
-  doc.querySelectorAll('.tabs2 [role=tab]').forEach((x) => x.setAttribute('aria-selected', String((x as HTMLElement).dataset.tab === T.tab)));
+  // one tab stop for the row (arrow keys move between tabs), on the tab that is shown
+  doc.querySelectorAll<HTMLElement>('.tabs2 [role=tab]').forEach((x) => { const on = x.dataset.tab === T.tab; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; });
   doc.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => p.hidden = p.dataset.panel !== T.tab);
 }
 
@@ -120,8 +122,9 @@ export const trackFeature: Feature = {
     const bindPhotos = () => $('oPhotos').querySelectorAll<HTMLImageElement>('img').forEach(bindPhoto);
     const bindList = () => $('tList').querySelectorAll<HTMLElement>('.ord').forEach((b) => b.addEventListener('click', () => openOrder(+b.dataset.o!), { signal }));
     bindList(); bindPhotos();
-    const showList = () => { renderList(document); bindList(); T.view = 'orders'; tView(document); };
-    function openOrder(i: number) { T.cur = ORDERS[i]; T.cur.extra = []; T.cur.fresh = 0; renderOrder(document); bindPhotos(); T.view = 'order'; tView(document); scrollTo({ top: 0, behavior: rm ? 'auto' : 'smooth' }); }
+    // each change of view puts focus on the page title, which names the new view
+    const showList = () => { renderList(document); bindList(); T.view = 'orders'; tView(document); focusHeading($('tTitle')); };
+    function openOrder(i: number) { T.cur = ORDERS[i]; T.cur.extra = []; T.cur.fresh = 0; renderOrder(document); bindPhotos(); T.view = 'order'; tView(document); scrollTo({ top: 0, behavior: rm ? 'auto' : 'smooth' }); focusHeading($('tTitle')); }
     const addLog = (txt: string) => {
       const o = T.cur!, stamp = nowStamp(), tr = document.createElement('tr'); tr.className = 'new';
       tr.innerHTML = `<td>${stamp}</td><td>${txt}</td><td>You</td>`; $('oLog').prepend(tr);
@@ -130,6 +133,8 @@ export const trackFeature: Feature = {
     $('oApprove').addEventListener('click', () => {
       const o = T.cur!; vib(); addLog(o.decH + ' / approved'); toast(o.code + ' / approved');
       o.decH = ''; o.need = 'None / next stage'; if (o.stage < 7) o.stage += 1; o.extra = []; o.fresh = 0; renderOrder(document); bindPhotos(); renderList(document); bindList();
+      // the buttons are gone; focus goes to the next decision that replaced them
+      focusHeading($('oDecH'));
     }, { signal });
     $('oChanges').addEventListener('click', () => { vib(); addLog(T.cur!.decH + ' / changes requested'); toast('Changes sent to the team'); }, { signal });
     $('oPhoto').addEventListener('click', () => {
@@ -141,23 +146,34 @@ export const trackFeature: Feature = {
         if (b && T.cur === o) b.disabled = false;
       }, 2200);
     }, { signal });
-    document.querySelectorAll<HTMLElement>('.tabs2 [role=tab]').forEach((t) => t.addEventListener('click', () => { T.tab = t.dataset.tab!; renderTabs(document); }, { signal }));
+    const tabs = [...document.querySelectorAll<HTMLElement>('.tabs2 [role=tab]')];
+    tabs.forEach((t) => t.addEventListener('click', () => { T.tab = t.dataset.tab!; renderTabs(document); }, { signal }));
+    document.querySelector<HTMLElement>('.tabs2')!.addEventListener('keydown', (e) => {
+      const i = tabs.findIndex((t) => t.dataset.tab === T.tab);
+      const to = ({ ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 } as Record<string, number>)[e.key];
+      if (to === undefined) return;
+      e.preventDefault(); const t = tabs[(to + tabs.length) % tabs.length]; T.tab = t.dataset.tab!; renderTabs(document); t.focus();
+    }, { signal });
     const signIn = () => { showList(); toast('Signed in / demo account'); };
     $('tId').addEventListener('input', (e) => { T.id = (e.target as HTMLInputElement).value; }, { signal });
     $('tCode').addEventListener('input', (e) => { T.code = (e.target as HTMLInputElement).value; }, { signal });
-    const setErr = (msg: string) => { T.err = msg; $('tErr').textContent = msg; };
+    // the error line is tied to the field it is about, which gets focus
+    const setErr = (msg: string, field?: string) => {
+      T.err = msg; T.bad = field ? [field] : []; $('tErr').textContent = msg; markInvalid(document, ['tId', 'tCode'], T.bad, 'tErr');
+      if (field) $(field).focus();
+    };
     $('tSendCode').addEventListener('click', () => {
-      if ($<HTMLInputElement>('tId').value.trim().length < 4) return setErr('Add the email or WhatsApp number on your order');
+      if ($<HTMLInputElement>('tId').value.trim().length < 4) return setErr('Add the email or WhatsApp number on your order', 'tId');
       setErr(''); T.codeStep = true; renderLogin(document); $('tCode').focus(); toast('Code sent');
     }, { signal });
     $('tVerify').addEventListener('click', () => {
-      if (!/^\d{6}$/.test($<HTMLInputElement>('tCode').value)) return setErr('Enter the 6 digits from the message');
+      if (!/^\d{6}$/.test($<HTMLInputElement>('tCode').value)) return setErr('Enter the 6 digits from the message', 'tCode');
       setErr(''); signIn();
     }, { signal });
     const back = () => { T.codeStep = false; renderLogin(document); };
-    $('tBack').addEventListener('click', back, { signal });
+    $('tBack').addEventListener('click', () => { back(); $('tId').focus(); }, { signal });
     $('tDemo').addEventListener('click', signIn, { signal });
-    $('tOut').addEventListener('click', () => { back(); T.view = 'login'; tView(document); }, { signal });
+    $('tOut').addEventListener('click', () => { back(); T.view = 'login'; tView(document); focusHeading($('tTitle')); }, { signal });
     $('tAll').addEventListener('click', showList, { signal });
   },
 };

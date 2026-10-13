@@ -10,10 +10,19 @@ export function setMenu(o: boolean) {
   hdr.classList.toggle('open', o); hdr.classList.remove('up');
   burger.setAttribute('aria-expanded', String(o)); burger.setAttribute('aria-label', o ? 'Close menu' : 'Open menu');
   document.body.style.overflow = o ? 'hidden' : '';
+  // the page behind the open menu is out of reach, as behind a dialog (Tab, screen readers)
+  document.querySelectorAll<HTMLElement>('body > main, body > footer, #mbar').forEach((el) => { el.inert = o; });
   updBar();
 }
 
-addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+// Escape closes the menu and puts focus back on the button that opened it
+addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const open = !!hdr?.classList.contains('open');
+  setMenu(false); if (open) burger!.focus();
+});
+// the menu belongs to the phone layout: leaving it (a tablet turned sideways) closes the menu
+matchMedia('(max-width: 1020px)').addEventListener('change', (e) => { if (!e.matches && hdr?.classList.contains('open')) setMenu(false); });
 
 let lastY = scrollY;
 addEventListener('scroll', () => {

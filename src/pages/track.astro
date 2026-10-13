@@ -75,10 +75,10 @@ for (const [slot, img] of Object.entries(PHOTOS)) {
           <p style="margin:0;color:var(--cotton)" id="oDecP"></p>
           <div style="display:flex;gap:8px;flex-wrap:wrap" id="oDecBtns"><button class="btn btn-red" id="oApprove">Approve</button><button class="btn btn-line" id="oChanges">Ask for changes</button></div>
         </div>
-        <div class="tabs2" role="tablist"><button role="tab" aria-selected="true" data-tab="photos">Photos</button><button role="tab" aria-selected="false" data-tab="specs">Specs</button><button role="tab" aria-selected="false" data-tab="log">Approval log</button></div>
-        <div data-panel="photos"><div class="photos" id="oPhotos"></div><div style="margin-top:12px"><button class="btn btn-line" id="oPhoto">Request a photo of this stage</button></div></div>
-        <div data-panel="specs" hidden><table class="spec2" id="oSpecs"></table></div>
-        <div data-panel="log" hidden><div style="overflow-x:auto"><table class="log2"><thead><tr><th>Date</th><th>Decision</th><th>By</th></tr></thead><tbody id="oLog"></tbody></table></div></div>
+        <div class="tabs2" role="tablist" aria-label="Order details"><button role="tab" id="tab-photos" aria-controls="panel-photos" aria-selected="true" data-tab="photos">Photos</button><button role="tab" id="tab-specs" aria-controls="panel-specs" aria-selected="false" tabindex="-1" data-tab="specs">Specs</button><button role="tab" id="tab-log" aria-controls="panel-log" aria-selected="false" tabindex="-1" data-tab="log">Approval log</button></div>
+        <div data-panel="photos" role="tabpanel" id="panel-photos" aria-labelledby="tab-photos"><div class="photos" id="oPhotos"></div><div style="margin-top:12px"><button class="btn btn-line" id="oPhoto">Request a photo of this stage</button></div></div>
+        <div data-panel="specs" role="tabpanel" id="panel-specs" aria-labelledby="tab-specs" tabindex="0" hidden><table class="spec2" id="oSpecs"></table></div>
+        <div data-panel="log" role="tabpanel" id="panel-log" aria-labelledby="tab-log" tabindex="0" hidden><div style="overflow-x:auto"><table class="log2"><thead><tr><th>Date</th><th>Decision</th><th>By</th></tr></thead><tbody id="oLog"></tbody></table></div></div>
       </div>
     </div>
   </div>

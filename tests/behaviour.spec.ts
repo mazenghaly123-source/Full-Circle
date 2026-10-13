@@ -338,6 +338,9 @@ test('reduced motion: no wipe, and the hero ring is shown complete', async ({ br
   await page.goto(`${info.project.use.baseURL}/`);
   await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '14px');
   await expect(page.locator('#heroLabels .st.on')).toHaveCount(8);
+  // the dot is back at the top, where the circle closes
+  await expect(page.locator('#heroDot')).toHaveAttribute('cx', '200');
+  await expect(page.locator('#heroDot')).toHaveAttribute('cy', '50');
   await page.locator('header .nav a[href="/about"]').click();
   await page.waitForURL('**/about');
   await expect(page.locator('#wipe')).toBeHidden();
@@ -502,4 +505,92 @@ test('a photo slot reads "Photo" until its photo has loaded', async ({ page }) =
   await expect(cap).toBeVisible();
   release();
   await expect(cap).toBeHidden({ timeout: 10_000 });
+});
+
+// Accessibility fixes from the site audit (docs/audits/2026-10-08-site-audit.md, fix plan A).
+test.describe('accessibility', () => {
+  test('a skip link appears on the first Tab and moves past the header', async ({ page }) => {
+    await page.goto('/about');
+    const skip = page.locator('a.skip');
+    expect(await skip.evaluate((el) => el.getBoundingClientRect().bottom)).toBeLessThanOrEqual(0);
+    await page.keyboard.press('Tab');
+    await expect(skip).toBeFocused();
+    // it slides in (the buttons' transform transition)
+    await expect.poll(() => skip.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(0);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('main')).toBeFocused();
+  });
+
+  test('phone: the open menu shuts out the page behind it, and Escape returns to the burger', async ({ page }, info) => {
+    test.skip(!isPhone(info), 'phone only');
+    await page.goto('/');
+    await page.locator('#burger').click();
+    await expect(page.locator('#hdr')).toHaveClass(/open/);
+    for (const sel of ['main', 'footer', '#mbar']) expect(await page.locator(sel).evaluate((el) => (el as HTMLElement).inert)).toBe(true);
+    await expect(page.locator('.mmenu')).toHaveCSS('overflow-y', 'auto');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#burger')).toBeFocused();
+    for (const sel of ['main', 'footer', '#mbar']) expect(await page.locator(sel).evaluate((el) => (el as HTMLElement).inert)).toBe(false);
+  });
+
+  test('request a sample: questions are named groups, and errors point at their fields', async ({ page }) => {
+    await page.goto('/request-a-sample');
+    await expect(page.getByRole('group', { name: '01 / The brand is' })).toBeVisible();
+    await expect(page.getByRole('group', { name: '02 / Product' }).getByRole('button')).toHaveCount(7);
+    await page.locator('#send').click();
+    // a missing pick: focus on its first option, the group described by the error line
+    await expect(page.locator('#opts-path .opt').first()).toBeFocused();
+    await expect(page.locator('#opts-path')).toHaveAttribute('aria-describedby', 'err');
+    await expect(page.locator('#opts-product')).toHaveAttribute('aria-describedby', 'err');
+    await clickStill(page.locator('#opts-path .opt', { hasText: 'Starting' }));
+    await clickStill(page.locator('#opts-product .opt', { hasText: 'Tees' }));
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#fBrand')).toBeFocused();
+    await expect(page.locator('#fBrand')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('#fBrand')).toHaveAttribute('aria-describedby', 'err');
+    await expect(page.locator('#opts-path')).not.toHaveAttribute('aria-describedby');
+    await page.locator('#fBrand').fill('Acme Studio');
+    await page.locator('#fContact').fill('hello@acme.test');
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#sentH')).toBeFocused();
+    await expect(page.locator('#fBrand')).not.toHaveAttribute('aria-invalid');
+  });
+
+  test('contact: every missing field is marked, focus goes to the first, then to "Sent."', async ({ page }) => {
+    await page.goto('/contact');
+    await page.locator('#cName').fill('Sara');
+    await page.locator('#cForm button[type=submit]').click();
+    await expect(page.locator('#cReach')).toBeFocused();
+    for (const id of ['cReach', 'cMsg']) await expect(page.locator(`#${id}`)).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('#cName')).not.toHaveAttribute('aria-invalid');
+    await page.locator('#cReach').fill('+20 100 000 0000');
+    await page.locator('#cMsg').fill('Hello');
+    await page.locator('#cForm button[type=submit]').click();
+    await expect(page.locator('#cDoneH')).toBeFocused();
+  });
+
+  test('track: focus follows the view, and the tabs work with arrow keys', async ({ page }) => {
+    await page.goto('/track');
+    await page.locator('#tSendCode').click();
+    await expect(page.locator('#tId')).toBeFocused();
+    await expect(page.locator('#tId')).toHaveAttribute('aria-invalid', 'true');
+    await page.locator('#tDemo').click();
+    await expect(page.locator('#tTitle')).toBeFocused();
+    await page.locator('#tList .ord').first().click();
+    await expect(page.locator('#tTitle')).toBeFocused();
+    await page.locator('#oApprove').click();
+    await expect(page.locator('#oDecH')).toBeFocused();
+    const tab = (name: string) => page.getByRole('tab', { name });
+    await tab('Photos').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(tab('Specs')).toBeFocused();
+    await expect(tab('Specs')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tabpanel', { name: 'Specs' })).toBeVisible();
+    await page.keyboard.press('End');
+    await expect(tab('Approval log')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(tab('Photos')).toBeFocused();
+    await expect(page.getByRole('tabpanel', { name: 'Photos' })).toBeVisible();
+    await expect(page.locator('.tabs2 [tabindex="0"]')).toHaveCount(1);
+  });
 });

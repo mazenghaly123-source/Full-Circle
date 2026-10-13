@@ -13,6 +13,7 @@ interface Props {
   sizes: string;
   class?: string;
   style?: string;
+  /** Loads at once and first (the largest photo on screen when the page opens). */
   eager?: boolean;
 }
 
@@ -30,6 +31,7 @@ const css = [tone ? `--tone:${tone}` : '', style].filter(Boolean).join(';');
       alt=""
       class="fill"
       loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
       decoding="async"
       style={PHOTO_FOCUS[slot] ? `object-position:${PHOTO_FOCUS[slot]}` : undefined}
     />

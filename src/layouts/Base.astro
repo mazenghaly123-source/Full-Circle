@@ -25,9 +25,11 @@ const { page, title, description } = Astro.props;
 <meta name="theme-color" content="#11110F">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style is:inline>[hidden]{display:none!important}body{margin:0}</style>
+{/* preload only the hero's heading and body text; the rest load as the page styles them (the local
+    font provider records no subsets, so each preloaded weight brings its latin-ext file too) */}
 <Font cssVariable="--font-saira-condensed" preload />
-<Font cssVariable="--font-geist" preload={[{ weight: '400' }, { weight: '500' }]} />
-<Font cssVariable="--font-plex-mono" preload={[{ weight: '400' }]} />
+<Font cssVariable="--font-geist" preload={[{ weight: '400' }]} />
+<Font cssVariable="--font-plex-mono" />
 <script is:inline>
   // Loading a page never smooth-scrolls (the page's smooth scrolling is for in-page links), and a
   // reload starts at the top, as the prototype did, instead of scrolling back down the page.
@@ -53,15 +55,16 @@ const { page, title, description } = Astro.props;
 <ClientRouter fallback="swap" />
 </head>
 <body data-page={page}>
+<a class="skip btn btn-red" href="#main">Skip to content</a>
 <Sprite />
 <Header current={page} />
 
-<main>
+<main id="main" tabindex="-1">
 <slot />
 </main>
 
 <Footer />
-<div class="mbar" id="mbar" transition:persist="mbar"><button class="btn btn-red go" id="mbarGo">Request a sample</button><a href={WHATSAPP_URL} target="_blank" rel="noopener" class="btn btn-line">WhatsApp</a></div>
+<div class="mbar" id="mbar" role="region" aria-label="Quick actions" transition:persist="mbar"><button class="btn btn-red go" id="mbarGo">Request a sample</button><a href={WHATSAPP_URL} target="_blank" rel="noopener" class="btn btn-line">WhatsApp</a></div>
 <div class="wipe" id="wipe" aria-hidden="true" transition:persist="wipe"><svg class="wipe-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" pathLength="100"/></svg><svg class="wipe-mark" viewBox="0 0 256.86 262.30"><use href="#fc-mark"/></svg></div>
 <div class="c-ring" id="cRing" hidden transition:persist="c-ring"></div><div class="c-dot" id="cDot" hidden transition:persist="c-dot"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" transition:persist="toast"></div>

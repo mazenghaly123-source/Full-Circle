@@ -10,9 +10,10 @@ function apply(doc: Document) {
   if (!arc || !dot || !labels) return;
   const texts = [...labels.children];
   if (rm) {
-    // reduced motion: the ring is shown drawn, with every stage lit (the prototype meant this,
-    // but then stepped it once, leaving only the first stage lit)
+    // reduced motion: the ring is shown drawn, with every stage lit and the dot back at the top
+    // (the prototype meant this, but then stepped it once, leaving only the first stage lit)
     arc.style.strokeDashoffset = '14'; texts.forEach((t) => t.classList.add('on'));
+    dot.setAttribute('cx', '200'); dot.setAttribute('cy', '50');
     return;
   }
   const f = heroI / 8;

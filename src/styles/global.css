@@ -5,7 +5,8 @@
    - photo slots hold a <picture>, so img.fill rules use a descendant selector
    - -webkit-backdrop-filter comes before backdrop-filter (the CSS minifier keeps only the last of
      the pair, and Chromium needs the unprefixed one)
-   - a few additions at the end (marked): client-side page swaps, and the crumb link above the title */
+   - a few additions at the end (marked): client-side page swaps, the crumb link above the title, the
+     <picture> wrapper, and accessibility fixes that show only when used (focus, skip link, menu) */
 /* Layout: a working homepage in Brands Factory order of clarity (one action, how it works, what we make, proof, contact) dressed in Full Circle V4.1. Single dark look by choice; one Bone section for tracking. */
 :root{
   --bg:#11110F; --raise:#1A1A17; --bone:#E8E2D8; --cotton:#D8D0C3; --charcoal:#292925; --red:#C5322B;
@@ -217,7 +218,7 @@ a{color:inherit;text-decoration:none}
 .opt[aria-pressed="true"]{background:var(--bone);color:var(--bg)}
 .opt:focus-visible{outline:2px solid var(--red);outline-offset:3px}
 .summary{position:sticky;top:88px;border:1px solid var(--line);padding:22px;display:grid;gap:16px;background:var(--raise)}
-.summary h3{font-size:46px}
+.summary h2{font-size:46px}
 .srow{display:flex;justify-content:space-between;gap:12px;padding-bottom:9px;border-bottom:1px dashed var(--faint);font-family:var(--f-mono);font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase}
 .srow span:last-child{text-align:right}
 .srow .empty{color:var(--dim)}
@@ -822,7 +823,6 @@ body{font-size:15.5px;line-height:1.55}
 @media (max-width:380px){.hero h1{font-size:44px}.sh h2{font-size:34px}.make>.cat{width:62%}}
 
 /* ===== image slots: files named as in the Image Prompts doc ===== */
-.ph>picture,.bgimg>picture{display:contents}
 .ph img.fill{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;filter:saturate(0.82) contrast(1.06) brightness(0.92);opacity:0;transition:opacity 600ms var(--ease),transform 900ms var(--ease)}
 .ph img.fill.ok{opacity:1}
 .ph:hover img.fill,.cat:hover .ph img.fill{transform:scale(1.06)}
@@ -920,3 +920,18 @@ a.copy{color:inherit;text-decoration:none}
 .crumb{position:relative;z-index:1}
 /* page swaps happen under the ring wipe; if a browser view transition ever runs, it must not animate */
 ::view-transition-group(root),::view-transition-old(root),::view-transition-new(root){animation:none}
+/* photo slots hold a <picture>; the photo inside lays out as the prototype's bare <img> did */
+.ph>picture,.bgimg>picture{display:contents}
+/* accessibility (site audit, 8 Oct 2026). Nothing here shows until it is used. */
+/* skip link: off screen until it has keyboard focus */
+.skip{position:fixed;left:var(--gut);top:12px;z-index:260;transform:translateY(-200%)}
+.skip:focus{transform:none}
+/* controls whose all:unset also removed the focus outline, and the file picker (its input is hidden) */
+.burger:focus-visible,.copy:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.file:has(input:focus-visible){outline:2px solid var(--red);outline-offset:3px}
+/* the main area and the headings that take focus after a change are not controls: no outline */
+main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:focus{outline:none}
+/* the phone menu scrolls when it is taller than the screen (zoomed in, or a phone held sideways) */
+@media (max-width:1020px){.mmenu{overflow-y:auto;overscroll-behavior:contain}}
+/* the two loops the reduced-motion rules above missed */
+@media (prefers-reduced-motion:reduce){.yo-gate .d{animation:none}.yo-you::after{animation:none;opacity:0}}

@@ -29,6 +29,22 @@ export const nowStamp = () => {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 };
 
+/**
+ * Ties an error line to the fields it is about: those in `bad` are marked invalid and described by
+ * the line (an option group only gets the description), the others are cleared.
+ */
+export function markInvalid(doc: Document, ids: readonly string[], bad: readonly string[], errId: string) {
+  for (const id of ids) {
+    const el = doc.getElementById(id); if (!el) continue;
+    const on = bad.includes(id), field = el.matches('input, textarea');
+    if (on) el.setAttribute('aria-describedby', errId); else el.removeAttribute('aria-describedby');
+    if (field && on) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+  }
+}
+
+/** Moves focus to a heading that replaced the controls you were using (without scrolling). */
+export const focusHeading = (el: HTMLElement) => { el.tabIndex = -1; el.focus({ preventScroll: true }); };
+
 /** decodeURIComponent that leaves a malformed string (a stray % in the address) as it is. */
 export const decode = (s: string) => { try { return decodeURIComponent(s); } catch { return s; } };
 

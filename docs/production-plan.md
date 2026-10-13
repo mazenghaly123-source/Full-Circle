@@ -58,8 +58,8 @@ Small, deliberate differences from the prototype:
 - Links that start a request are real links.
 - The demo's "Outerwear" opens the form on "Jackets" (the prototype passed a product the form does
   not have).
-- With reduced motion the hero ring shows complete (the prototype meant to, but left only the first
-  stage lit).
+- With reduced motion the hero ring shows complete, its dot back at the top (the prototype meant
+  to, but left only the first stage lit).
 - Back returns to where you were on the page.
 - A new page is already at the top when the wipe opens. The prototype's page visibly scrolled up
   during the reveal. If the old page is still scrolling (a category button, say) when you click a
@@ -69,6 +69,17 @@ Small, deliberate differences from the prototype:
 - Phone browsers tint their toolbar Obsidian.
 - The "Home" crumb on inner pages can be clicked; in the prototype the big title's text box covered
   it.
+- On Track, a photo you ask for is added to the order you asked on (the prototype added it to
+  whichever order was open when it arrived).
+- Accessibility, mostly invisible (the audit's fix plan A, `docs/audits/2026-10-08-site-audit.md`):
+  fields and option groups have names, error lines are announced and tied to the fields they are
+  about, the nav marks the page you are on, a skip link shows on the first Tab, the phone menu
+  holds focus like a dialog (and scrolls when taller than the screen), the Track tabs work with
+  arrow keys, and keyboard focus now shows on the burger, the Copy/Open buttons and the file
+  picker too. After a change of view (request or message sent, Track sign-in, an order opened or
+  approved) focus moves to the heading that replaced the buttons, without scrolling or an outline.
+  One change can be seen with a mouse: a request sent with a pick missing now scrolls to that
+  question (focus moves to its first option).
 
 **Prototype bugs kept for now** (the build matches the prototype; fixed when the real form and
 portal replace the demos in phases 2–3): after a request is sent, the form stays visible under

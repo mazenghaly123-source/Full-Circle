@@ -10,8 +10,9 @@ export const request = {
   contact: '',
   note: '',
   files: [] as File[],
-  /** the error line under the form, kept when the page comes back */
+  /** the error line under the form, kept when the page comes back, and the fields it is about */
   err: '',
+  bad: [] as string[],
 };
 
 export const picked = () => Object.values(request.sel).filter(Boolean).length;

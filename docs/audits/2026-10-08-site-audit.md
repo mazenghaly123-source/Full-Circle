@@ -2,7 +2,8 @@
 
 Four audits of the phase 1 site (branch `claude/youthful-maxwell-aiw9ob`, commit `6e8b571`): a
 code review (standards and spec), a security review, an accessibility audit (WCAG 2.1 AA) and a
-pre-launch SEO audit. Nothing has been changed because of them yet; the fix plan is at the end.
+pre-launch SEO audit. The fix plan is at the end: part A was done on 13 Oct 2026 (branch
+`claude/keen-gates-vu1na0`); parts B and C are open.
 
 | Audit | Result |
 |---|---|
@@ -186,7 +187,16 @@ clean address); a real 404 status; AVIF/WebP images with srcset; no layout shift
 
 ## Fix plan
 
-**A. Fixes that don't change the look or the copy** (can be done now):
+**A. Fixes that don't change the look or the copy.** Done 13 Oct 2026; parity with the prototype
+still holds, and `tests/behaviour.spec.ts` (*accessibility*) covers the new behaviour. Notes:
+- Fonts: the local font provider records no subsets, so a preload cannot leave out a weight's
+  latin-ext file. Preloads went from 8 files to 4 (Saira Condensed 700 and Geist 400, each with its
+  latin-ext file); IBM Plex Mono and Geist 500 load as the page uses them.
+- The reduced-motion and focus changes, and the one change a mouse user can see (a request sent
+  with a pick missing scrolls to that question), are listed in the plan's deliberate differences.
+- The ticket on How it works no longer announces itself; the toasts already announce each event.
+
+The items, as planned:
 - Reduced-motion hero dot at the top (spec 1).
 - Focus outlines on the burger, Copy/Open and the file picker (a11y 10, 11).
 - Phone menu: background `inert`, focus back to the burger, menu scrolls (a11y 12, 9).

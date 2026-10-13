@@ -4,13 +4,15 @@
 // Phase 1 keeps the prototype's behaviour: the request is checked and a code is shown, but nothing
 // is sent yet. Phase 2 sends it to the server, which issues the code and notifies the team.
 import type { Feature } from '../core/lifecycle';
-import { $, demoCode, toast, vib } from '../core/util';
+import { $, demoCode, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
 import { picked, request } from '../core/state';
 import { arrival } from '../core/nav';
 import { REQUEST_QUESTIONS, type RequestKey } from '../../data/site';
 import { updGo } from '../shell/mbar';
 
 const FILE_HINT = 'Add a sketch, tech pack or photo (optional)';
+/** What an error line can be about: the two required option groups and the two required fields. */
+const CHECKED = ['opts-path', 'opts-product', 'fBrand', 'fContact'] as const;
 
 /** A pick from the URL counts only if it is one of that question's own options. */
 const isOption = (k: RequestKey, v: string) => (REQUEST_QUESTIONS.find((q) => q.k === k)!.options as readonly string[]).includes(v);
@@ -36,7 +38,7 @@ function restore(doc: Document) {
   (doc.getElementById('fContact') as HTMLInputElement).value = request.contact;
   (doc.getElementById('fNote') as HTMLTextAreaElement).value = request.note;
   doc.getElementById('fFileT')!.textContent = request.files.length ? request.files.map((f) => f.name).join(', ') : FILE_HINT;
-  doc.getElementById('err')!.textContent = request.err;
+  doc.getElementById('err')!.textContent = request.err; markInvalid(doc, CHECKED, request.bad, 'err');
   if (request.sent) { doc.getElementById('sentCode')!.textContent = request.code; doc.getElementById('reqCode')!.textContent = request.code; doc.getElementById('summary')!.classList.add('is-sent'); }
   renderSummary(doc);
 }
@@ -64,17 +66,25 @@ export const requestFeature: Feature = {
     $('fContact').addEventListener('input', (e) => { request.contact = (e.target as HTMLInputElement).value; }, { signal });
     $('fNote').addEventListener('input', (e) => { request.note = (e.target as HTMLTextAreaElement).value; }, { signal });
     $('fFile').addEventListener('change', (e) => { request.files = [...((e.target as HTMLInputElement).files ?? [])]; $('fFileT').textContent = request.files.length ? request.files.map((x) => x.name).join(', ') : FILE_HINT; }, { signal });
-    const fail = (msg: string, field?: string) => { request.err = msg; $('err').textContent = msg; if (field) $(field).focus(); };
+    // the error line is tied to the fields it is about, and focus goes to the first of them (a
+    // missing pick: its first option, with the question scrolled to the middle of the screen)
+    const fail = (msg: string, bad: string[]) => {
+      request.err = msg; request.bad = bad; $('err').textContent = msg; markInvalid(document, CHECKED, bad, 'err');
+      const first = $(bad[0]);
+      if (!first.matches('.opts')) { first.focus(); return; }
+      first.querySelector('button')!.focus({ preventScroll: true }); first.closest('.q')!.scrollIntoView({ behavior: rm ? 'auto' : 'smooth', block: 'center' });
+    };
     $('send').addEventListener('click', () => {
       vib();
-      if (!request.sel.path || !request.sel.product) return fail('Pick the brand stage and a product');
-      if (!$<HTMLInputElement>('fBrand').value.trim()) return fail('Add the brand name', 'fBrand');
-      if ($<HTMLInputElement>('fContact').value.trim().length < 6) return fail('Add an email or WhatsApp number', 'fContact');
+      if (!request.sel.path || !request.sel.product) return fail('Pick the brand stage and a product', (['path', 'product'] as const).filter((k) => !request.sel[k]).map((k) => `opts-${k}`));
+      if (!$<HTMLInputElement>('fBrand').value.trim()) return fail('Add the brand name', ['fBrand']);
+      if ($<HTMLInputElement>('fContact').value.trim().length < 6) return fail('Add an email or WhatsApp number', ['fContact']);
       // TODO(phase 2): send to the submit-request function, which issues the code and notifies the team
       const code = demoCode();
-      request.sent = true; request.code = code; request.err = '';
+      request.sent = true; request.code = code; request.err = ''; request.bad = []; markInvalid(document, CHECKED, [], 'err');
       // the phone bar reads "Request sent" and slides away on the next scroll, as in the prototype
       $('err').textContent = ''; $('sentCode').textContent = code; $('reqCode').textContent = code; $('summary').classList.add('is-sent'); toast(code + ' / request received'); updGo();
+      focusHeading($('sentH'));
     }, { signal });
   },
 };

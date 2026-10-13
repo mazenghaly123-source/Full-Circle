@@ -5,6 +5,7 @@
 // The canvas and its WebGL context are made once and moved into each new home page, so coming back
 // to Home shows the mark as you left it (no second settle, no fade), as in the prototype.
 import type { Feature } from '../core/lifecycle';
+import { later } from '../core/lifecycle';
 import { fine, rm } from '../core/util';
 import { arrival } from '../core/nav';
 
@@ -14,6 +15,8 @@ try { const c = document.createElement('canvas'); gl = !!(c.getContext('webgl2')
 let ready = false, failed = false, building: Promise<void> | null = null;
 let canvas: HTMLCanvasElement | null = null, rw: HTMLElement | null = null;
 let io: IntersectionObserver | null = null, loop: () => void = () => {};
+/** Starts the canvas's resize and pointer listeners for the home page on screen, until it is left. */
+let listen: (signal: AbortSignal) => void = () => {};
 
 function ensureBuilt() {
   if (!gl) return Promise.resolve();
@@ -55,19 +58,27 @@ async function build() {
   scene.add(new THREE.AmbientLight(0xffffff, 0.12));
   let dirty = true;
   function size() { const w = cv.clientWidth || 1, h = cv.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); dirty = true; }
-  new ResizeObserver(() => { size(); loop(); }).observe(cv); size();
+  size();
   // motion: one settle on entry, then a gentle tilt toward the pointer (or a finger), never a spin
   let tx = 0, ty = 0, cx = 0, cy = 0, t0 = 0, intro = !rm, drag: { x: number; y: number; x0: number; y0: number } | null = null;
-  addEventListener('pointermove', (e) => {
+  const move = (e: PointerEvent) => {
+    loop();
     if (drag) { tx = Math.max(-1, Math.min(1, drag.x0 + (e.clientX - drag.x) / 160)); ty = Math.max(-1, Math.min(1, drag.y0 + (e.clientY - drag.y) / 160)); return; }
     if (!fine || !rw) return; const r = rw.getBoundingClientRect();
     tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth * 0.45)));
     ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight * 0.55)));
-  }, { passive: true });
-  cv.addEventListener('pointerdown', (e) => { if (fine) return; drag = { x: e.clientX, y: e.clientY, x0: tx, y0: ty }; });
-  const endDrag = () => { if (drag) { drag = null; tx = 0; ty = 0; } };
-  addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
-  document.addEventListener('mouseleave', () => { tx = 0; ty = 0; });
+  };
+  const endDrag = () => { if (drag) { drag = null; tx = 0; ty = 0; } loop(); };
+  // the canvas is kept across pages, but it follows the pointer and its size only while Home is shown
+  listen = (signal) => {
+    const o = { passive: true, signal };
+    const ro = new ResizeObserver(() => { size(); loop(); }); ro.observe(cv);
+    addEventListener('pointermove', move, o);
+    cv.addEventListener('pointerdown', (e) => { if (fine) return; drag = { x: e.clientX, y: e.clientY, x0: tx, y0: ty }; }, o);
+    addEventListener('pointerup', endDrag, o); addEventListener('pointercancel', endDrag, o);
+    document.addEventListener('mouseleave', () => { tx = 0; ty = 0; }, o);
+    signal.addEventListener('abort', () => { ro.disconnect(); io?.disconnect(); endDrag(); }, { once: true });
+  };
   let visible = true;
   io = new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible) loop(); }, { threshold: 0 });
   let raf = 0;
@@ -84,17 +95,17 @@ async function build() {
     const moving = intro || Math.abs(tx - cx) > 0.0005 || Math.abs(ty - cy) > 0.0005;
     if (moving || dirty) { dirty = false; raf = requestAnimationFrame(tick); }
   }
-  addEventListener('pointermove', () => loop(), { passive: true }); addEventListener('pointerup', () => loop());
   renderer.render(scene, camera);
   ready = true;
 }
 
-/** Puts the (one) 3D canvas into the home page on screen and starts watching it. */
-function attach(wrap: HTMLElement) {
+/** Puts the (one) 3D canvas into the home page on screen and starts watching it until it is left. */
+function attach(wrap: HTMLElement, signal: AbortSignal) {
   rw = wrap;
   const slot = wrap.querySelector('canvas.mark3');
   if (canvas && slot && slot !== canvas) slot.replaceWith(canvas);
   io?.disconnect(); io?.observe(wrap);
+  listen(signal);
   wrap.classList.add('m3on');
   loop();
 }
@@ -107,7 +118,7 @@ export const heroMarkFeature: Feature = {
   mount(signal) {
     const wrap = document.querySelector<HTMLElement>('.hero .ringwrap');
     if (!wrap) return;
-    if (ready) { attach(wrap); return; }
+    if (ready) { attach(wrap, signal); return; }
     // no WebGL, or the 3D mark already failed: the flat mark draws itself (again on each visit,
     // as the prototype's CSS sweep restarted whenever Home came back)
     if (!gl || failed) { wrap.classList.remove('m3wait'); return; }
@@ -116,9 +127,8 @@ export const heroMarkFeature: Feature = {
     wrap.classList.add('m3wait');
     // building the mesh is heavy, so after a page change it waits for the wipe to finish
     const delay = arrival === 'load' ? 0 : WIPE_MS;
-    const fallback = setTimeout(() => { if (!wrap.classList.contains('m3on')) wrap.classList.remove('m3wait'); }, 2600 + delay);
-    const start = setTimeout(() => ensureBuilt().then(() => { if (ready && !signal.aborted && wrap.isConnected && wrap.classList.contains('m3wait')) attach(wrap); }), delay);
-    signal.addEventListener('abort', () => { clearTimeout(fallback); clearTimeout(start); }, { once: true });
+    later(signal, () => { if (!wrap.classList.contains('m3on')) wrap.classList.remove('m3wait'); }, 2600 + delay);
+    later(signal, () => ensureBuilt().then(() => { if (ready && !signal.aborted && wrap.isConnected && wrap.classList.contains('m3wait')) attach(wrap, signal); }), delay);
   },
 };
 

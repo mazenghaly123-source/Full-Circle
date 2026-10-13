@@ -41,6 +41,8 @@ export const portalDemoFeature: Feature = {
     }, { signal });
     $('pPhoto').addEventListener('click', () => {
       vib(); demo.photoPending = true; $<HTMLButtonElement>('pPhoto').disabled = true; plog('Photo requested', 'Pending');
+      // not tied to the page: the photo arrives even if you leave Home, as in the one-document
+      // prototype, and the page is updated only if it is on screen
       setTimeout(() => {
         demo.photoPending = false; plog('Photo received / ' + (demo.approved ? 'Production' : 'Sampling'), 'New');
         const b = document.getElementById('pPhoto') as HTMLButtonElement | null; if (b) b.disabled = false;

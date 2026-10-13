@@ -11,7 +11,8 @@ const yoTicks = STAGES.map((_, i) => {
 });
 const yoLabels = STAGES.map((g, i) => {
   const a = ((i / 8 + 1 / 16) * 360 - 90) * Math.PI / 180;
-  return { left: 50 + 45 * Math.cos(a), top: 50 + 45 * Math.sin(a), n: pad(i + 1), s: g.s, label: `Go to stage ${i + 1}, ${g.n}` };
+  // the name starts with the visible label ("05 Sample"), so voice control finds the button by it
+  return { left: 50 + 45 * Math.cos(a), top: 50 + 45 * Math.sin(a), n: pad(i + 1), s: g.s, label: `${pad(i + 1)} ${g.s}: go to the ${g.n} stage` };
 });
 ---
 <Base page="how" title="How it works / Full Circle" description="Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.">
@@ -127,7 +128,7 @@ const yoLabels = STAGES.map((g, i) => {
     </div>
   </aside>
 </section>
-<div class="yo-ticket" id="yoTicket" role="status" aria-live="polite">
+<div class="yo-ticket" id="yoTicket">
   <div class="yo-segs" id="yoSegs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="yo-tk">
     <div class="yo-f"><span class="mono dim">Your order</span><span class="yo-code" id="yoCode">FC-0000</span></div>

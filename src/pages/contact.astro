@@ -8,9 +8,9 @@ import { EMAIL, INSTAGRAM, INSTAGRAM_URL, PHONE, PHONE_URL, ROUTES, WHATSAPP, WH
 <section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
   <div class="cgrid">
     <div class="ccards">
-      <div><span class="mono dim">WhatsApp</span><span><a class="cv" href={WHATSAPP_URL} target="_blank" rel="noopener"><b id="cWa">{WHATSAPP}</b></a><button class="copy" data-copy="cWa">Copy</button><a class="copy" href={WHATSAPP_URL} target="_blank" rel="noopener">Open chat ↗</a></span></div>
+      <div><span class="mono dim">WhatsApp</span><span><a class="cv" href={WHATSAPP_URL} target="_blank" rel="noopener"><b id="cWa">{WHATSAPP}</b></a><button class="copy" data-copy="cWa">Copy</button><a class="copy" href={WHATSAPP_URL} target="_blank" rel="noopener">Open chat <span aria-hidden="true">↗</span></a></span></div>
       <div><span class="mono dim">Phone</span><span><a class="cv" href={PHONE_URL}><b id="cTel">{PHONE}</b></a><button class="copy" data-copy="cTel">Copy</button></span></div>
-      <div><span class="mono dim">Instagram</span><span><a class="cv" href={INSTAGRAM_URL} target="_blank" rel="noopener"><b>{INSTAGRAM}</b></a><a class="copy" href={INSTAGRAM_URL} target="_blank" rel="noopener">Open ↗</a></span></div>
+      <div><span class="mono dim">Instagram</span><span><a class="cv" href={INSTAGRAM_URL} target="_blank" rel="noopener"><b>{INSTAGRAM}</b></a><a class="copy" href={INSTAGRAM_URL} target="_blank" rel="noopener">Open <span aria-hidden="true">↗</span></a></span></div>
       <div><span class="mono dim">Email</span><span><a class="cv" href={`mailto:${EMAIL}`}><b id="cMail">{EMAIL}</b></a><button class="copy" data-copy="cMail">Copy</button></span></div>
       <div><span class="mono dim">Where</span><b>Cairo, Egypt / visits by appointment</b></div>
       <div><span class="mono dim">Hours</span><b>Sunday – Thursday / 9:00 – 17:00 <span class="tbc">TBC</span></b></div>
@@ -25,7 +25,7 @@ import { EMAIL, INSTAGRAM, INSTAGRAM_URL, PHONE, PHONE_URL, ROUTES, WHATSAPP, WH
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><button class="btn btn-red" type="submit">Send message</button><a href={ROUTES.start} class="mono dim">Production enquiry? Request a sample</a></div>
         <span class="mono" id="cErr" style="color:var(--red);min-height:1em" role="alert"></span>
       </form>
-      <div id="cDone" hidden style="display:grid;gap:10px"><h3 class="camp" style="font-size:56px">Sent.</h3><p style="margin:0;color:var(--cotton)">We will reply on the contact you gave.</p></div>
+      <div id="cDone" hidden style="display:grid;gap:10px"><h2 class="camp" id="cDoneH" tabindex="-1" style="font-size:56px">Sent.</h2><p style="margin:0;color:var(--cotton)">We will reply on the contact you gave.</p></div>
     </div>
   </div>
 </section>

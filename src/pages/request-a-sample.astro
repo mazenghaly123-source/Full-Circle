@@ -9,8 +9,8 @@ import { REQUEST_QUESTIONS } from '../data/site';
   <div class="start">
     <div id="qs">
       {REQUEST_QUESTIONS.map((q) => (
-        <div class="q" data-k={q.k}><div class="q-h"><span class="mono">{q.label}</span><span class="mono dim">{q.hint}</span></div>
-          <div class="opts">{q.options.map((o) => <button class="opt" aria-pressed="false">{o}</button>)}</div>
+        <div class="q" data-k={q.k}><div class="q-h"><span class="mono" id={`q-${q.k}`}>{q.label}</span><span class="mono dim">{q.hint}</span></div>
+          <div class="opts" id={`opts-${q.k}`} role="group" aria-labelledby={`q-${q.k}`}>{q.options.map((o) => <button class="opt" aria-pressed="false">{o}</button>)}</div>
           {q.k === 'qty' && <div class="warn" id="qtyWarn">Our minimum is 60 pieces per colour for most products and 150 for denim. Send the request anyway: we will suggest the closest option on the call.</div>}
         </div>
       ))}
@@ -27,7 +27,7 @@ import { REQUEST_QUESTIONS } from '../data/site';
         <button class="btn btn-red" id="send">Request a sample</button>
         <span class="mono" id="err" style="color:var(--red);min-height:1em" role="alert"></span>
       </div>
-      <div class="sent-box"><h3 class="camp">Received.</h3><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p></div>
+      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p></div>
     </aside>
   </div>
   <div class="next3">
