@@ -15,7 +15,7 @@ const yoLabels = STAGES.map((g, i) => {
   return { left: 50 + 45 * Math.cos(a), top: 50 + 45 * Math.sin(a), n: pad(i + 1), s: g.s, label: `${pad(i + 1)} ${g.s}: go to the ${g.n} stage` };
 });
 ---
-<Base page="how" title="How it works / Full Circle" description="Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.">
+<Base page="how" title="How it works / From idea to bulk / Full Circle" description="Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.">
 <PageHero crumb="How it works" title="Eight stages. One partner." lead="Every stage ends with something you can see and a decision you make. Below, a demo order moves through all eight. Scroll, make the decisions, and watch what happens when you skip one." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(50% 60% at 60% 90%,#243E8F,transparent 72%)">
     <div class="minirail" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="in"></i><i></i><i></i><i></i></div>
 </PageHero>
@@ -58,7 +58,7 @@ const yoLabels = STAGES.map((g, i) => {
       <dl class="kv2"><dt>Base size</dt><dd>M</dd><dt>Grade</dt><dd>XS / S / M / L / XL</dd><dt>You receive</dt><dd>Base-size pattern + fit notes</dd><dt>You approve</dt><dd class="ap">Pattern sign-off</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
     </div>
     <div class="yo-st" data-i="4">
-      <div class="yo-top mono"><span style="color:var(--red)">05 / Sampling / the gate</span><span class="dim">Bulk waits for this</span></div>
+      <div class="yo-top mono"><span class="need">05 / Sampling / the gate</span><span class="dim">Bulk waits for this</span></div>
       <h2 class="camp">Approve the sample.</h2>
       <p class="yo-big">The sample you sign becomes the contract. Bulk is measured against it, piece by piece.</p>
       <p>Production does not move until you approve. Try scrolling past without approving.</p>

@@ -75,7 +75,7 @@ const photoTile = (doc: Document, s: number, k: number, instant: boolean) => {
   const i = Math.max(0, s - k), slot = `stage-${pad(i + 1)}`;
   return `<div class="ph" data-img="${slot}" style="--tone:radial-gradient(70% 60% at ${30 + k * 20}% 40%,${STAGES[i].tone},#1b1b18 72%)">${stagePhoto(doc, slot, instant)}<div class="cap mono"><span>${STAGES[i].s}</span><span>${k === 0 ? 'Latest' : ''}</span></div></div>`;
 };
-const extraTile = (s: number) => `<div class="ph" style="--tone:radial-gradient(70% 60% at 50% 40%,${STAGES[s].tone},#1b1b18 72%)"><div class="cap mono"><span>${STAGES[s].s}</span><span style="color:var(--red)">New</span></div></div>`;
+const extraTile = (s: number) => `<div class="ph" style="--tone:radial-gradient(70% 60% at 50% 40%,${STAGES[s].tone},#1b1b18 72%)"><div class="cap mono"><span>${STAGES[s].s}</span><span class="need">New</span></div></div>`;
 
 /** instant: a page coming back shows photos already seen without fading them in again */
 function renderOrder(doc: Document, instant = false) {
@@ -89,6 +89,8 @@ function renderOrder(doc: Document, instant = false) {
   g('tChip').classList.toggle('ok', need); g('tChipT').textContent = need ? 'Waiting on you' : 'On track';
   g('oDecision').classList.toggle('done', !need);
   g('oDecT').textContent = need ? 'Your decision' : 'Next decision';
+  // the red dot means "needs you", so it shows only while a decision is waiting (as in the list)
+  g('oDecT').classList.toggle('need', need); g('oDecT').classList.toggle('dim', !need);
   g('oDecH').textContent = need ? o.decH : STAGES[s].ok;
   g('oDecP').textContent = need ? o.decP : 'Nothing needed from you right now. We will message you when the next decision is ready.';
   g('oDecBtns').hidden = !need;

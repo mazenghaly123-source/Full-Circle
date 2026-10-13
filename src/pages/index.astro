@@ -25,9 +25,10 @@ const ATELIER = [
   { slot: 'atelier-5', tone: 'radial-gradient(70% 60% at 50% 40%,#3b4f7a,#1d2638 72%)', cap: 'Garment' },
 ];
 ---
-<Base page="home" title="Full Circle / Idea to product" description="Design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands that are starting or scaling. What you approve in sampling is what ships.">
+<Base page="home" title="Full Circle / Clothing manufacturer in Cairo, Egypt" description="Design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands starting or scaling. From 60 pieces per colour.">
 <section class="hero grain"><BgImg img="hero" sizes="100vw" eager />
   <div class="light"></div>
+  <div class="scrim" aria-hidden="true"></div>
   <div class="wrap">
     <div>
       <div class="mono dim" style="margin-bottom:22px">Development + manufacturing / Cairo, Egypt</div>
@@ -131,9 +132,9 @@ const ATELIER = [
       <p>The sample you sign becomes the reference. Every bulk piece is measured against it: chest, length, sleeve, stitch, colour. If it does not match, it does not leave.</p>
     </div>
     <div class="vs">
-      <Photo img="promise-sample" tone="radial-gradient(70% 60% at 40% 40%,#3b4f7a,#1d2638 72%)" caption={['Sample 03', 'Signed']} sizes="(max-width: 760px) 135px, 240px" />
+      <Photo img="promise-sample" describe tone="radial-gradient(70% 60% at 40% 40%,#3b4f7a,#1d2638 72%)" caption={['Sample 03', 'Signed']} sizes="(max-width: 760px) 135px, 240px" />
       <span class="eq">=</span>
-      <Photo img="promise-bulk" tone="radial-gradient(70% 60% at 60% 40%,#3b4f7a,#1d2638 72%)" caption={['Bulk 0412', 'QC pass']} sizes="(max-width: 760px) 135px, 240px" />
+      <Photo img="promise-bulk" describe tone="radial-gradient(70% 60% at 60% 40%,#3b4f7a,#1d2638 72%)" caption={['Bulk 0412', 'QC pass']} sizes="(max-width: 760px) 135px, 240px" />
     </div>
   </div>
 </section>
@@ -150,7 +151,7 @@ const ATELIER = [
       <div class="portal">
         <div class="prow"><span class="mono" style="font-size:13px">FC-2418 / Overshirt</span><span class="chipst mono" id="pChip"><i></i><span id="pChipT">Awaiting approval</span></span></div>
         <div class="pbody">
-          <Photo img="portal-sample" caption={['Sample 03', 'Photo']} sizes="(max-width: 760px) 110px, (max-width: 860px) 40vw, 260px" />
+          <Photo img="portal-sample" describe caption={['Sample 03', 'Photo']} sizes="(max-width: 760px) 110px, (max-width: 860px) 40vw, 260px" />
           <div class="kv">
             <div><span>Stage</span><span id="pStage">05 / Sampling</span></div>
             <div><span>Item</span><span>Sample 03 / Fit + fabric</span></div>

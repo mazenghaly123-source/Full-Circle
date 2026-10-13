@@ -1,4 +1,5 @@
-// Home hero: the stage ring fills one stage at a time, then starts again.
+// Home hero: the stage ring fills one stage at a time and rests complete, its dot back at the top
+// ("full circle"). It stops after one circle, as Mazen decided (site audit B5): the prototype looped.
 import type { Feature } from '../core/lifecycle';
 import { ring, rm } from '../core/util';
 
@@ -22,10 +23,9 @@ function apply(doc: Document) {
   texts.forEach((t, k) => t.classList.toggle('on', k < heroI));
 }
 
-function heroStep() { heroI = (heroI + 1) % 9; apply(document); }
-
 // the ring keeps time on every page, so it is where you left it when you come back
-if (!rm) setInterval(heroStep, 1100);
+const timer = rm ? 0 : window.setInterval(heroStep, 1100);
+function heroStep() { heroI = Math.min(8, heroI + 1); apply(document); if (heroI === 8) clearInterval(timer); }
 
 export const heroRingFeature: Feature = {
   prepare: apply,

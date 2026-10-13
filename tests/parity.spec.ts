@@ -1,5 +1,6 @@
 // Parity: every page of the build is screenshotted next to the same page of the prototype and the
-// two are compared pixel by pixel.
+// two are compared pixel by pixel. The prototype first gets the approved changes (site audit part B,
+// see approvePrototype), so it is the prototype as approved that the build must match.
 // - "layout": photos and the 3D canvas are hidden, so only type, spacing, colour and shapes count.
 // - "visual": everything, photos and the 3D mark included, compared at 1/8 scale. Photos are
 //   re-encoded from the originals, so fine pixel noise is expected and averaged out; a wrong or
@@ -9,7 +10,7 @@ import { expect, test } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import sharp from 'sharp';
-import { PAGES, PROTOTYPE, contextFor, freeze, serveThreeLocally, settle } from './helpers';
+import { PAGES, PROTOTYPE, approvePrototype, contextFor, freeze, serveThreeLocally, settle } from './helpers';
 
 const LIMITS = { layout: 0.002, visual: 0.005 };
 const SCALE = { layout: 1, visual: 8 };
@@ -25,6 +26,7 @@ for (const { key, route } of PAGES) {
       await freeze(page);
       if (side === 'prototype') await serveThreeLocally(page);
       await page.goto(side === 'prototype' ? `${PROTOTYPE}#${key}` : `${info.project.use.baseURL}${route}`, { waitUntil: 'load' });
+      if (side === 'prototype') await approvePrototype(page);
       await settle(page);
       const visual = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' });
       const style = await page.addStyleTag({ content: HIDE_MEDIA });

@@ -1,7 +1,7 @@
 ---
 // A photo slot (.ph): the tinted placeholder, the photo on top when one is published, and the caption.
 import { Picture } from 'astro:assets';
-import { PHOTOS, PHOTO_FOCUS, photoWidths } from '../data/photos';
+import { PHOTOS, PHOTO_ALT, PHOTO_FOCUS, photoWidths } from '../data/photos';
 
 interface Props {
   /** Photo slot name, e.g. cat-denim (the prototype's data-img). */
@@ -15,9 +15,11 @@ interface Props {
   style?: string;
   /** Loads at once and first (the largest photo on screen when the page opens). */
   eager?: boolean;
+  /** Describe the photo (its PHOTO_ALT text); leave off where a link around it already names it. */
+  describe?: boolean;
 }
 
-const { img: slot, caption = [], tone, sizes, class: cls, style = '', eager = false } = Astro.props;
+const { img: slot, caption = [], tone, sizes, class: cls, style = '', eager = false, describe = false } = Astro.props;
 const photo = PHOTOS[slot];
 const css = [tone ? `--tone:${tone}` : '', style].filter(Boolean).join(';');
 ---
@@ -28,7 +30,7 @@ const css = [tone ? `--tone:${tone}` : '', style].filter(Boolean).join(';');
       formats={['avif', 'webp']}
       widths={photoWidths(photo)}
       sizes={sizes}
-      alt=""
+      alt={describe ? (PHOTO_ALT[slot] ?? '') : ''}
       class="fill"
       loading={eager ? 'eager' : 'lazy'}
       fetchpriority={eager ? 'high' : undefined}

@@ -59,6 +59,42 @@ export async function serveThreeLocally(page: Page) {
   });
 }
 
+/**
+ * The approved departures from the prototype (site audit part B): the CSS between the markers at the
+ * end of src/styles/global.css, and the markup the build uses for them. The parity suite applies them
+ * to the prototype, so the build is compared with the prototype as approved.
+ */
+const APPROVED_CSS = (() => {
+  const css = readFileSync(resolve('src/styles/global.css'), 'utf8');
+  const m = css.match(/\/\* ===== approved changes[\s\S]*?\*\/([\s\S]*?)\/\* ===== end approved changes ===== \*\//);
+  if (!m) throw new Error('the approved changes block is missing from src/styles/global.css');
+  return m[1];
+})();
+
+/** Field labels the build shows above its fields (B6), by field id. */
+const FIELD_LABELS: [string, string][] = [
+  ['fBrand', 'Brand name'], ['fContact', 'Email or WhatsApp'], ['fNote', 'Notes (optional)'],
+  ['cName', 'Your name'], ['cReach', 'Email or WhatsApp'], ['cMsg', 'Message'],
+  ['tId', 'Email or WhatsApp number'], ['tCode', '6-digit code'],
+];
+
+export async function approvePrototype(page: Page) {
+  await page.evaluate(([css, labels]) => {
+    // last in the document, as the block is last in global.css (the prototype's own styles sit in <body>)
+    const style = document.createElement('style'); style.textContent = css; document.body.append(style);
+    // B2: error lines and the red labels become Bone with a red dot
+    for (const id of ['err', 'cErr', 'tErr']) { const e = document.getElementById(id)!; e.removeAttribute('style'); e.classList.add('errline'); }
+    for (const e of document.querySelectorAll('.yo-top span[style="color:var(--red)"], #oDecT')) { e.removeAttribute('style'); e.classList.add('need'); }
+    // B3: the scrim over the hero
+    document.querySelector('.hero > .light')!.insertAdjacentHTML('afterend', '<div class="scrim" aria-hidden="true"></div>');
+    // B6: a label above each field
+    for (const [id, text] of labels) {
+      const l = document.createElement('label'); l.className = 'mono dim flabel'; l.htmlFor = id; l.textContent = text;
+      document.getElementById(id)!.before(l);
+    }
+  }, [APPROVED_CSS, FIELD_LABELS] as const);
+}
+
 /** Waits for fonts, photos, the 3D mark, intros and count-ups, then stops the hero ring at a fixed stage. */
 export async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
