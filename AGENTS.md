@@ -8,6 +8,11 @@ This repo uses [Matt Pocock's engineering skills](https://github.com/mattpocock/
 installed as editable copies under `.claude/skills/` and tracked in `skills-lock.json`.
 Update them with `npx skills update`.
 
+The [Cloudflare plugin](https://github.com/cloudflare/skills) (Cloudflare's skills, among them
+`wrangler`, plus the Cloudflare API MCP server at `mcp.cloudflare.com`) is enabled for the
+project in `.claude/settings.json`, as Cloudflare's [agent setup](https://developers.cloudflare.com/agent-setup/claude-code/)
+recommends. The MCP server asks each person to sign in to Cloudflare (OAuth) the first time it is used.
+
 ### Issue tracker
 
 Issues live in GitHub Issues on `mazenghaly123-source/Full-Circle`, with a local-markdown
