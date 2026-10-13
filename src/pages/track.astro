@@ -16,11 +16,13 @@ const STAGE_SIZES = '(max-width: 860px) 31vw, 190px';
 const stagePhotos: Record<string, { avif: string; webp: string; src: string; focus?: string }> = {};
 for (const [slot, img] of Object.entries(PHOTOS)) {
   if (!slot.startsWith('stage-')) continue;
-  const widths = [240, 360, 480].filter((w) => w <= img.width);
+  // never wider than the original (as photoWidths does), and never an empty srcset
+  const max = Math.min(img.width, 480);
+  const widths = [...[240, 360].filter((w) => w < max), max];
   const [avif, webp, jpg] = await Promise.all([
     getImage({ src: img, widths, format: 'avif' }),
     getImage({ src: img, widths, format: 'webp' }),
-    getImage({ src: img, width: 480, format: 'jpg' }),
+    getImage({ src: img, width: max, format: 'jpg' }),
   ]);
   stagePhotos[slot] = { avif: avif.srcSet.attribute, webp: webp.srcSet.attribute, src: jpg.src, focus: PHOTO_FOCUS[slot] };
 }

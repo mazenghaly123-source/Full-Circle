@@ -67,8 +67,9 @@ test('built CSS keeps every rule of the source CSS', async ({ page }, info) => {
     }
   }
   expect(problems).toEqual([]);
-  // Safari before 18 needs the prefixed form (Chromium ignores it, so it is checked as text)
-  const prefixed = (css: string) => (css.match(/-webkit-backdrop-filter/g) ?? []).length;
+  // Safari before 18 needs the prefixed form (Chromium ignores it, so it is checked as text;
+  // declarations only, not the stylesheet's own comments)
+  const prefixed = (css: string) => (css.match(/-webkit-backdrop-filter\s*:/g) ?? []).length;
   expect(prefixed(built)).toBeGreaterThanOrEqual(prefixed(source));
-  expect(prefixed(built)).toBeGreaterThanOrEqual((built.match(/[^-]backdrop-filter/g) ?? []).length);
+  expect(prefixed(built)).toBeGreaterThanOrEqual((built.match(/[^-]backdrop-filter\s*:/g) ?? []).length);
 });
