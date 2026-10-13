@@ -2,8 +2,8 @@
 
 Four audits of the phase 1 site (branch `claude/youthful-maxwell-aiw9ob`, commit `6e8b571`): a
 code review (standards and spec), a security review, an accessibility audit (WCAG 2.1 AA) and a
-pre-launch SEO audit. The fix plan is at the end: part A was done on 13 Oct 2026 (branch
-`claude/keen-gates-vu1na0`); parts B and C are open.
+pre-launch SEO audit. The fix plan is at the end: parts A and B were done on 13 Oct 2026 (B as
+Mazen decided it); part C waits for the domain.
 
 | Audit | Result |
 |---|---|
@@ -209,7 +209,11 @@ The items, as planned:
 - Code: move the CSS rule under production additions, scope the 3D listeners to Home, and declare
   spec items 5–6 in the plan's deliberate differences (standards 1, 4; spec 5, 6).
 
-**B. Decisions for Mazen** (each changes the look or the copy slightly):
+**B. Decisions for Mazen** (each changes the look or the copy slightly). Decided 13 Oct 2026: the
+recommended option on all eight (A for 2, "stop after one circle" for 5), shown before and after on
+the decisions page. Built the same day. On wide screens the hero scrim fades to the right so the
+lights by the ring keep their colour (the decision was shown on a phone, where it stays even).
+Product photos inside a link that already names them (the Home category cards) keep an empty alt.
 1. Red button fill `#BC2F29` instead of `#C5322B` for buttons only (4.56:1). Barely visible.
 2. Red small text: Bone with a red dot, or a lighter text red `#E0544B`.
 3. Hero: a slightly darker scrim over the photo; mono labels in Raw Cotton.

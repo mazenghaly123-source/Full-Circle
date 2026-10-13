@@ -24,7 +24,8 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 
 ## Design system (V4.1 "Raw Editorial"): do not drift
 - Colours: Obsidian #11110F (bg), Bone #E8E2D8 (text), Charcoal #292925, Raw Cotton #D8D0C3,
-  Signal Red #C5322B (the only accent: primary CTA, live dot, approvals).
+  Signal Red #C5322B (the only accent: primary CTA, live dot, approvals). Red button fills use
+  #BC2F29 so their text passes contrast; red is never small text (use Bone with a red dot).
   Atmospheric light only (never UI): Indigo #243E8F, Burnt Orange #C96832, Faded Red #A63F3F.
 - Type: Saira Condensed (stand-in for Eurostile Bold Condensed) for display, Geist (for
   Suisse Intl) for body, IBM Plex Mono (for Suisse Mono) for labels.
@@ -50,6 +51,10 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - Tracking portal is part of the build.
 - Atelier, floor and team photos must be REAL photos (not AI). Everything else may be AI.
 - Image generation: never use Higgsfield Nano Banana / GPT Image; give Mazen prompts.
+- Site audit part B (13 Oct 2026), all approved: the button red above, Bone + red dot for small
+  red text, a scrim over the hero, a gradient behind photo captions, the hero ring stops after one
+  circle, labels above form fields, 44px option buttons and tabs on phones, search titles and
+  descriptions, described product photos.
 
 ## Confirmed content
 - MOQ: tees 60/colour, hoodies 60, tops 60–100, sweatpants 60, shorts 60, shirts 80–100,
@@ -69,6 +74,9 @@ atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
 - **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at
   1440×900, 390×844 and 375×667; a change that moves pixels the prototype did not is a regression.
   Run the parity, behaviour and CSS suites (`package.json` scripts) after any visual or script change.
+- An approved visual departure from the prototype goes in the marked *approved changes* block at
+  the end of `src/styles/global.css`, with any markup it needs mirrored in `approvePrototype`
+  (`tests/helpers.ts`); the parity suite applies both to the prototype before comparing.
 - `src/styles/global.css` is the prototype's CSS in its original order (later blocks override
   earlier ones). Edit rules in place and append new ones under *production additions*. Write
   `-webkit-backdrop-filter` before `backdrop-filter`; `tests/css.spec.ts` checks the minifier kept

@@ -71,7 +71,7 @@ test('client-side navigation runs the ring wipe, keeps the shell and updates the
   expect(t.swap - t.start).toBeGreaterThanOrEqual(470);
   expect(t.swap - t.start).toBeLessThan(1200);
   expect(await page.evaluate(() => (window as any).__sameDocument)).toBe(true);
-  await expect(page).toHaveTitle('How it works / Full Circle');
+  await expect(page).toHaveTitle('How it works / From idea to bulk / Full Circle');
   await expect(page.locator('#hdr')).not.toHaveClass(/open/);
   expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
   if (!isPhone(info)) await expect(page.locator('header .nav a[href="/how-it-works"]')).toHaveClass(/on/);
@@ -592,5 +592,70 @@ test.describe('accessibility', () => {
     await expect(tab('Photos')).toBeFocused();
     await expect(page.getByRole('tabpanel', { name: 'Photos' })).toBeVisible();
     await expect(page.locator('.tabs2 [tabindex="0"]')).toHaveCount(1);
+  });
+});
+
+// Mazen's decisions on the site audit, part B (docs/audits/2026-10-08-site-audit.md). The parity
+// suite covers how they look; these cover how they behave.
+test.describe('approved changes', () => {
+  test('home: the hero ring fills once and rests on the full circle', async ({ page }) => {
+    await page.clock.install();
+    await page.goto('/');
+    await page.clock.runFor(8 * 1100);
+    await expect(page.locator('#heroLabels .st.on')).toHaveCount(8);
+    await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '0px');
+    await expect(page.locator('#heroDot')).toHaveAttribute('cy', '50');
+    // and it does not start again
+    await page.clock.runFor(5000);
+    await expect(page.locator('#heroLabels .st.on')).toHaveCount(8);
+  });
+
+  test('every field has a visible label above it', async ({ page }) => {
+    for (const [route, names] of [
+      ['/request-a-sample', ['Brand name', 'Email or WhatsApp', 'Notes (optional)']],
+      ['/contact', ['Your name', 'Email or WhatsApp', 'Message']],
+      ['/track', ['Email or WhatsApp number']],
+    ] as const) {
+      await page.goto(route);
+      for (const name of names) {
+        await expect(page.getByLabel(name, { exact: true })).toBeVisible();
+        await expect(page.locator('label.flabel', { hasText: name })).toBeVisible();
+      }
+    }
+  });
+
+  test('phone: option buttons are at least 44px tall', async ({ page }, info) => {
+    test.skip(!isPhone(info), 'phone only');
+    await page.goto('/request-a-sample');
+    expect(await page.locator('.opt').first().evaluate((e) => e.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  });
+
+  test('an error line is Bone with a red dot, and the dot shows only with a message', async ({ page }) => {
+    await page.goto('/request-a-sample');
+    const err = page.locator('#err');
+    expect(await err.evaluate((e) => getComputedStyle(e, '::before').content)).toBe('none');
+    await page.locator('#send').click();
+    await expect(err).toHaveText('Pick the brand stage and a product');
+    await expect(err).toHaveCSS('color', 'rgb(232, 226, 216)');
+    expect(await err.evaluate((e) => getComputedStyle(e, '::before').backgroundColor)).toBe('rgb(197, 50, 43)');
+  });
+
+  test('track: the decision label carries the red dot only while a decision is waiting', async ({ page }) => {
+    await page.goto('/track');
+    await page.locator('#tDemo').click();
+    await page.locator('#tList .ord').first().click();
+    await expect(page.locator('#oDecT')).toHaveClass(/\bneed\b/);
+    await page.locator('#oApprove').click();
+    await expect(page.locator('#oDecT')).toHaveText('Next decision');
+    await expect(page.locator('#oDecT')).not.toHaveClass(/\bneed\b/);
+  });
+
+  test('search titles, and product photos described where no link names them', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveTitle('Full Circle / Clothing manufacturer in Cairo, Egypt');
+    await expect(page.locator('.promise .ph img').first()).toHaveAttribute('alt', /denim overshirt sample/);
+    await expect(page.locator('#makeGrid img').first()).toHaveAttribute('alt', '');
+    await page.goto('/what-we-make');
+    await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', 'Raw and washed denim jeans laid on a workshop table');
   });
 });

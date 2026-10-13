@@ -36,15 +36,17 @@ for (const [slot, img] of Object.entries(PHOTOS)) {
       <span class="mono dim" id="tStep">Step 1 of 2</span>
       <h2 class="camp" id="tLoginH">Sign in</h2>
       <div id="tA" style="display:grid;gap:12px">
-        <input class="field" id="tId" placeholder="Email or WhatsApp number" autocomplete="username" aria-label="Email or WhatsApp number">
+        <label class="mono dim flabel" for="tId">Email or WhatsApp number</label>
+        <input class="field" id="tId" placeholder="Email or WhatsApp number" autocomplete="username">
         <button class="btn btn-red" id="tSendCode">Send me a code</button>
       </div>
       <div id="tB" hidden style="display:grid;gap:12px">
-        <input class="field" id="tCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" aria-label="6-digit code" style="font-family:var(--f-mono);letter-spacing:0.4em;font-size:22px">
+        <label class="mono dim flabel" for="tCode">6-digit code</label>
+        <input class="field" id="tCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" style="font-family:var(--f-mono);letter-spacing:0.4em;font-size:22px">
         <button class="btn btn-red" id="tVerify">Sign in</button>
         <button class="btn" id="tBack" style="padding:6px 0;justify-self:start;text-decoration:underline;text-underline-offset:4px">Use a different email or number</button>
       </div>
-      <span class="mono" id="tErr" style="color:var(--red);min-height:1em" role="alert"></span>
+      <span class="mono errline" id="tErr" role="alert"></span>
       <p class="demo-note" style="margin:0">Demo: type anything, then any 6 digits. Or <button class="btn" id="tDemo" style="padding:0;text-decoration:underline;text-underline-offset:4px;font-size:13px">open the demo account</button>.</p>
     </div>
   </div>
@@ -72,7 +74,7 @@ for (const [slot, img] of Object.entries(PHOTOS)) {
       <div style="display:grid;gap:22px;min-width:0">
         <div><span class="mono dim" id="oMeta"></span><h2 class="camp" style="font-size:clamp(56px,6vw,96px);margin-top:8px" id="oName"></h2></div>
         <div class="decision" id="oDecision">
-          <span class="mono" style="color:var(--red)" id="oDecT">Your decision</span>
+          <span class="mono need" id="oDecT">Your decision</span>
           <h3 class="camp" id="oDecH"></h3>
           <p style="margin:0;color:var(--cotton)" id="oDecP"></p>
           <div style="display:flex;gap:8px;flex-wrap:wrap" id="oDecBtns"><button class="btn btn-red" id="oApprove">Approve</button><button class="btn btn-line" id="oChanges">Ask for changes</button></div>

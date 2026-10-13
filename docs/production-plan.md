@@ -80,6 +80,15 @@ Small, deliberate differences from the prototype:
   approved) focus moves to the heading that replaced the buttons, without scrolling or an outline.
   One change can be seen with a mouse: a request sent with a pick missing now scrolls to that
   question (focus moves to its first option).
+- Approved by Mazen on 13 Oct 2026 (the audit's part B), so the site now looks slightly different
+  from the prototype on purpose: red button fills are #BC2F29; small red text (error lines, "Your
+  decision", the gate label) is Bone with a red dot, and "Next decision" on Track is dim, as the dot
+  means "needs you"; a scrim over the hero (fading to the right on wide screens, so the lights by
+  the ring keep their colour) with the mono labels in Raw Cotton; a soft gradient behind captions
+  on loaded photos; the hero ring fills once and rests complete; a label above every field;
+  44px option buttons and tabs on phones; new page titles and descriptions; descriptions for the
+  product photos (not where a link around the photo already names it). The CSS is the marked block
+  at the end of `global.css`; the parity tests apply it to the prototype before comparing.
 
 **Prototype bugs kept for now** (the build matches the prototype; fixed when the real form and
 portal replace the demos in phases 2–3): after a request is sent, the form stays visible under

@@ -6,7 +6,8 @@
    - -webkit-backdrop-filter comes before backdrop-filter (the CSS minifier keeps only the last of
      the pair, and Chromium needs the unprefixed one)
    - a few additions at the end (marked): client-side page swaps, the crumb link above the title, the
-     <picture> wrapper, and accessibility fixes that show only when used (focus, skip link, menu) */
+     <picture> wrapper, and accessibility fixes that show only when used (focus, skip link, menu)
+   - last, the approved changes (site audit part B): the deliberate departures from the prototype */
 /* Layout: a working homepage in Brands Factory order of clarity (one action, how it works, what we make, proof, contact) dressed in Full Circle V4.1. Single dark look by choice; one Bone section for tracking. */
 :root{
   --bg:#11110F; --raise:#1A1A17; --bone:#E8E2D8; --cotton:#D8D0C3; --charcoal:#292925; --red:#C5322B;
@@ -935,3 +936,25 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 @media (max-width:1020px){.mmenu{overflow-y:auto;overscroll-behavior:contain}}
 /* the two loops the reduced-motion rules above missed */
 @media (prefers-reduced-motion:reduce){.yo-gate .d{animation:none}.yo-you::after{animation:none;opacity:0}}
+/* ===== approved changes (site audit part B, decided by Mazen on 13 Oct 2026) =====
+   Deliberate departures from the prototype. tests/parity.spec.ts injects this block (between the
+   two markers) and the matching markup into the prototype before comparing, so everything else is
+   still held to the prototype. Keep every approved visual change inside the markers. */
+/* B1 button fills: Bone on #BC2F29 is 4.56:1; Signal Red stays for dots, lines and the mark */
+.btn-red{background:#BC2F29}
+/* B2 no small red text: Bone with a red dot (the .need pattern); an error line shows its dot only
+   while it says something */
+.errline{color:var(--bone);min-height:1em}
+.errline:not(:empty)::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:9px;vertical-align:1px}
+/* B3 hero: a scrim over the photo and the lights, and the mono labels in Raw Cotton. On wide
+   screens it fades out to the right, so the lights around the ring keep their colour. */
+.hero .scrim{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(17,17,15,.5) 0%,rgba(17,17,15,.35) 50%,rgba(17,17,15,.08) 100%)}
+@media (max-width:900px){.hero .scrim{background:rgba(17,17,15,.42)}}
+.hero .mono.dim{color:var(--cotton)}
+/* B4 captions sit on a soft dark gradient once the photo has loaded */
+.ph .cap{z-index:1}
+.ph:has(img.fill.ok)::after{content:"";position:absolute;inset:auto 0 0 0;height:42%;pointer-events:none;background:linear-gradient(rgba(17,17,15,0),rgba(17,17,15,.72))}
+/* B6 a visible label above each field, and 44px option buttons and tabs on phones */
+.flabel{display:block;font-size:10px;margin-bottom:-8px}
+@media (max-width:760px){.opt,.tabs2 button{min-height:44px}}
+/* ===== end approved changes ===== */

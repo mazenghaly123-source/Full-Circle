@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import { EMAIL, INSTAGRAM, INSTAGRAM_URL, PHONE, PHONE_URL, ROUTES, WHATSAPP, WHATSAPP_URL } from '../data/site';
 ---
-<Base page="contact" title="Contact / Full Circle" description="WhatsApp is the fastest way to reach Full Circle in Cairo. Phone, email and Instagram are here too; for a production enquiry, request a sample.">
+<Base page="contact" title="Contact / Clothing manufacturer in Cairo / Full Circle" description="WhatsApp is the fastest way to reach Full Circle in Cairo. Phone, email and Instagram are here too. To start production, request a sample.">
 <PageHero crumb="Contact" title="Talk to us." lead="WhatsApp is the fastest way to reach us. For a production enquiry, the sample request gets you an answer quicker." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" />
 <section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
   <div class="cgrid">
@@ -19,11 +19,14 @@ import { EMAIL, INSTAGRAM, INSTAGRAM_URL, PHONE, PHONE_URL, ROUTES, WHATSAPP, WH
     </div>
     <div>
       <form id="cForm" novalidate style="display:grid;gap:14px">
-        <input class="field" id="cName" placeholder="Your name" autocomplete="name" aria-label="Your name">
-        <input class="field" id="cReach" placeholder="Email or WhatsApp" autocomplete="email" aria-label="Email or WhatsApp">
-        <textarea class="field" id="cMsg" placeholder="Message" aria-label="Message"></textarea>
+        <label class="mono dim flabel" for="cName">Your name</label>
+        <input class="field" id="cName" placeholder="Your name" autocomplete="name">
+        <label class="mono dim flabel" for="cReach">Email or WhatsApp</label>
+        <input class="field" id="cReach" placeholder="Email or WhatsApp" autocomplete="email">
+        <label class="mono dim flabel" for="cMsg">Message</label>
+        <textarea class="field" id="cMsg" placeholder="Message"></textarea>
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><button class="btn btn-red" type="submit">Send message</button><a href={ROUTES.start} class="mono dim">Production enquiry? Request a sample</a></div>
-        <span class="mono" id="cErr" style="color:var(--red);min-height:1em" role="alert"></span>
+        <span class="mono errline" id="cErr" role="alert"></span>
       </form>
       <div id="cDone" hidden style="display:grid;gap:10px"><h2 class="camp" id="cDoneH" tabindex="-1" style="font-size:56px">Sent.</h2><p style="margin:0;color:var(--cotton)">We will reply on the contact you gave.</p></div>
     </div>
