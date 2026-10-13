@@ -1,0 +1,16 @@
+// Cloudflare Workers, static assets only: no Worker code and no Astro adapter (see
+// docs/adr/0002-cloudflare-workers-static-assets.md). Keep this file: without it, `wrangler deploy`
+// sets up an adapter and a Worker on its own.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "full-circle",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  // set to false once the custom domain is live, so the workers.dev copy is not indexed
+  "workers_dev": true,
+  "preview_urls": true
+}

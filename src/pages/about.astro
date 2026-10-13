@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Photo from '../components/Photo.astro';
+import BgImg from '../components/BgImg.astro';
+import { ROUTES } from '../data/site';
+
+const TEAM = [
+  { slot: 'team-1', role: 'Founder / production' },
+  { slot: 'team-2', role: 'Design + development' },
+  { slot: 'team-3', role: 'Pattern + sampling' },
+  { slot: 'team-4', role: 'Client lead' },
+];
+---
+<Base page="about" title="About / Full Circle" description="Full Circle is a development and manufacturing partner for clothing brands, based in Cairo. One team holds the whole chain, from the first sketch to delivered bulk.">
+<PageHero crumb="About" title="Fashion culture leads. Process proves it." lead="Full Circle is a development and manufacturing partner for clothing brands, based in Cairo. We hold the whole chain, from the first sketch to delivered bulk, so nothing is lost between suppliers." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(40% 50% at 20% 90%,#A63F3F,transparent 72%)"><BgImg img="about-floor" sizes="100vw" eager slot="bg" /></PageHero>
+<section class="wrap sec">
+  <div class="sh"><h2 class="camp">Why one partner</h2><p>Most brands juggle four or five suppliers. Every hand-off is a place where quality slips and nobody owns the result.</p></div>
+  <div class="chain">
+    <div><span class="mono dim">The usual way</span>
+      <div class="links"><span>Designer</span><i>/ gap /</i><span>Pattern maker</span><i>/ gap /</i><span>Fabric supplier</span><i>/ gap /</i><span>Factory</span></div>
+      <p style="margin:0;color:var(--cotton)">Four briefs, four timelines, and a bulk run that does not match the sample.</p></div>
+    <div><span class="mono dim">With Full Circle</span>
+      <div class="onering"><svg viewBox="0 0 256.86 262.30" aria-hidden="true" style="color:var(--bone)"><use href="#fc-mark"/></svg><p style="margin:0">One team, one brief, one timeline. The sample you approve is measured against every bulk piece.</p></div></div>
+  </div>
+</section>
+<section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
+  <div class="sh"><h2 class="camp">The team</h2><p>The people your brand works with, from first call to delivery. <span class="tbc">Names + portraits TBC</span></p></div>
+  <div class="team">
+    {TEAM.map((t) => <div><Photo img={t.slot} caption={['Portrait']} sizes="(max-width: 860px) 50vw, 25vw" /><b>Name</b><span class="mono dim">{t.role}</span></div>)}
+  </div>
+</section>
+<section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
+  <div class="sh"><h2 class="camp">How we work with you</h2></div>
+  <div class="rules">
+    <div><span class="mono dim" data-count="1">01</span><b>Every stage has an output.</b><p>A brief, a tech pack, a swatch, a pattern, a sample. You see it before we move on.</p></div>
+    <div><span class="mono dim" data-count="2">02</span><b>Every decision is yours.</b><p>Nothing moves to the next stage without your approval, and every approval is kept with the order.</p></div>
+    <div><span class="mono dim" data-count="3">03</span><b>Nothing ships unseen.</b><p>Bulk is measured against the sample you signed. Ask for a photo of any stage, any time.</p></div>
+  </div>
+  <p class="mono dim" style="margin-top:56px">Coming next / Full Circle Studio, a consultancy arm for brands that need direction before production.</p>
+</section>
+<section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
+  <div class="sh"><h2 class="camp">Where we sell</h2><p>Made on our floor in Cairo, for brands in the Gulf and the Middle East, Turkey and China.</p></div>
+  <div class="contact" style="border-top:0;margin-top:-12px">
+    <div><span class="mono dim">Made in</span><b>Cairo, Egypt</b></div>
+    <div><span class="mono dim">01</span><b>Gulf + Middle East</b></div>
+    <div><span class="mono dim">02</span><b>Turkey</b></div>
+    <div><span class="mono dim">03</span><b>China</b></div>
+  </div>
+</section>
+<CtaBand title="Come and see." text="Book a first call, or a visit to the floor in Cairo."><a href={ROUTES.start} class="btn btn-red" style="padding:16px 22px">Request a sample</a></CtaBand>
+</Base>

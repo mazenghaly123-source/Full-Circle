@@ -1,0 +1,29 @@
+---
+// A full-bleed background photo (.bgimg) behind a hero or a card.
+import { Picture } from 'astro:assets';
+import { PHOTOS, photoWidths } from '../data/photos';
+
+interface Props {
+  /** Photo slot name, e.g. cat-denim (the prototype's data-img). */
+  img: string;
+  sizes: string;
+  eager?: boolean;
+}
+
+const { img: slot, sizes, eager = false } = Astro.props;
+const photo = PHOTOS[slot];
+---
+<div class="bgimg" data-img={slot}>
+  {photo && (
+    <Picture
+      src={photo}
+      formats={['avif', 'webp']}
+      widths={photoWidths(photo)}
+      sizes={sizes}
+      alt=""
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
+      decoding="async"
+    />
+  )}
+</div>

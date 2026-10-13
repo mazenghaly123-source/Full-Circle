@@ -1,0 +1,42 @@
+---
+import { ROUTES, WHATSAPP_URL, type PageKey } from '../data/site';
+
+interface Props {
+  current: PageKey;
+}
+
+const { current } = Astro.props;
+const NAV = [
+  { key: 'how', label: 'How it works' },
+  { key: 'make', label: 'What we make' },
+  { key: 'about', label: 'About' },
+  { key: 'contact', label: 'Contact' },
+] as const;
+const MENU = [
+  { key: 'home', label: 'Home' },
+  { key: 'how', label: 'How it works' },
+  { key: 'make', label: 'What we make' },
+  { key: 'about', label: 'About' },
+  { key: 'track', label: 'Track order' },
+  { key: 'contact', label: 'Contact' },
+] as const;
+const on = (key: string) => (key === current ? 'on' : undefined);
+const here = (key: string) => (key === current ? 'page' : undefined);
+---
+<header class="hdr" id="hdr">
+  <div class="wrap">
+    <a href={ROUTES.home} class="word" aria-label="Full Circle home"><svg class="logo-h" viewBox="0 0 889.35 147.50" aria-hidden="true"><use href="#fc-h"/></svg></a>
+    <nav class="nav" aria-label="Main">
+      {NAV.map((n) => <a href={ROUTES[n.key]} data-nav={n.key} class={on(n.key)} aria-current={here(n.key)}>{n.label}</a>)}
+    </nav>
+    <div class="hdr-r">
+      <a href={ROUTES.track} class:list={['mono track-link', on('track')]} data-nav="track" aria-current={here('track')}>Track order</a>
+      <a href={ROUTES.start} class="btn btn-red" style="padding:10px 14px">Request a sample</a>
+      <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
+    </div>
+  </div>
+  <nav class="mmenu" aria-label="Mobile">
+    {MENU.map((n, i) => <a href={ROUTES[n.key]} aria-current={here(n.key)}>{n.label}<span class="mono dim">{String(i).padStart(2, '0')}</span></a>)}
+    <div class="mfoot"><a href={ROUTES.start} class="btn btn-red">Request a sample</a><a href={WHATSAPP_URL} target="_blank" rel="noopener" class="btn btn-line">WhatsApp</a></div>
+  </nav>
+</header>

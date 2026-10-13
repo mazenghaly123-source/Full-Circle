@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import { ROUTES } from '../data/site';
+---
+<Base page="notfound" title="Not found / Full Circle" description="This page does not exist.">
+<PageHero crumb="Not found" title="Off the circle." lead="This page does not exist, or it moved. Start from the home page, or go straight to a sample request." light="radial-gradient(40% 50% at 85% 25%,#C96832,transparent 70%)">
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><a href={ROUTES.start} class="btn btn-red">Request a sample</a><a href={ROUTES.home} class="btn btn-line">Home</a></div>
+</PageHero>
+</Base>
