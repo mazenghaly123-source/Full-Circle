@@ -3,7 +3,7 @@
 Four audits of the phase 1 site (branch `claude/youthful-maxwell-aiw9ob`, commit `6e8b571`): a
 code review (standards and spec), a security review, an accessibility audit (WCAG 2.1 AA) and a
 pre-launch SEO audit. The fix plan is at the end: parts A and B were done on 13 Oct 2026 (B as
-Mazen decided it); part C waits for the domain.
+Mazen decided it); part C waits for the domain, except the 3D build in a Web Worker (done 14 Oct).
 
 | Audit | Result |
 |---|---|
@@ -224,5 +224,9 @@ Product photos inside a link that already names them (the Home category cards) k
 8. Descriptive alt text for product photos.
 
 **C. At launch** (phase 5, needs the domain): social previews first, then canonical, sitemap,
-robots, structured data, `workers_dev` off and noindex on previews, CSP and HSTS, the 3D build in a
-Web Worker, and a Google Business Profile with the address.
+robots, structured data, `workers_dev` off and noindex on previews, CSP and HSTS, and a Google
+Business Profile with the address.
+
+The 3D build in a Web Worker (SEO 6) needs no domain, so it was done on 14 Oct 2026; see the plan's
+§2. With it, the 3D mark's wait after a page change now comes from the wipe's own timings
+(standards 7).

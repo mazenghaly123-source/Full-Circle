@@ -5,6 +5,11 @@ import { pointer } from './pointer';
 import { setMenu } from './header';
 import { arrival } from '../core/nav';
 
+/** After the swap the ring draws (300ms), then the wipe closes to the centre (560ms). */
+const RING_MS = 300, CLOSE_MS = 560;
+/** How long the wipe takes to clear the new page after the swap. */
+export const WIPE_CLEAR_MS = RING_MS + CLOSE_MS;
+
 const w = $('wipe');
 let covering = false, covered: Promise<void> = Promise.resolve(), t1 = 0, t2 = 0;
 let pin: AbortController | undefined;
@@ -50,6 +55,6 @@ document.addEventListener('astro:after-swap', () => {
   w.classList.add('ring');
   t1 = window.setTimeout(() => {
     w.style.setProperty('--wx', '50%'); w.style.setProperty('--wy', '50%'); w.className = 'wipe cover ring leave';
-    t2 = window.setTimeout(() => { pin?.abort(); if (w.classList.contains('leave')) w.className = 'wipe'; }, 560);
-  }, 300);
+    t2 = window.setTimeout(() => { pin?.abort(); if (w.classList.contains('leave')) w.className = 'wipe'; }, CLOSE_MS);
+  }, RING_MS);
 });

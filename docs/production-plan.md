@@ -95,10 +95,16 @@ portal replace the demos in phases 2–3): after a request is sent, the form sta
 "Received." and sending again makes a new code; on Track, the line under the order code does not
 update after Approve.
 
-**Found while building, for later:** the 3D logo mesh has about 724,000 vertices, and building it
-takes about 0.6 s on the main thread on a fast computer, more on phones. The prototype has the same
-cost. In phase 5 I'd build the mesh in a Web Worker so the page stays responsive; it looks exactly
-the same.
+**The 3D mark is built off the main thread** (14 Oct 2026, early: it was a phase 5 item but needs
+no domain). The logo mesh has about 724,000 vertices; extruding it took about 0.6 s on the main
+thread of a fast computer and seconds on a phone, with the page frozen meanwhile (the prototype has
+the same cost). It is now extruded in a Web Worker while the scene is set up, and the shaders
+compile in that time. The mesh is the same to the byte, and a test compares the mark with the
+prototype's at full size: no pixel differs. Still on the main thread: the GPU set-up (the lighting
+environment and the first draw), which a phone's GPU does quickly. This sandbox has no GPU, so its
+speed numbers say little here; re-measure Home with PageSpeed Insights after deploy. As in the
+prototype, once three.js has arrived the 3D mark always comes up, however long the build takes: the
+2.6 s limit before the flat mark is for three.js arriving.
 
 ## 3. Architecture
 
@@ -287,7 +293,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 2 | Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile and uploads, staff emails, request receipts, consent records, privacy notice page, form lines | A test request lands in the database and in the staff inboxes (test data only until the lawyer signs off) |
 | 3 | Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
-| 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, mesh building in a Web Worker, **no TBC left** | Live on the domain |
+| 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 
 **The domain blocks phases 2–4.** Without it, email can only reach the person who owns the email

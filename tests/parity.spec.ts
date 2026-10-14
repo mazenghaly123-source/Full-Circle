@@ -5,12 +5,14 @@
 // - "visual": everything, photos and the 3D mark included, compared at 1/8 scale. Photos are
 //   re-encoded from the originals, so fine pixel noise is expected and averaged out; a wrong or
 //   missing photo, a wrong crop or a different 3D pose still shows.
+// - "3D mark": the hero's 3D canvas alone, at full size. The build extrudes the mesh in a worker and
+//   the prototype on its main thread; the two must draw the same pixels.
 import { writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import sharp from 'sharp';
-import { PAGES, PROTOTYPE, approvePrototype, contextFor, freeze, serveThreeLocally, settle } from './helpers';
+import { PAGES, PROTOTYPE, approvePrototype, contextFor, freeze, isPhone, serveThreeLocally, settle } from './helpers';
 
 const LIMITS = { layout: 0.002, visual: 0.005 };
 const SCALE = { layout: 1, visual: 8 };
@@ -60,3 +62,31 @@ for (const { key, route } of PAGES) {
     console.log(`[${info.project.name}] ${key}\n  ` + report.join('\n  '));
   });
 }
+
+test('parity: 3D mark at full size', async ({ browser }, info) => {
+  test.skip(isPhone(info), 'checked once, on desktop');
+  test.setTimeout(300_000);
+  const shots: Record<string, PNG> = {};
+  for (const side of ['prototype', 'build'] as const) {
+    const ctx = await browser.newContext(contextFor(info));
+    const page = await ctx.newPage();
+    await freeze(page);
+    if (side === 'prototype') await serveThreeLocally(page);
+    await page.goto(side === 'prototype' ? `${PROTOTYPE}#home` : `${info.project.use.baseURL}/`, { waitUntil: 'load' });
+    if (side === 'prototype') await approvePrototype(page);
+    await settle(page);
+    await expect(page.locator('.hero .ringwrap'), `${side}: the 3D mark is up, not the flat one`).toHaveClass(/m3on/);
+    await page.addStyleTag({ content: '*{visibility:hidden!important} canvas.mark3{visibility:visible!important}' });
+    await page.waitForTimeout(300);
+    const clip = (await page.locator('canvas.mark3').boundingBox())!;
+    const shot = await page.screenshot({ clip, animations: 'disabled' });
+    writeFileSync(info.outputPath(`mark3-${side}.png`), shot);
+    shots[side] = PNG.sync.read(shot);
+    await ctx.close();
+  }
+  const a = shots.prototype, b = shots.build;
+  expect(`${b.width}×${b.height}`).toBe(`${a.width}×${a.height}`);
+  const n = pixelmatch(a.data, b.data, undefined, a.width, a.height, { threshold: 0 });
+  console.log(`[${info.project.name}] 3D mark: ${n} of ${a.width * a.height} pixels differ`);
+  expect(n).toBe(0);
+});
