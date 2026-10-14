@@ -12,7 +12,7 @@ import { expect, test } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import sharp from 'sharp';
-import { PAGES, PROTOTYPE, approvePrototype, contextFor, freeze, isPhone, serveThreeLocally, settle } from './helpers';
+import { PAGES, PROTOTYPE, approvePrototype, contextFor, freeze, serveThreeLocally, settle } from './helpers';
 
 const LIMITS = { layout: 0.002, visual: 0.005 };
 const SCALE = { layout: 1, visual: 8 };
@@ -26,9 +26,8 @@ for (const { key, route } of PAGES) {
       const ctx = await browser.newContext(contextFor(info));
       const page = await ctx.newPage();
       await freeze(page);
-      if (side === 'prototype') await serveThreeLocally(page);
+      if (side === 'prototype') { await serveThreeLocally(page); await approvePrototype(page); }
       await page.goto(side === 'prototype' ? `${PROTOTYPE}#${key}` : `${info.project.use.baseURL}${route}`, { waitUntil: 'load' });
-      if (side === 'prototype') await approvePrototype(page);
       await settle(page);
       const visual = await page.screenshot({ fullPage: true, animations: 'disabled', caret: 'hide' });
       const style = await page.addStyleTag({ content: HIDE_MEDIA });
@@ -64,16 +63,15 @@ for (const { key, route } of PAGES) {
 }
 
 test('parity: 3D mark at full size', async ({ browser }, info) => {
-  test.skip(isPhone(info), 'checked once, on desktop');
+  test.skip(info.project.name === 'phone-375', 'checked on desktop and one phone');
   test.setTimeout(300_000);
   const shots: Record<string, PNG> = {};
   for (const side of ['prototype', 'build'] as const) {
     const ctx = await browser.newContext(contextFor(info));
     const page = await ctx.newPage();
     await freeze(page);
-    if (side === 'prototype') await serveThreeLocally(page);
+    if (side === 'prototype') { await serveThreeLocally(page); await approvePrototype(page); }
     await page.goto(side === 'prototype' ? `${PROTOTYPE}#home` : `${info.project.use.baseURL}/`, { waitUntil: 'load' });
-    if (side === 'prototype') await approvePrototype(page);
     await settle(page);
     await expect(page.locator('.hero .ringwrap'), `${side}: the 3D mark is up, not the flat one`).toHaveClass(/m3on/);
     await page.addStyleTag({ content: '*{visibility:hidden!important} canvas.mark3{visibility:visible!important}' });
