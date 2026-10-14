@@ -1,5 +1,6 @@
 // Home hero: the real logo, extruded in 3D (three.js). One settle on load, then a gentle tilt toward
-// the pointer (finger-drag on phones). It never spins. If WebGL is missing, or three.js does not
+// the pointer (finger-drag on phones, turning further and following closer than the mouse, as Mazen
+// asked on 14 Oct 2026). It never spins. If WebGL is missing, or three.js does not
 // arrive within 2.6s, the flat mark draws itself in a 360° sweep instead.
 //
 // The mesh is extruded in a worker (hero-mesh.worker.ts), so the page keeps responding meanwhile.
@@ -74,9 +75,11 @@ async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<M
   function size() { const w = cv.clientWidth || 1, h = cv.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); dirty = true; }
   // motion: one settle on entry, then a gentle tilt toward the pointer (or a finger), never a spin
   let tx = 0, ty = 0, cx = 0, cy = 0, t0 = 0, intro = !rm, drag: { x: number; y: number; x0: number; y0: number } | null = null;
+  // a finger turns it 1.7× as far as the mouse, over 90px of travel (the mouse: the prototype's tilt)
+  const reach = fine ? 1 : 1.7, DRAG_PX = 90;
   const move = (e: PointerEvent) => {
     loop();
-    if (drag) { tx = Math.max(-1, Math.min(1, drag.x0 + (e.clientX - drag.x) / 160)); ty = Math.max(-1, Math.min(1, drag.y0 + (e.clientY - drag.y) / 160)); return; }
+    if (drag) { tx = Math.max(-1, Math.min(1, drag.x0 + (e.clientX - drag.x) / DRAG_PX)); ty = Math.max(-1, Math.min(1, drag.y0 + (e.clientY - drag.y) / DRAG_PX)); return; }
     if (!fine || !rw) return; const r = rw.getBoundingClientRect();
     tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth * 0.45)));
     ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight * 0.55)));
@@ -99,10 +102,10 @@ async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<M
   function tick(now: number) {
     raf = 0; if (!visible || document.hidden || !cv.isConnected || !cv.offsetParent) return;
     if (!t0) t0 = now;
-    const k = rm ? 1 : 0.06; cx += (tx - cx) * k; cy += (ty - cy) * k;
+    const k = rm ? 1 : drag ? 0.16 : 0.06; cx += (tx - cx) * k; cy += (ty - cy) * k;
     let iy = 0, ix = 0, iz = 0;
     if (intro) { const q = Math.min(1, (now - t0) / 1900), e = 1 - Math.pow(1 - q, 4); iy = -0.55 * (1 - e); ix = 0.22 * (1 - e); iz = -260 * (1 - e); if (q >= 1) intro = false; }
-    pivot.rotation.y = 0.24 + cx * 0.5 + iy; pivot.rotation.x = -0.16 + cy * 0.34 + ix; pivot.position.z = iz;
+    pivot.rotation.y = 0.24 + cx * 0.5 * reach + iy; pivot.rotation.x = -0.16 + cy * 0.34 * reach + ix; pivot.position.z = iz;
     key.position.set(-480 + cx * 520, 520 - cy * 360, 380);
     renderer.render(scene, camera);
     const moving = intro || Math.abs(tx - cx) > 0.0005 || Math.abs(ty - cy) > 0.0005;

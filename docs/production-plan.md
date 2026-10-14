@@ -89,6 +89,12 @@ Small, deliberate differences from the prototype:
   44px option buttons and tabs on phones; new page titles and descriptions; descriptions for the
   product photos (not where a link around the photo already names it). The CSS is the marked block
   at the end of `global.css`; the parity tests apply it to the prototype before comparing.
+- Asked for by Mazen on 14 Oct 2026: on phones the hero mark is 1.25× bigger inside its ring (the 3D
+  mark and the flat fallback; the ring and the page stay as they were), and a finger turns the 3D
+  mark further and more directly: 1.7× the mouse's tilt, the full turn over 90px of travel instead
+  of 160px, catching up with the finger 2.7× as fast. It settles back as before when let go. The
+  mouse on a computer keeps the prototype's tilt. (Tilting with the phone's gyroscope was looked at
+  and dropped: on iPhones it needs a permission prompt.)
 
 **Prototype bugs kept for now** (the build matches the prototype; fixed when the real form and
 portal replace the demos in phases 2–3): after a request is sent, the form stays visible under

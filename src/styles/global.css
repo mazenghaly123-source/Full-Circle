@@ -936,7 +936,7 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 @media (max-width:1020px){.mmenu{overflow-y:auto;overscroll-behavior:contain}}
 /* the two loops the reduced-motion rules above missed */
 @media (prefers-reduced-motion:reduce){.yo-gate .d{animation:none}.yo-you::after{animation:none;opacity:0}}
-/* ===== approved changes (site audit part B, decided by Mazen on 13 Oct 2026) =====
+/* ===== approved changes (decided by Mazen: site audit part B on 13 Oct 2026, then as dated) =====
    Deliberate departures from the prototype. tests/parity.spec.ts injects this block (between the
    two markers) and the matching markup into the prototype before comparing, so everything else is
    still held to the prototype. Keep every approved visual change inside the markers. */
@@ -957,4 +957,6 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 /* B6 a visible label above each field, and 44px option buttons and tabs on phones */
 .flabel{display:block;font-size:10px;margin-bottom:-8px}
 @media (max-width:760px){.opt,.tabs2 button{min-height:44px}}
+/* 14 Oct 2026, phones: the hero mark 1.25× bigger inside its ring (the 3D one and the flat fallback) */
+@media (max-width:760px){.ringwrap canvas.mark3{width:80%}.ringwrap svg.heromark{width:42.5%}}
 /* ===== end approved changes ===== */
