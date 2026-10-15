@@ -21,7 +21,7 @@ type Row = [label: string, value: string, href?: string];
 
 /** A plain-text and an HTML version of the same rows, in a quiet layout that survives any mail app. */
 function render(title: string, intro: string, rows: Row[], outro: string[] = []) {
-  const text = [title, '', intro, '', ...rows.map(([l, v, h]) => `${l ? `${l}: ` : '  '}${v}${h && !v.includes(h) ? ` (${h})` : ''}`), ...(outro.length ? ['', ...outro] : [])].join('\n');
+  const text = [title, '', intro, '', ...rows.map(([l, v, h]) => `${l}: ${v}${h && !v.includes(h) ? ` (${h})` : ''}`), ...(outro.length ? ['', ...outro] : [])].join('\n');
   const cell = 'padding:6px 12px 6px 0;vertical-align:top;font-size:14px;line-height:1.45';
   const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f4f1ec;color:#11110F;font-family:Helvetica,Arial,sans-serif">
 <div style="max-width:560px;margin:0 auto;background:#fff;padding:28px;border-top:4px solid #11110F">
@@ -38,8 +38,7 @@ const sourceLine = (s: Source) => Object.entries(s).filter(([k]) => k !== 'landi
 
 export type RequestMail = {
   code: string; at: Date; brand: string; picks: Record<string, string | null>; belowMinimum: boolean;
-  typed: string; reach: Contact; whatsappUpdates?: boolean; note: string;
-  files: { name: string; url: string }[]; source: Source;
+  typed: string; reach: Contact; whatsappUpdates?: boolean; note: string; source: Source;
 };
 
 /** The alert staff get for a new request. */
@@ -52,7 +51,6 @@ export function staffRequestEmail(r: RequestMail) {
   ];
   if (r.whatsappUpdates !== undefined) rows.push(['Order updates on WhatsApp', r.whatsappUpdates ? 'Yes, opted in' : 'No']);
   if (r.note) rows.push(['Notes', r.note]);
-  r.files.forEach((f, i) => rows.push([i ? '' : `Files (links last 7 days)`, f.name, f.url]));
   const from = sourceLine(r.source);
   if (from) rows.push(['Came from', from]);
   if (r.source.landing) rows.push(['First page', r.source.landing]);

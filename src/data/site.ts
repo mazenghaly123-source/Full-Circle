@@ -3,8 +3,9 @@ import type { OptionOf } from '../../supabase/functions/_shared/forms';
 // Site content, copied from prototype/index.html. Pages render it at build time; the browser
 // scripts import the same data, so there is one copy of every stage, category and question.
 
-export const WHATSAPP_URL =
-  'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20found%20you%20through%20your%20website.';
+/** A WhatsApp chat with Full Circle, opened with a message ready to send. */
+export const whatsappLink = (text: string) => `https://wa.me/201011435406?text=${encodeURIComponent(text)}`;
+export const WHATSAPP_URL = whatsappLink('Hi Full Circle, I found you through your website.');
 export const WHATSAPP = '+20 101 143 5406';
 export const PHONE = '+20 2 2698 7277';
 export const PHONE_URL = 'tel:+20226987277';

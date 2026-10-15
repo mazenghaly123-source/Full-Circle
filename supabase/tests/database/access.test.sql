@@ -3,7 +3,7 @@
 -- are not staff see nothing; staff read everything and change only a status; owners manage staff.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(33);
+select plan(29);
 
 -- start from empty tables (the transaction is rolled back at the end, so a local stack keeps its rows)
 truncate public.requests, public.messages, public.contact_consents, public.notifications cascade;
@@ -28,8 +28,6 @@ insert into public.requests (path, product, brand, contact, contact_channel, ema
   values ('Starting', 'Tees', 'One', 'one@brand.test', 'email', 'one@brand.test', 'v');
 insert into public.requests (path, product, brand, contact, contact_channel, whatsapp, notice_version)
   values ('Scaling', 'Denim', 'Two', '0101 143 5406', 'whatsapp', '+201011435406', 'v');
-insert into public.request_files (request_id, object_path, name, size, type)
-  select id, code || '/1-a.png', 'a.png', 10, 'image/png' from public.requests where brand = 'One';
 insert into public.messages (name, contact, contact_channel, email, text, notice_version)
   values ('Sara', 'sara@x.test', 'email', 'sara@x.test', 'Hello', 'v');
 insert into public.contact_consents (channel, address, purpose, opted_in, wording, wording_version, source)
@@ -55,14 +53,12 @@ select throws_ok($$insert into public.requests (path, product, brand, contact, c
 select throws_ok($$insert into public.messages (name, contact, contact_channel, email, text, notice_version) values ('X', 'x@y.test', 'email', 'x@y.test', 'Hi', 'v')$$,
   '42501', null, 'anon cannot insert a message');
 select throws_ok($$select nextval('public.code_seq')$$, '42501', null, 'anon cannot take a code');
-select is((select count(*)::int from storage.objects where bucket_id = 'request-files'), 0, 'anon sees no uploaded files');
 reset role;
 
 -- a signed-in user who is not staff (a future client): nothing either
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000c", "role": "authenticated"}';
 select is((select count(*)::int from public.requests), 0, 'a non-staff user sees no requests');
-select is((select count(*)::int from public.request_files), 0, 'a non-staff user sees no request files');
 select is((select count(*)::int from public.messages), 0, 'a non-staff user sees no messages');
 select is((select count(*)::int from public.contact_consents), 0, 'a non-staff user sees no consents');
 select is((select count(*)::int from public.notifications), 0, 'a non-staff user sees no notifications');
@@ -77,7 +73,6 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000b", "role": "authenticated"}';
 select is((select count(*)::int from public.requests), 2, 'staff see the requests');
-select is((select count(*)::int from public.request_files), 1, 'staff see the request files');
 select is((select count(*)::int from public.messages), 1, 'staff see the messages');
 select is((select count(*)::int from public.notifications), 1, 'staff see the notifications');
 select lives_ok($$update public.requests set status = 'replied' where brand = 'One'$$, 'staff can move a request on');
@@ -95,9 +90,6 @@ select lives_ok($$insert into public.staff (user_id, name) values ('00000000-000
 select is((select count(*)::int from public.staff), 3, 'an owner sees all staff');
 select lives_ok($$delete from public.staff where user_id = '00000000-0000-0000-0000-00000000000c'$$, 'an owner can remove staff');
 reset role;
-
--- uploads stay private
-select is((select public from storage.buckets where id = 'request-files'), false, 'the request-files bucket is private');
 
 select * from finish();
 rollback;

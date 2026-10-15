@@ -1,4 +1,4 @@
-// The form functions on a local Supabase: what lands in the database, the files and the emails.
+// The form functions on a local Supabase: what lands in the database, and the emails.
 // Runs when SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_PUBLISHABLE_KEY point at a local stack
 // (`supabase start`; the CI backend job sets them). Turnstile and Resend are stood in for by a small
 // server on port 54399, which supabase/functions/.env points the functions at:
@@ -48,19 +48,13 @@ async function mailsTo(address: string, n: number) {
 
 const run = Date.now().toString(36);
 const fn = (name: string) => `${URL_}/functions/v1/${name}`;
-const PNG = Buffer.from('89504e470d0a1a0a0000000d4948445200000001', 'hex');
+const requestForm = (data: Record<string, unknown>) =>
+  JSON.stringify({ path: 'Scaling', product: 'Denim', qty: '60–150', have: 'A sketch', brand: 'Acme', note: '', notice: NOTICE.version, source: {}, turnstile: TOKEN, ...data });
+const post = (name: string, body: string) => fetch(fn(name), { method: 'POST', body });
 
-function requestForm(data: Record<string, unknown>, files: [name: string, bytes: Buffer, type: string][] = []) {
-  const fd = new FormData();
-  fd.set('data', JSON.stringify({ path: 'Scaling', product: 'Denim', qty: '60–150', have: 'A sketch', brand: 'Acme', note: '', notice: NOTICE.version, source: {}, turnstile: TOKEN, ...data }));
-  for (const [name, bytes, type] of files) fd.append('files', new Blob([new Uint8Array(bytes)], { type }), name);
-  return fd;
-}
-const post = (name: string, body: BodyInit) => fetch(fn(name), { method: 'POST', body });
-
-test('a request with files and a WhatsApp number lands, and staff are emailed', async () => {
+test('a request with a WhatsApp number lands, and staff are emailed', async () => {
   const contact = `010 ${String(Date.now()).slice(-8)}`;
-  const res = await post('submit-request', requestForm({ contact, note: 'Raw selvedge', whatsappUpdates: true, source: { utm_source: 'instagram', landing: '/what-we-make' } }, [['front sketch.png', PNG, 'image/png'], ['pack.pdf', Buffer.from('%PDF-1.4 x'), 'application/pdf']]));
+  const res = await post('submit-request', requestForm({ contact, note: 'Raw selvedge', whatsappUpdates: true, source: { utm_source: 'instagram', landing: '/what-we-make' } }));
   expect(res.status).toBe(200);
   const { code } = await res.json();
   expect(code).toMatch(/^FC-\d{4,}$/);
@@ -69,21 +63,12 @@ test('a request with files and a WhatsApp number lands, and staff are emailed', 
   expect(r).toMatchObject({ path: 'Scaling', product: 'Denim', qty: '60–150', have: 'A sketch', brand: 'Acme', contact, contact_channel: 'whatsapp', email: null, note: 'Raw selvedge', status: 'new', notice_version: NOTICE.version, source: { utm_source: 'instagram', landing: '/what-we-make' } });
   expect(r.whatsapp).toMatch(/^\+201\d{9}$/);
 
-  const files = await rows<{ object_path: string; name: string; type: string; size: number }>('request_files', `request_id=eq.${r.id}&select=object_path,name,type,size&order=id`);
-  expect(files).toEqual([
-    { object_path: `${code}/1-front-sketch.png`, name: 'front sketch.png', type: 'image/png', size: PNG.length },
-    { object_path: `${code}/2-pack.pdf`, name: 'pack.pdf', type: 'application/pdf', size: 10 },
-  ]);
-  const stored = await fetch(`${URL_}/storage/v1/object/request-files/${files[0].object_path}`, { headers: { apikey: SECRET } });
-  expect(Buffer.from(await stored.arrayBuffer())).toEqual(PNG);
-
   const [consent] = await rows('contact_consents', `request_id=eq.${r.id}&select=channel,address,purpose,opted_in,wording,wording_version,source`);
   expect(consent).toEqual({ channel: 'whatsapp', address: r.whatsapp, purpose: 'order_updates', opted_in: true, wording: NOTICE.whatsappUpdates, wording_version: NOTICE.version, source: `request ${code}` });
 
   const [alert] = (await mailsTo('staff@fullcircle.test', 1)).filter((m) => m.subject.startsWith(code));
   expect(alert.subject).toBe(`${code} / New sample request: Acme (Denim, Scaling)`);
   expect(alert.text).toContain('Order updates on WhatsApp: Yes, opted in');
-  expect(alert.html).toContain('/storage/v1/object/sign/request-files/');
   await expect.poll(async () => (await rows('notifications', `request_id=eq.${r.id}&select=audience,channel,status,detail&order=id`)).length).toBe(2);
   expect(await rows('notifications', `request_id=eq.${r.id}&select=audience,channel,status,detail&order=id`)).toEqual([
     { audience: 'staff', channel: 'email', status: 'sent', detail: null },
@@ -107,7 +92,7 @@ test('a brand that gave an email gets a receipt, and staff can reply to it', asy
 
 test('requests the server must turn away save nothing', async () => {
   const before = (await rows('requests', 'select=id')).length;
-  const refused = async (body: FormData, status: number, json: object) => {
+  const refused = async (body: string, status: number, json: object) => {
     const res = await post('submit-request', body);
     expect(res.status).toBe(status);
     expect(await res.json()).toEqual(json);
@@ -116,8 +101,7 @@ test('requests the server must turn away save nothing', async () => {
   await refused(requestForm({ contact: 'a@b.test', product: 'Socks' }), 400, { error: ERRORS.picks, field: 'picks' });
   await refused(requestForm({ contact: 'nobody' }), 400, { error: ERRORS.contact, field: 'contact' });
   await refused(requestForm({ contact: 'a@b.test', notice: 'old' }), 400, { error: ERRORS.failed });
-  await refused(requestForm({ contact: 'a@b.test' }, [['page.html', Buffer.from('<html>'), 'image/png']]), 400, { error: ERRORS.files, field: 'files' });
-  await refused(requestForm({ contact: 'a@b.test' }, Array.from({ length: 6 }, (_, i) => [`${i}.png`, PNG, 'image/png'] as [string, Buffer, string])), 400, { error: ERRORS.files, field: 'files' });
+  await refused('not json', 400, { error: ERRORS.failed });
   expect((await rows('requests', 'select=id')).length).toBe(before);
 });
 
@@ -152,12 +136,15 @@ test('a number counts as one contact however it is written', async () => {
 test('the publishable key reads and writes nothing', async () => {
   test.skip(!PUBLISHABLE, 'no publishable key');
   const headers = { apikey: PUBLISHABLE, 'Content-Type': 'application/json' };
-  for (const table of ['requests', 'request_files', 'messages', 'contact_consents', 'notifications', 'staff']) {
+  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff']) {
     const res = await fetch(`${URL_}/rest/v1/${table}?select=*`, { headers });
     expect(res.status, table).toBe(401);
   }
   const insert = await fetch(`${URL_}/rest/v1/requests`, { method: 'POST', headers, body: JSON.stringify({ path: 'Starting', product: 'Tees', brand: 'X', contact: 'x@y.test', contact_channel: 'email', email: 'x@y.test', notice_version: 'v' }) });
   expect(insert.status).toBe(401);
-  const list = await fetch(`${URL_}/storage/v1/object/list/request-files`, { method: 'POST', headers, body: JSON.stringify({ prefix: '' }) });
-  expect(await list.json()).toEqual([]);
+});
+
+test('no files are kept: storage has no buckets', async () => {
+  const res = await fetch(`${URL_}/storage/v1/bucket`, { headers: { apikey: SECRET } });
+  expect(await res.json()).toEqual([]);
 });

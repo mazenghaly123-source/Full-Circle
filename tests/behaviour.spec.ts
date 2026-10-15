@@ -1,7 +1,7 @@
 // Behaviour of the production build: navigation, motion that carries meaning, the phone
 // experience, the demos and the forms. Runs at 1440×900, 390×844 and 375×667.
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { PAGES, isPhone, mockBackend, postedData, postedFiles, watchErrors } from './helpers';
+import { PAGES, isPhone, mockBackend, postedData, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
 
 // Software WebGL in headless Chromium needs seconds to draw the 3D hero mark and blocks the page
@@ -414,17 +414,14 @@ test.describe('pages you come back to (the prototype was one document)', () => {
   });
 });
 
-test('request and track: files, errors and a pending photo survive a trip to another page', async ({ page }, info) => {
+test('request and track: errors and a pending photo survive a trip to another page', async ({ page }, info) => {
   await page.goto('/request-a-sample');
-  await page.locator('#fFile').setInputFiles([{ name: 'sketch.png', mimeType: 'image/png', buffer: Buffer.from('x') }, { name: 'pack.pdf', mimeType: 'application/pdf', buffer: Buffer.from('y') }]);
   await page.locator('#send').click();
   await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
   await openNav(page, '/about', isPhone(info));
   await page.waitForURL('**/about');
   await page.goBack();
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
-  await expect(page.locator('#fFileT')).toHaveText('sketch.png, pack.pdf');
-  expect(await page.locator('#fFile').evaluate((i: HTMLInputElement) => i.files?.length)).toBe(2);
   await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
 
   await page.goto('/track');
@@ -672,7 +669,7 @@ test.describe('the forms send to the backend', () => {
     await page.locator('#fContact').fill(contact);
   }
 
-  test('request: the picks, contact, opt-in, files and source go to the function, and its code shows', async ({ page }) => {
+  test('request: the picks, contact, opt-in and source go to the function, its code shows, and WhatsApp opens with it', async ({ page }) => {
     const sent = await mockBackend(page);
     await page.goto('/request-a-sample');
     await fillRequest(page, 'hello@acme.test');
@@ -684,7 +681,9 @@ test.describe('the forms send to the backend', () => {
     await expect(page.locator('#fWaUpdates')).not.toBeChecked();
     await page.locator('#fWaUpdates').check();
     await page.locator('#fNote').fill('Raw selvedge');
-    await page.locator('#fFile').setInputFiles([{ name: 'sketch.png', mimeType: 'image/png', buffer: Buffer.from('x') }]);
+    // requests take no files: they come later, on WhatsApp
+    await expect(page.locator('input[type=file]')).toHaveCount(0);
+    await expect(page.locator('#sentWa')).toBeHidden();
     await clickStill(page.locator('#send'));
     await expect(page.locator('#sentCode')).toHaveText('FC-2501');
     await expect(page.locator('#reqCode')).toHaveText('FC-2501');
@@ -696,7 +695,11 @@ test.describe('the forms send to the backend', () => {
     });
     // where the visitor came from: here, straight to the form
     expect(data.source).toEqual({ landing: '/request-a-sample' });
-    expect(postedFiles(sent[0])).toEqual(['sketch.png']);
+    // once sent, the conversation carries on on WhatsApp, with the code ready to send
+    await expect(page.locator('#sentWa')).toBeVisible();
+    await expect(page.locator('#sentWa')).toHaveText('Continue on WhatsApp');
+    await expect(page.locator('#sentWa')).toHaveAttribute('href', 'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20just%20sent%20sample%20request%20FC-2501%20(Acme%20Studio).');
+    await expect(page.locator('#sentWa')).toHaveAttribute('target', '_blank');
     // once sent, the picks cannot change and the request is not sent twice
     expect(await page.locator('#qs').evaluate((e) => (e as HTMLElement).inert)).toBe(true);
     await expect(page.locator('#send')).toBeHidden();
@@ -737,17 +740,6 @@ test.describe('the forms send to the backend', () => {
     await expect(page.locator('#err')).toHaveText('');
   });
 
-  test('request: files the server would refuse are caught before sending', async ({ page }) => {
-    const sent = await mockBackend(page);
-    await page.goto('/request-a-sample');
-    await fillRequest(page, 'hello@acme.test');
-    await page.locator('#fFile').setInputFiles(Array.from({ length: 6 }, (_, i) => ({ name: `f${i}.png`, mimeType: 'image/png', buffer: Buffer.from('x') })));
-    await clickStill(page.locator('#send'));
-    await expect(page.locator('#err')).toHaveText(ERRORS.files);
-    expect(sent).toHaveLength(0);
-    await expect(page.locator('#fFileH')).toHaveText(NOTICE.files);
-  });
-
   test('request: a contact that is neither an email nor a number is caught', async ({ page }) => {
     await page.goto('/request-a-sample');
     await fillRequest(page, 'call me maybe');
@@ -768,6 +760,7 @@ test.describe('the forms send to the backend', () => {
     await page.waitForURL((u) => u.pathname === '/request-a-sample');
     await expect(page.locator('#sentCode')).toHaveText('FC-2501');
     await expect(page.locator('.sent-box')).toBeVisible();
+    await expect(page.locator('#sentWa')).toHaveAttribute('href', 'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20just%20sent%20sample%20request%20FC-2501%20(Acme%20Studio).');
   });
 
   test('contact: the message goes to the function, with a WhatsApp line for a number', async ({ page }) => {

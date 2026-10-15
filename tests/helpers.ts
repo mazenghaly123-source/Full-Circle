@@ -79,8 +79,8 @@ const FIELD_LABELS: [string, string][] = [
   ['tId', 'Email or WhatsApp number'], ['tCode', '6-digit code'],
 ];
 
-/** The form lines (approved 15 Oct 2026): what shows under the file picker and under each form's button. */
-const FORM_LINES = { files: NOTICE.files, request: NOTICE.request, contact: NOTICE.contact };
+/** The form lines (approved 15 Oct 2026): what shows under each form's button. */
+const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
 
 export async function approvePrototype(page: Page) {
   await page.evaluate(([css, labels, lines]) => {
@@ -96,16 +96,18 @@ export async function approvePrototype(page: Page) {
       const l = document.createElement('label'); l.className = 'mono dim flabel'; l.htmlFor = id; l.textContent = text;
       document.getElementById(id)!.before(l);
     }
-    // the form lines: the upload hint, and the privacy line under each form's button (the WhatsApp
-    // line, the opt-in and the Turnstile slot stay hidden until used, so they are not added)
+    // the form lines: the privacy line under each form's button (the WhatsApp line, the opt-in and
+    // the Turnstile slot stay hidden until used, so they are not added)
     const notice = (text: string, link: boolean) => {
       const p = document.createElement('p'); p.className = 'notice'; p.textContent = text;
       if (link) { const a = document.createElement('a'); a.href = '/privacy'; a.textContent = 'Privacy notice'; p.append(' ', a); }
       return p;
     };
-    document.getElementById('fFile')!.closest('label')!.after(notice(lines.files, false));
     document.getElementById('err')!.after(notice(lines.request, true));
     document.getElementById('cErr')!.after(notice(lines.contact, true));
+    // requests take no files (15 Oct 2026), and a sent request offers WhatsApp with its code
+    document.getElementById('fFile')!.closest('label')!.remove();
+    document.querySelector('.sent-box')!.insertAdjacentHTML('beforeend', '<a class="btn btn-line" id="sentWa" target="_blank" rel="noopener">Continue on WhatsApp</a>');
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES] as const);
 }
 
@@ -133,7 +135,7 @@ export async function settle(page: Page) {
 }
 
 /** What a mocked form function received, and how it should answer. */
-export type Sent = { url: string; body: Buffer | null; contentType: string };
+export type Sent = { url: string; body: Buffer | null };
 
 /**
  * Stands in for the forms' backend: Cloudflare's Turnstile script (answers at once with its test
@@ -148,7 +150,7 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
   }));
   await page.route(/\/functions\/v1\/submit-(request|contact)$/, async (route) => {
     const req = route.request(), fn = req.url().endsWith('submit-request') ? 'submit-request' : 'submit-contact';
-    sent.push({ url: req.url(), body: req.postDataBuffer(), contentType: (await req.allHeaders())['content-type'] ?? '' });
+    sent.push({ url: req.url(), body: req.postDataBuffer() });
     const a = answer(fn, sent.filter((s) => s.url.endsWith(fn)).length);
     if (a.delayMs) await new Promise((r) => setTimeout(r, a.delayMs));
     if (a.abort) return route.abort('failed');
@@ -157,13 +159,5 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
   return sent;
 }
 
-/** The JSON a mocked request carried: the "data" part of the request form, or the contact form's body. */
-export function postedData(s: Sent): Record<string, unknown> {
-  const text = s.body?.toString('utf8') ?? '';
-  if (!s.contentType.startsWith('multipart/form-data')) return JSON.parse(text);
-  const m = text.match(/name="data"\r\n\r\n([\s\S]*?)\r\n--/);
-  return JSON.parse(m![1]);
-}
-
-/** The file names a mocked request form carried. */
-export const postedFiles = (s: Sent) => [...(s.body?.toString('latin1') ?? '').matchAll(/name="files"; filename="([^"]*)"/g)].map((m) => m[1]);
+/** The JSON a mocked form function received. */
+export const postedData = (s: Sent): Record<string, unknown> => JSON.parse(s.body?.toString('utf8') ?? '');

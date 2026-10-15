@@ -1,41 +1,24 @@
-// Receives the sample request form: checks it, saves the request and its files, records the
-// WhatsApp opt-in, and emails staff (and the brand, when it gave an email). Answers with the code.
+// Receives the sample request form: checks it, saves the request, records the WhatsApp opt-in, and
+// emails staff (and the brand, when it gave an email). Answers with the code.
 //
-// POST multipart/form-data: "data" (JSON, RequestData in _shared/forms.ts) and up to 5 "files".
-import { ERRORS, FILE_TYPES, LIMITS, NOTICE, belowMinimum, checkRequest, sniffType } from '../_shared/forms.ts';
+// POST application/json: RequestData in _shared/forms.ts.
+import { ERRORS, NOTICE, belowMinimum, checkRequest } from '../_shared/forms.ts';
 import { clientReceiptEmail, staffRequestEmail } from '../_shared/emails.ts';
 import { WHATSAPP_LATER, crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
 
-const BUCKET = 'request-files';
-/** How long the file links in the staff email work. */
-const LINK_SECONDS = 7 * 24 * 3600;
 /** Requests from one contact in an hour before it is asked to use WhatsApp instead. */
 const PER_HOUR = 5;
-
-/** A file name that is safe in a storage path (the original name is kept in the database). */
-const safeName = (name: string) => name.normalize('NFKD').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(-80) || 'file';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();
   if (req.method !== 'POST') return refuse('Send the form with POST', 405);
 
-  let form: FormData, raw: unknown;
-  try { form = await req.formData(); raw = JSON.parse(String(form.get('data'))); } catch { return refuse(ERRORS.failed); }
+  let raw: unknown;
+  try { raw = await req.json(); } catch { return refuse(ERRORS.failed); }
   const checked = checkRequest(raw as never);
   if (!checked.ok) return refuse(checked.error, 400, checked.field);
   const r = checked.value;
   if (r.notice !== NOTICE.version) return refuse(ERRORS.failed);
-
-  // files: how many, how big, and what their first bytes say they are
-  const files = form.getAll('files').filter((f): f is File => f instanceof File && f.size > 0);
-  const total = files.reduce((n, f) => n + f.size, 0);
-  if (files.length > LIMITS.files || total > LIMITS.totalBytes || files.some((f) => f.size > LIMITS.fileBytes)) return refuse(ERRORS.files, 400, 'files');
-  const typed: { file: File; type: (typeof FILE_TYPES)[number] }[] = [];
-  for (const file of files) {
-    const type = sniffType(new Uint8Array(await file.slice(0, 16).arrayBuffer()));
-    if (!type) return refuse(ERRORS.files, 400, 'files');
-    typed.push({ file, type });
-  }
 
   try {
     if (!(await human(r.turnstile, req))) return refuse(ERRORS.robot, 403, 'robot');
@@ -56,43 +39,34 @@ Deno.serve(async (req) => {
     }, 'id,code,created_at');
   } catch (err) { return crash('insert request', err, ERRORS.failed); }
 
-  // the files go in under the request's code; if one fails, the whole request is taken back so the
-  // brand can send it again rather than staff getting it without its files
-  const stored: { object_path: string; name: string; size: number; type: string }[] = [];
-  try {
-    for (const [i, { file, type }] of typed.entries()) {
-      const object_path = `${saved.code}/${i + 1}-${safeName(file.name)}`;
-      await client.upload(BUCKET, object_path, file, type);
-      stored.push({ object_path, name: file.name.slice(0, 200), size: file.size, type });
-    }
-    if (stored.length) await client.insert('request_files', stored.map((f) => ({ ...f, request_id: saved.id })));
-    if (r.whatsappUpdates !== undefined) {
+  // the opt-in goes with the request; if it cannot be recorded, the request is taken back so the
+  // brand can send it again rather than staff getting it without its answer
+  if (r.whatsappUpdates !== undefined) {
+    try {
       await client.insert('contact_consents', {
         channel: 'whatsapp', address: whatsapp ?? r.contact, purpose: 'order_updates', opted_in: r.whatsappUpdates,
         wording: NOTICE.whatsappUpdates, wording_version: NOTICE.version, source: `request ${saved.code}`, request_id: saved.id,
       });
+    } catch (err) {
+      await client.delete('requests', { id: `eq.${saved.id}` }).catch(() => {});
+      return crash('record consent', err, ERRORS.failed);
     }
-  } catch (err) {
-    await Promise.allSettled([stored.length && client.removeFiles(BUCKET, stored.map((f) => f.object_path)), client.delete('requests', { id: `eq.${saved.id}` })]);
-    return crash('store request files', err, ERRORS.failed);
   }
 
-  later(notify(client, saved, r, stored));
+  later(notify(client, saved, r));
   return reply({ code: saved.code });
 });
 
 type Saved = { id: number; code: string; created_at: string };
 type Checked = Extract<ReturnType<typeof checkRequest>, { ok: true }>['value'];
 
-/** Emails staff (with links to the files) and the brand, and logs each message. */
-async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked, stored: { object_path: string; name: string }[]) {
-  const links = stored.length ? await client.signedUrls(BUCKET, stored.map((f) => f.object_path), LINK_SECONDS).catch(() => []) : [];
+/** Emails staff and the brand, and logs each message. */
+async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked) {
   const staff = staffEmails();
   const alert = staffRequestEmail({
     code: saved.code, at: new Date(saved.created_at), brand: r.brand,
     picks: { path: r.path, product: r.product, qty: r.qty, have: r.have }, belowMinimum: belowMinimum(r.qty, r.product),
     typed: r.contact, reach: r.reach, whatsappUpdates: r.whatsappUpdates, note: r.note, source: r.source,
-    files: stored.map((f, i) => ({ name: f.name, url: links[i] ?? '' })),
   });
   const toStaff = await sendEmail({ to: staff, ...alert, replyTo: r.reach.channel === 'email' ? r.reach.email : undefined });
   await logNotification(client, { event: 'request_received', audience: 'staff', channel: 'email', recipients: staff, sent: toStaff, request_id: saved.id });

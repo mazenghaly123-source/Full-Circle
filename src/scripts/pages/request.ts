@@ -1,44 +1,37 @@
-// Request a sample: four picks, a live summary, contact details and optional files. Other pages
-// send picks along in the URL (/request-a-sample?path=Scaling&product=Denim).
+// Request a sample: four picks, a live summary and contact details. Other pages send picks along in
+// the URL (/request-a-sample?path=Scaling&product=Denim).
 //
 // Sending posts the request to the submit-request Edge Function, which saves it, issues its code
 // (FC-####) and tells the team. The form checks the same rules first (supabase/functions/_shared/forms.ts).
+// Once sent, a button opens WhatsApp with the code, as the conversation carries on there.
 import type { Feature } from '../core/lifecycle';
 import { $, byId, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
 import { picked, request } from '../core/state';
 import { arrival } from '../core/nav';
 import { source } from '../core/source';
 import { isProblem, submit } from '../core/send';
-import { REQUEST_QUESTIONS, belowMinimum, type RequestKey } from '../../data/site';
-import { ERRORS, FILE_TYPES, LIMITS, NOTICE, isOption, readContact, type RequestData } from '../../../supabase/functions/_shared/forms';
+import { REQUEST_QUESTIONS, belowMinimum, whatsappLink, type RequestKey } from '../../data/site';
+import { ERRORS, NOTICE, isOption, readContact, type RequestData } from '../../../supabase/functions/_shared/forms';
 import { updGo } from '../shell/mbar';
 
-const FILE_HINT = 'Add a sketch, tech pack or photo (optional)';
 const SEND = 'Request a sample', SENDING = 'Sending…';
-/** What an error line can be about: the two required option groups, the two required fields and the files. */
-const CHECKED = ['opts-path', 'opts-product', 'fBrand', 'fContact', 'fFile'] as const;
+/** What an error line can be about: the two required option groups and the two required fields. */
+const CHECKED = ['opts-path', 'opts-product', 'fBrand', 'fContact'] as const;
 /** The field an answer from the server is about. */
-const FIELD: Record<string, string[]> = { brand: ['fBrand'], contact: ['fContact'], files: ['fFile'] };
-
-/** The file picker's label: the files chosen, or the hint. */
-const fileLabel = () => request.files.length ? request.files.map((f) => f.name).join(', ') : FILE_HINT;
+const FIELD: Record<string, string[]> = { brand: ['fBrand'], contact: ['fContact'] };
 
 /** The contact reads as a WhatsApp number: say so, and offer order updates there. */
 const onWhatsApp = () => readContact(request.contact)?.channel === 'whatsapp';
 
-/** Files the server would turn away: too many, too big, or not an image or a PDF. */
-const filesOk = () => request.files.length <= LIMITS.files
-  && request.files.reduce((n, f) => n + f.size, 0) <= LIMITS.totalBytes
-  && request.files.every((f) => f.size <= LIMITS.fileBytes && (!f.type || (FILE_TYPES as readonly string[]).includes(f.type) || /\.(pdf|heic|heif|avif)$/i.test(f.name)));
-
 /**
- * The summary once the request is sent: its code, and the sent look. The form goes away (the
- * prototype's .is-sent rule meant to hide it, but the box's inline display won) and the picks can
- * no longer change, so a request is never sent twice.
+ * The summary once the request is sent: its code, the sent look, and WhatsApp ready with the code.
+ * The form goes away (the prototype's .is-sent rule meant to hide it, but the box's inline display
+ * won) and the picks can no longer change, so a request is never sent twice.
  */
 function showSent(doc: Document) {
   const g = byId(doc);
   g('sentCode').textContent = request.code; g('reqCode').textContent = request.code; g('summary').classList.add('is-sent');
+  (g('sentWa') as HTMLAnchorElement).href = whatsappLink(`Hi Full Circle, I just sent sample request ${request.code} (${request.brand.trim()}).`);
   g('summary').querySelector<HTMLElement>('.form-box')!.hidden = true;
   g('qs').inert = true;
 }
@@ -71,7 +64,6 @@ function restore(doc: Document) {
   (doc.getElementById('fNote') as HTMLTextAreaElement).value = request.note;
   (doc.getElementById('fWaUpdates') as HTMLInputElement).checked = request.waUpdates;
   doc.getElementById('waOpt')!.hidden = !onWhatsApp();
-  doc.getElementById('fFileT')!.textContent = fileLabel();
   doc.getElementById('err')!.textContent = request.err; markInvalid(doc, CHECKED, request.bad, 'err');
   showSending(doc);
   if (request.sent) showSent(doc);
@@ -85,18 +77,12 @@ function choose(k: RequestKey, v: string) {
 }
 
 /** The request as the server takes it. */
-const payload = (turnstile: string) => {
-  const data: RequestData = {
-    path: request.sel.path!, product: request.sel.product!, qty: request.sel.qty, have: request.sel.have,
-    brand: request.brand, contact: request.contact, note: request.note,
-    whatsappUpdates: onWhatsApp() ? request.waUpdates : undefined,
-    notice: NOTICE.version, source, turnstile,
-  };
-  const fd = new FormData();
-  fd.set('data', JSON.stringify(data));
-  request.files.forEach((f) => fd.append('files', f, f.name));
-  return fd;
-};
+const payload = (turnstile: string): string => JSON.stringify({
+  path: request.sel.path!, product: request.sel.product!, qty: request.sel.qty, have: request.sel.have,
+  brand: request.brand, contact: request.contact, note: request.note,
+  whatsappUpdates: onWhatsApp() ? request.waUpdates : undefined,
+  notice: NOTICE.version, source, turnstile,
+} satisfies RequestData);
 
 export const requestFeature: Feature = {
   prepare: restore,
@@ -108,14 +94,11 @@ export const requestFeature: Feature = {
       for (const k of ['path', 'product'] as const) { const v = params.get(k); if (v && isOption(k, v)) request.sel[k] = v; }
     }
     restore(document);
-    // files chosen before leaving the page are put back in the picker
-    if (request.files.length) { try { const dt = new DataTransfer(); request.files.forEach((f) => dt.items.add(f)); $<HTMLInputElement>('fFile').files = dt.files; } catch { /* old browser: the names stay in the label */ } }
     document.querySelectorAll<HTMLElement>('.q').forEach((q) => q.addEventListener('click', (e) => { const o = (e.target as Element).closest('.opt'); if (o) { vib(); choose(q.dataset.k as RequestKey, o.textContent!); } }, { signal }));
     $('fBrand').addEventListener('input', (e) => { request.brand = (e.target as HTMLInputElement).value; }, { signal });
     $('fContact').addEventListener('input', (e) => { request.contact = (e.target as HTMLInputElement).value; $('waOpt').hidden = !onWhatsApp(); }, { signal });
     $('fWaUpdates').addEventListener('change', (e) => { request.waUpdates = (e.target as HTMLInputElement).checked; }, { signal });
     $('fNote').addEventListener('input', (e) => { request.note = (e.target as HTMLTextAreaElement).value; }, { signal });
-    $('fFile').addEventListener('change', (e) => { request.files = [...((e.target as HTMLInputElement).files ?? [])]; $('fFileT').textContent = fileLabel(); }, { signal });
     // the error line is tied to the fields it is about, and focus goes to the first of them (a
     // missing pick: its first option, with the question scrolled to the middle of the screen)
     const fail = (msg: string, bad: string[]) => {
@@ -132,7 +115,6 @@ export const requestFeature: Feature = {
       if (!request.sel.path || !request.sel.product) return fail(ERRORS.picks, missingPicks());
       if (!request.brand.trim()) return fail(ERRORS.brand, ['fBrand']);
       if (!readContact(request.contact)) return fail(ERRORS.contact, ['fContact']);
-      if (!filesOk()) return fail(ERRORS.files, ['fFile']);
       request.sending = true; request.err = ''; request.bad = []; $('err').textContent = ''; markInvalid(document, CHECKED, [], 'err'); showSending(document);
       const out = await submit<{ code: string }>('submit-request', $('rTs'), payload);
       request.sending = false;

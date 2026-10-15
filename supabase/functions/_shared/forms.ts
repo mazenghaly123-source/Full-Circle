@@ -22,32 +22,8 @@ export const belowMinimum = (qty: string | null, product: string | null) =>
 export const isOption = (k: RequestKey, v: unknown): v is string =>
   typeof v === 'string' && (REQUEST_QUESTIONS.find((q) => q.k === k)!.options as readonly string[]).includes(v);
 
-/** Longest text each field takes, and the files a request can carry. */
-export const LIMITS = {
-  brand: 200, name: 200, contact: 200, note: 4000, message: 4000,
-  files: 5, fileBytes: 10 * 1024 * 1024, totalBytes: 20 * 1024 * 1024,
-} as const;
-
-/** File types a request can carry: images (phones send HEIC) and PDFs. */
-export const FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif', 'image/avif', 'application/pdf'] as const;
-
-/** What a file's first bytes say it is (the name and the browser's type can be anything). */
-export function sniffType(head: Uint8Array): (typeof FILE_TYPES)[number] | null {
-  const at = (i: number, ...b: number[]) => b.every((x, k) => head[i + k] === x);
-  const ascii = (i: number, n: number) => String.fromCharCode(...head.subarray(i, i + n));
-  if (at(0, 0xff, 0xd8, 0xff)) return 'image/jpeg';
-  if (at(0, 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)) return 'image/png';
-  if (ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') return 'image/webp';
-  if (ascii(0, 4) === 'GIF8') return 'image/gif';
-  if (ascii(0, 5) === '%PDF-') return 'application/pdf';
-  if (ascii(4, 4) === 'ftyp') {
-    const brand = ascii(8, 4);
-    if (brand === 'avif' || brand === 'avis') return 'image/avif';
-    if (['heic', 'heix', 'heim', 'heis', 'hevc', 'hevx'].includes(brand)) return 'image/heic';
-    if (brand === 'mif1' || brand === 'msf1') return 'image/heif';
-  }
-  return null;
-}
+/** Longest text each field takes. */
+export const LIMITS = { brand: 200, name: 200, contact: 200, note: 4000, message: 4000 } as const;
 
 /** How someone can be reached: an email, or a WhatsApp number (null when its country cannot be told). */
 export type Contact = { channel: 'email'; email: string } | { channel: 'whatsapp'; whatsapp: string | null };
@@ -89,7 +65,6 @@ export const NOTICE = {
   contact: 'We use these details to reply to your message. They are stored mainly in Frankfurt, Germany; some of our providers in the US and elsewhere also process them.',
   whatsappReply: 'We’ll reply on WhatsApp.',
   whatsappUpdates: 'Also send me updates on my order from Full Circle on WhatsApp. I can stop them at any time.',
-  files: 'Please don’t upload photos of people or ID documents.',
 } as const;
 
 /** Where a visitor came from, taken on the first page they open and sent with a request or message. */
@@ -104,7 +79,7 @@ export function cleanSource(raw: unknown): Source {
   return out;
 }
 
-/** What the request form sends (as JSON in the "data" part, next to the files). */
+/** What the request form sends. Files are not taken: they come later, on WhatsApp. */
 export type RequestData = {
   path: string; product: string; qty: string | null; have: string | null;
   brand: string; contact: string; note: string;
@@ -124,7 +99,6 @@ export const ERRORS = {
   picks: 'Pick the brand stage and a product',
   brand: 'Add the brand name',
   contact: 'Add an email or WhatsApp number',
-  files: `Up to ${LIMITS.files} files: images or PDFs, ${LIMITS.fileBytes / 1024 / 1024} MB each, ${LIMITS.totalBytes / 1024 / 1024} MB in all`,
   message: 'Fill in your name, contact and message',
   robot: 'We could not check that you are not a robot. Try again',
   failed: 'Could not send. Check your connection and try again, or message us on WhatsApp',
@@ -133,7 +107,7 @@ export const ERRORS = {
 
 type Checked<T> = { ok: true; value: T } | ({ ok: false } & Problem);
 
-/** Checks a request's fields (files are checked where they arrive). */
+/** Checks a request's fields. */
 export function checkRequest(d: Partial<RequestData>): Checked<RequestData & { reach: Contact }> {
   if (!isOption('path', d.path) || !isOption('product', d.product)) return { ok: false, error: ERRORS.picks, field: 'picks' };
   if (d.qty != null && !isOption('qty', d.qty)) return { ok: false, error: ERRORS.picks, field: 'picks' };

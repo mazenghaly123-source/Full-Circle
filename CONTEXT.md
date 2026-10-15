@@ -30,7 +30,7 @@ _Avoid_: Admin (that is the name of the view, not of a person)
 
 **Request**:
 A brand's first message through the request form: path, product, pieces per style, what they
-have, contact, optional files. Not yet a commitment.
+have, contact, optional notes. Not yet a commitment.
 _Avoid_: Lead, enquiry, quote
 
 **Code**:

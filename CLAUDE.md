@@ -50,6 +50,11 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   menu, snap carousels with dots, animated orange/indigo hero light, labelled hero ring.
   Phone quality matters a lot: test at 390×844 and 375×667.
 - Starting/Scaling: split section on Home now; dedicated ad landing pages later.
+- The site takes no files (Mazen, 15 Oct 2026): the request form has no upload, and sketches,
+  tech packs and photos come on WhatsApp after the first contact. A sent request shows
+  "Continue on WhatsApp", which opens a chat with its code ready to send.
+- The legal review of the forms and the privacy notice is done (Mazen, 15 Oct 2026). Don't raise
+  it again.
 - Tracking portal is part of the build.
 - Atelier, floor and team photos must be REAL photos (not AI). Everything else may be AI.
 - Image generation: never use Higgsfield Nano Banana / GPT Image; give Mazen prompts.
@@ -69,8 +74,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 
 ## Still TBC (marked with a dashed TBC tag in the prototype)
 Working hours, bulk lead time, fabrics/weights per category, techniques, sample pricing,
-who answers requests and how fast, team names/roles/portraits, domain. Real photos missing:
-atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
+who answers requests and how fast, team names/roles/portraits, domain, and the privacy notice's
+company details and periods (`/privacy`). Real photos missing: atelier-1..5, about-floor,
+team-1..4. All of it is filled in before launch.
 
 ## Site code
 - **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at
@@ -98,8 +104,8 @@ atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
   come from the `@fontsource` packages through Astro's local font provider, so builds need no network.
 
 ## Backend
-- Supabase project `full-circle-staging` (Frankfurt, free plan, **test data only** until the lawyer
-  signs off). The live project is created at launch. Every build sends its forms to staging unless
+- Supabase project `full-circle-staging` (Frankfurt, free plan, **test data only**). The live
+  project is created at launch. Every build sends its forms to staging unless
   `PUBLIC_SUPABASE_URL` says otherwise (`src/data/backend.ts`).
 - Row-level security on every table, and the publishable key reaches none of them: the forms
   write through the `submit-request` and `submit-contact` Edge Functions, which check a Turnstile
@@ -108,7 +114,10 @@ atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
   with `deno check`. `tests/unit/backend.spec.ts` runs them end to end on a local stack
   (`supabase start`); the CI *backend* job does all three.
 - Migrations reach staging through the Supabase MCP (`apply_migration`); keep each local file
-  named with the version the project records, so the two histories match.
+  named with the version the project records, so the two histories match. Statements the MCP
+  counts as destructive (DROP, DELETE) wait for a confirmation that never reaches a cloud session
+  and time out: give Mazen that SQL to run in the dashboard's SQL editor, with an insert into
+  `supabase_migrations.schema_migrations` recording the local file's version.
 
 ## Work rules
 - Confirm the plan with Mazen before large builds; don't build unrequested versions.

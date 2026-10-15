@@ -1,6 +1,6 @@
 ---
-// The privacy notice the forms link to (docs/production-plan.md §7). A draft until the lawyer has
-// reviewed it; the parts only the lawyer or Mazen can answer carry a TBC tag, like the rest of the site.
+// The privacy notice the forms link to (docs/production-plan.md §7). Facts still to come carry a TBC
+// tag, like the rest of the site.
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import { EMAIL, ROUTES, WHATSAPP, WHATSAPP_URL } from '../data/site';
@@ -8,7 +8,7 @@ import { EMAIL, ROUTES, WHATSAPP, WHATSAPP_URL } from '../data/site';
 const tbc = '<span class="tbc">TBC</span>';
 ---
 <Base page="privacy" title="Privacy notice / Full Circle" description="What Full Circle collects when you request a sample, send a message or follow an order, why, where it is kept, and what you can ask for.">
-<PageHero crumb="Privacy" title="Privacy notice." lead="What we collect when you contact us or work with us, why, where it is kept, and what you can ask for. This is a draft: our lawyer is reviewing it, and the parts marked TBC are filled in before launch." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" />
+<PageHero crumb="Privacy" title="Privacy notice." lead="What we collect when you contact us or work with us, why, where it is kept, and what you can ask for." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" />
 <div class="wrap priv">
   <section>
     <div><span class="mono dim">01</span><h2>Who we are</h2></div>
@@ -21,7 +21,7 @@ const tbc = '<span class="tbc">TBC</span>';
     <div><span class="mono dim">02</span><h2>What we collect</h2></div>
     <div>
       <ul>
-        <li><b>When you request a sample:</b> your brand name, your email or WhatsApp number, your picks (product, quantity, what you have), your notes and any files you add.</li>
+        <li><b>When you request a sample:</b> your brand name, your email or WhatsApp number, your picks (product, quantity, what you have) and your notes. We do not take files through the site: sketches and photos come later, on WhatsApp.</li>
         <li><b>When you send a message:</b> your name, your email or WhatsApp number and your message.</li>
         <li><b>With either:</b> the first page you opened on the site and the site or ad that sent you (for example Instagram), so we know which posts bring brands to us.</li>
         <li><b>When you become a client:</b> your sign-in to the tracking page, your orders, the decisions you approve or ask to change, and photos of your order at each stage.</li>
@@ -87,13 +87,13 @@ const tbc = '<span class="tbc">TBC</span>';
   <section>
     <div><span class="mono dim">09</span><h2>Security</h2></div>
     <div>
-      <p>Everything travels encrypted. Files you send are private: only Full Circle staff open them, through links that expire. If a breach affects your data, we tell you and the authorities as the law requires.</p>
+      <p>Everything travels encrypted, and only Full Circle staff can read what you send us. If a breach affects your data, we tell you and the authorities as the law requires.</p>
     </div>
   </section>
   <section>
     <div><span class="mono dim">10</span><h2>Changes</h2></div>
     <div>
-      <p>Draft of 15 October 2026. Every change is dated here.</p>
+      <p>Last updated 15 October 2026. Every change is dated here.</p>
     </div>
   </section>
 </div>

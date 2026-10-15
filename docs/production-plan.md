@@ -19,7 +19,7 @@ Status (15 Oct 2026): **phase 1 is built** (the static site at parity with the p
 | Q8 | Domain | **Not bought yet.** It now blocks phases 2–4, not only launch (see §8) | |
 | Q9 | TBC content | **Filled in before launch.** Launch is blocked until no TBC tag remains | |
 | Q10 | Analytics | Recommendation: **Umami Cloud**, free plan, EU region (§6) | |
-| Q11 | Privacy note | Recommendation in §7. **Talk to an Egyptian data-protection lawyer this month** | |
+| Q11 | Privacy note | §7, as built. **Reviewed by the lawyer and confirmed** (Mazen, 15 Oct 2026) | |
 | — | Hosting | **Cloudflare Workers (static assets)** rather than Pages, following Cloudflare's current advice | [ADR 0002](./adr/0002-cloudflare-workers-static-assets.md) |
 
 ## 2. Where things stand
@@ -99,27 +99,30 @@ again, was fixed in phase 2.)
 **Phase 2 is built** (15 Oct 2026, branch `claude/phase-2-requests`), on the Supabase project
 **full-circle-staging** (Frankfurt, free plan), with test data only:
 
-- *Database:* requests, their files (a private bucket), contact messages, consent records, the log
-  of every message sent, and staff with their roles. Codes come from one sequence, starting at
-  FC-2501. Row-level security on every table; the publishable key reaches none of them. Tested:
-  33 database checks of who can reach what, run in CI.
+- *Database:* requests, contact messages, consent records, the log of every message sent, and
+  staff with their roles. Codes come from one sequence, starting at FC-2501. Row-level security on
+  every table; the publishable key reaches none of them. Tested: 29 database checks of who can
+  reach what, run in CI.
 - *Forms:* both post to Edge Functions (`submit-request`, `submit-contact`) that check the same
-  rules as the page, a Turnstile token, file types by their first bytes (up to 5 images or PDFs,
-  10 MB each, 20 MB in all) and a limit of 5 sends an hour per contact. The request answers with
-  its code. Each request and message carries where the visitor came from (ad tags, referring site,
-  first page). Emails: an alert to staff for each, a receipt to a brand that gave an email; the
-  WhatsApp receipt waits for phase 4 and is logged as such.
-- *Form lines* (approved by Mazen on 15 Oct): the privacy line under each button, "We'll reply on
-  WhatsApp" with a separate unticked box for order updates once a number is typed (stored with its
-  exact wording), and the hint not to upload photos of people or IDs. A **draft privacy notice**
-  at `/privacy`, with TBC where only the lawyer or Mazen can answer.
-- *Checked on staging:* a request with a PDF and one with a WhatsApp opt-in landed with their file,
-  consent and log rows; the publishable key was refused on every table and file.
+  rules as the page, a Turnstile token and a limit of 5 sends an hour per contact (however the
+  email or number is typed). The request answers with its code. Each request and message carries
+  where the visitor came from (ad tags, referring site, first page). Emails: an alert to staff for
+  each, a receipt to a brand that gave an email; the WhatsApp receipt waits for phase 4 and is
+  logged as such.
+- *No files* (Mazen, 15 Oct 2026): the request form has no upload, so the site stores no files.
+  Sketches and photos come on WhatsApp: once a request is sent, "Continue on WhatsApp" opens a chat
+  with its code ready to send. (The first build took files; they were removed the same day.)
+- *Form lines* (approved by Mazen on 15 Oct): the privacy line under each button, and "We'll reply
+  on WhatsApp" with a separate unticked box for order updates once a number is typed (stored with
+  its exact wording). The **privacy notice** at `/privacy`; its company details and periods are
+  TBC like the rest of the site's open facts.
+- *Checked on staging:* requests by email and by WhatsApp (with an opt-in) landed with their
+  consent and log rows; the publishable key was refused on every table.
 
 **Left for phase 2 to be done:** a Resend account and key (until then nothing is emailed; every
 email is logged as skipped), then the domain verified at Resend so receipts reach brands; a real
-Turnstile widget (staging's test key lets everything through); the nightly clean-up once the lawyer
-gives retention periods; the Arabic notice decision (§7).
+Turnstile widget (staging's test key lets everything through); the nightly clean-up, once the
+retention periods (TBC on `/privacy`) are known.
 
 **Found while building, for later:** the 3D logo mesh has about 724,000 vertices, and building it
 takes about 0.6 s on the main thread on a fast computer, more on phones. The prototype has the same
@@ -134,7 +137,7 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
  ├─ /track   client portal (JS app)   ──────────────► ├─ Auth: invite-only, 6-digit codes
  ├─ /admin   staff app (JS app, noindex) ───────────► │    email  → Resend (SMTP)
  └─ forms ───────────────────────────────────────────► │    WhatsApp → Send SMS hook → Meta Cloud API
-                                                       ├─ Storage: private buckets (stage photos, uploads)
+                                                       ├─ Storage: private buckets (stage photos)
  Umami Cloud (EU) ◄── pageviews + 3 events            └─ Edge Functions (run in Frankfurt):
                                                             submit-request, submit-contact, notify,
                                                             whatsapp-webhook
@@ -160,7 +163,6 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
 | `clients` | brand, notes | staff; members read their own |
 | `client_members` | user ↔ client (a brand can have several people) | staff; user reads own rows |
 | `requests` | code, path, product, qty, have, brand, contact, contact type, note, status, UTM/referrer | insert **only through the Edge Function**; staff read and update |
-| `request_files` | storage path per upload | function inserts; staff read |
 | `messages` | contact form | function inserts; staff read |
 | `orders` | code, client, name, product, fabric, qty, stage (1–8), open decision | staff full; members read their client's orders |
 | `order_specs` | key/value rows per order | staff write; members read |
@@ -182,9 +184,9 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
 - **Staff roles** (proposed, please confirm): **owner** can do everything, including adding and
   removing staff and exporting or deleting someone's data when asked; **staff** answer requests,
   create orders, open decisions, upload photos and move stages. Staff sign in by email code.
-- **Housekeeping:** a nightly job deletes requests and messages older than the retention period
-  (with their files), and uploads that were never finished. Uploads are limited to images and PDFs
-  of a set size, kept in private buckets and shown only through signed links.
+- **Housekeeping:** a nightly job deletes requests and messages older than the retention period.
+  The site takes no files from visitors; stage photos, which staff upload, are kept in a private
+  bucket and shown only through signed links.
 
 ### Admin (`/admin`)
 Same design system, plain and built for a phone first:
@@ -253,12 +255,12 @@ Data Protection Center (PDPC), a registered data protection officer, and a licen
 store data abroad. Supabase in Frankfurt and the US providers count as abroad. The PDPC's online
 portal was reported as not yet open in September 2026. So:
 
-1. **Brief an Egyptian data-protection lawyer this month** (questions to bring are listed below).
-2. **Build phases 2–4 with test data only** until the lawyer has signed off. Phase 1 collects nothing.
+**Done (15 Oct 2026):** the lawyer reviewed the forms and the privacy notice and confirmed them
+(Mazen). Staging keeps test data only; the live project is created at launch.
 
 **Privacy notice**: one short page, in plain language. It covers:
 - who we are and how to reach us about privacy
-- what we collect: request and contact details, uploads, portal account, order records
+- what we collect: request and contact details, portal account, order records
 - why we collect it and on what basis
 - who processes it: Supabase, Cloudflare, Resend, Meta (WhatsApp), Umami
 - where it is stored: mainly Frankfurt, with some providers in the US and elsewhere
@@ -269,9 +271,8 @@ portal was reported as not yet open in September 2026. So:
 - security and breaches
 - date and version
 
-PDPC guidance asks for the notice and consent texts in Arabic. That conflicts with "Arabic comes
-later", so **please decide**: a single Arabic notice page at launch (recommended, and small), or
-English only for now with the lawyer's view on the risk.
+The notice and the form lines ship in English, as built and confirmed; the Arabic version comes with
+the Arabic site.
 
 **On the forms** (no "I agree" checkbox; Turkish and Egyptian guidance both reject bundled
 "I accept" wording):
@@ -281,25 +282,13 @@ English only for now with the lawyer's view on the risk.
 - When a WhatsApp number is entered: a plain line *"We'll reply on WhatsApp"*, plus a separate
   unticked box for ongoing order updates on WhatsApp (Meta requires an opt-in that names Full
   Circle). The wording, time and number are stored.
-- Uploads: a short hint not to upload photos of people or IDs.
+- No uploads: the site takes no files (15 Oct 2026), so no hint is needed.
 
-These are additions to the approved design, so they need your OK. They are small and use existing
-styles.
+These additions were approved on 15 Oct 2026 and are built.
 
 **Cookie banner: not needed** as long as analytics stays cookieless, fonts and three.js stay
 self-hosted (they already are), and the only browser storage is the signed-in client's session.
 The notice describes this instead.
-
-**Questions for the lawyer:**
-- the controller licence and the cross-border transfer licence, and how to file while the PDPC
-  portal is closed
-- whether transfers abroad need each person's consent on the forms, and the exact wording
-- the data protection officer: who it can be (the law says "employee") and how to register them
-- which legal basis applies to replies, the portal, and notifications
-- whether the notice must be in Arabic at launch
-- retention periods for order and approval records
-- confirmation that transactional WhatsApp and email updates are not "e-marketing"
-- whether serving brands in Saudi Arabia, the UAE, Turkey or China triggers local duties
 
 The accounts are in Mazen's name, but Meta business verification and the PDPC filings have to be in
 Full Circle's legal name and use its commercial register and tax card.
@@ -310,7 +299,7 @@ Full Circle's legal name and use its commercial register and tax card.
 |---|---|---|
 | 0 | ✅ Repo, Astro, tests, CI | Done |
 | 1 | ✅ **Static site at parity** | Built and tested. **Next: Mazen connects Cloudflare (steps in `docs/deploy.md`) and signs off on the preview** |
-| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile and uploads, staff emails, request receipts, consent records, privacy notice page, form lines | A test request lands in the database and in the staff inboxes (test data only until the lawyer signs off). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
+| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
 | 3 | Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
 | 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, mesh building in a Web Worker, **no TBC left** | Live on the domain |
@@ -333,7 +322,7 @@ nameservers are then pointed at Cloudflare.
 | WhatsApp messages through Meta (≈200 a month at $0.004–0.016 each) | about $1–5 |
 | A SIM for the system WhatsApp number | top-ups |
 | Domain | per year |
-| Lawyer, and PDPC fees (reported as free under 100,000 records, not confirmed) | one-off |
+| PDPC fees (reported as free under 100,000 records, not confirmed) | one-off |
 
 ## 10. What I need from you
 
@@ -342,10 +331,10 @@ look at the preview.
 
 **Before phase 2:**
 1. Buy the domain.
-2. Brief the lawyer (§7).
+2. ~~Brief the lawyer (§7).~~ Done 15 Oct.
 3. ~~Create the Supabase account~~ (done: staging is up; live comes at launch). Create a Resend
    account and add its API key to the staging project's function secrets (`RESEND_API_KEY`).
-4. Decide on the Arabic privacy page at launch (§7).
+4. ~~Decide on the Arabic privacy page at launch (§7).~~ English as built; Arabic with the Arabic site.
 5. ~~Approve the small form additions (§7).~~ Approved 15 Oct and built.
 6. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
 

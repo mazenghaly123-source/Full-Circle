@@ -1,13 +1,12 @@
-// What the two form functions share: the database and storage calls they make, replies with CORS,
-// the Turnstile check, sending email through Resend and logging every message sent. Runs in Deno
-// (Supabase Edge Functions) with no dependencies: the handful of calls below go straight to
-// Supabase's REST and storage APIs.
+// What the two form functions share: the database calls they make, replies with CORS, the Turnstile
+// check, sending email through Resend and logging every message sent. Runs in Deno (Supabase Edge
+// Functions) with no dependencies: the handful of calls below go straight to Supabase's REST API.
 
 import type { Contact } from './forms.ts';
 
 const env = (k: string) => Deno.env.get(k)?.trim() || undefined;
 
-/** The database and storage as the service role (row-level security does not apply to it). */
+/** The database as the service role (row-level security does not apply to it). */
 export function db() {
   const url = env('SUPABASE_URL')!;
   // new projects hand functions their secret keys as JSON; older ones the service role JWT
@@ -23,7 +22,6 @@ export function db() {
   }
   const json = { 'Content-Type': 'application/json' };
   const query = (filters: Record<string, string>) => new URLSearchParams(filters).toString();
-  const objectPath = (bucket: string, path: string) => `${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`;
   return {
     /** Inserts rows; with `select`, returns the inserted rows' columns. */
     async insert<T = unknown>(table: string, rows: object | object[], select?: string): Promise<T[]> {
@@ -37,18 +35,6 @@ export function db() {
     },
     async delete(table: string, filters: Record<string, string>) {
       await call(`/rest/v1/${table}?${query(filters)}`, { method: 'DELETE' });
-    },
-    async upload(bucket: string, path: string, body: Blob, type: string) {
-      await call(`/storage/v1/object/${objectPath(bucket, path)}`, { method: 'POST', headers: { 'Content-Type': type, 'x-upsert': 'false' }, body });
-    },
-    async removeFiles(bucket: string, paths: string[]) {
-      await call(`/storage/v1/object/${bucket}`, { method: 'DELETE', headers: json, body: JSON.stringify({ prefixes: paths }) });
-    },
-    /** Links that open private files for a while, in the order of `paths` ('' where one failed). */
-    async signedUrls(bucket: string, paths: string[], seconds: number): Promise<string[]> {
-      const res = await call(`/storage/v1/object/sign/${bucket}`, { method: 'POST', headers: json, body: JSON.stringify({ expiresIn: seconds, paths }) });
-      const out: { signedURL?: string | null }[] = await res.json();
-      return out.map((o) => (o.signedURL ? `${url}/storage/v1${o.signedURL}` : ''));
     },
   };
 }

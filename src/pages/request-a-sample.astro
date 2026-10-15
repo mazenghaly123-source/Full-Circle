@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
-import { REQUEST_QUESTIONS } from '../data/site';
+import { REQUEST_QUESTIONS, WHATSAPP_URL } from '../data/site';
 import { PRIVACY } from '../data/backend';
 import { NOTICE } from '../../supabase/functions/_shared/forms';
 ---
@@ -29,14 +29,12 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
         <div class="wa-opt" id="waOpt" hidden><span class="dim">{NOTICE.whatsappReply}</span><label class="check"><input type="checkbox" id="fWaUpdates"><span>{NOTICE.whatsappUpdates}</span></label></div>
         <label class="mono dim flabel" for="fNote">Notes (optional)</label>
         <textarea class="field" id="fNote" placeholder="Anything we should know (optional)" style="min-height:64px"></textarea>
-        <label class="file"><input type="file" id="fFile" multiple accept="image/*,.pdf"><span class="mono">+</span><span id="fFileT">Add a sketch, tech pack or photo (optional)</span></label>
-        <p class="notice" id="fFileH">{NOTICE.files}</p>
         <div class="ts" id="rTs"></div>
         <button class="btn btn-red" id="send">Request a sample</button>
         <span class="mono errline" id="err" role="alert"></span>
         <p class="notice">{NOTICE.request} <a href={PRIVACY}>Privacy notice</a></p>
       </div>
-      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p></div>
+      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a></div>
     </aside>
   </div>
   <div class="next3">

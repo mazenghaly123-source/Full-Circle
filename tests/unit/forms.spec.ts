@@ -1,6 +1,6 @@
 // The forms' rules and emails (supabase/functions/_shared), which the site and the Edge Functions share.
 import { expect, test } from '@playwright/test';
-import { ERRORS, belowMinimum, checkMessage, checkRequest, readContact, sniffType, toInternational } from '../../supabase/functions/_shared/forms';
+import { ERRORS, belowMinimum, checkMessage, checkRequest, readContact, toInternational } from '../../supabase/functions/_shared/forms';
 import { clientReceiptEmail, staffMessageEmail, staffRequestEmail } from '../../supabase/functions/_shared/emails';
 
 test('a contact is read as an email or a WhatsApp number', () => {
@@ -23,20 +23,6 @@ test('phone numbers are put in international form', () => {
   // no country to go on
   expect(toInternational('050 123 4567')).toBeNull();
   expect(toInternational('2698 7277')).toBeNull();
-});
-
-test('files are told apart by their first bytes', () => {
-  const b = (...x: (number | string)[]) => new Uint8Array(x.flatMap((v) => (typeof v === 'string' ? [...v].map((c) => c.charCodeAt(0)) : [v])));
-  expect(sniffType(b(0xff, 0xd8, 0xff, 0xe0))).toBe('image/jpeg');
-  expect(sniffType(b(0x89, 'PNG', 0x0d, 0x0a, 0x1a, 0x0a))).toBe('image/png');
-  expect(sniffType(b('RIFF', 0, 0, 0, 0, 'WEBP'))).toBe('image/webp');
-  expect(sniffType(b('GIF89a'))).toBe('image/gif');
-  expect(sniffType(b('%PDF-1.7'))).toBe('application/pdf');
-  expect(sniffType(b(0, 0, 0, 0x18, 'ftypheic'))).toBe('image/heic');
-  expect(sniffType(b(0, 0, 0, 0x18, 'ftypmif1'))).toBe('image/heif');
-  expect(sniffType(b(0, 0, 0, 0x18, 'ftypavif'))).toBe('image/avif');
-  expect(sniffType(b('<html>'))).toBeNull();
-  expect(sniffType(b('PK', 3, 4))).toBeNull();
 });
 
 test('a request is checked the same way on both sides', () => {
@@ -70,14 +56,13 @@ test('emails escape what brands type, and link back to them', () => {
   const mail = staffRequestEmail({
     code: 'FC-2501', at, brand: 'Acme <script>', picks: { path: 'Scaling', product: 'Denim', qty: '60–150', have: null }, belowMinimum: true,
     typed: '0101 143 5406', reach: { channel: 'whatsapp', whatsapp: '+201011435406' }, whatsappUpdates: true, note: 'Line one\nLine "two"',
-    files: [{ name: 'a&b.png', url: 'https://x.test/a?token=1&b=2' }], source: { utm_source: 'instagram', landing: '/what-we-make' },
+    source: { utm_source: 'instagram', landing: '/what-we-make' },
   });
   expect(mail.subject).toBe('FC-2501 / New sample request: Acme <script> (Denim, Scaling)');
   expect(mail.html).not.toContain('<script>');
   expect(mail.html).toContain('Acme &lt;script&gt;');
   expect(mail.html).toContain('Line one<br>Line &quot;two&quot;');
   expect(mail.html).toContain('href="https://wa.me/201011435406"');
-  expect(mail.html).toContain('href="https://x.test/a?token=1&amp;b=2"');
   expect(mail.text).toContain('Pieces per style: 60–150 (below the minimum)');
   expect(mail.text).toContain('You have: —');
   expect(mail.text).toContain('Order updates on WhatsApp: Yes, opted in');

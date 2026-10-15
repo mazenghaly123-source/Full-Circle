@@ -14,7 +14,6 @@ export const request = {
   note: '',
   /** the opt-in box under a WhatsApp number: order updates on WhatsApp */
   waUpdates: false,
-  files: [] as File[],
   /** the error line under the form, kept when the page comes back, and the fields it is about */
   err: '',
   bad: [] as string[],
