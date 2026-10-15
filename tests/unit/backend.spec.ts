@@ -21,7 +21,8 @@ let mock: Server;
 
 test.beforeAll(async () => {
   mock = createServer(async (req, res) => {
-    let body = ''; for await (const c of req) body += c;
+    let body = '';
+    try { for await (const c of req) body += c; } catch { return; } // cut off when the server closes
     res.setHeader('content-type', 'application/json');
     if (req.url === '/siteverify') res.end(JSON.stringify({ success: body.includes(TOKEN) }));
     else if (req.url === '/emails') { mails.push(JSON.parse(body)); res.end(JSON.stringify({ id: `mail-${mails.length}` })); }
@@ -29,7 +30,8 @@ test.beforeAll(async () => {
   });
   await new Promise<void>((ok) => mock.listen(54399, '0.0.0.0', ok));
 });
-test.afterAll(() => new Promise<void>((ok) => mock.close(() => ok())));
+// close() alone waits for every open connection, and the functions' runtime can leave one open
+test.afterAll(() => new Promise<void>((ok) => { mock.close(() => ok()); mock.closeAllConnections(); }));
 
 /** Reads rows as the service role. */
 async function rows<T = Record<string, unknown>>(table: string, query: string): Promise<T[]> {
