@@ -1,30 +1,47 @@
 // Request a sample: four picks, a live summary, contact details and optional files. Other pages
 // send picks along in the URL (/request-a-sample?path=Scaling&product=Denim).
 //
-// Phase 1 keeps the prototype's behaviour: the request is checked and a code is shown, but nothing
-// is sent yet. Phase 2 sends it to the server, which issues the code and notifies the team.
+// Sending posts the request to the submit-request Edge Function, which saves it, issues its code
+// (FC-####) and tells the team. The form checks the same rules first (supabase/functions/_shared/forms.ts).
 import type { Feature } from '../core/lifecycle';
-import { $, byId, demoCode, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
+import { $, byId, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
 import { picked, request } from '../core/state';
 import { arrival } from '../core/nav';
+import { source } from '../core/source';
+import { isProblem, submit } from '../core/send';
 import { REQUEST_QUESTIONS, belowMinimum, type RequestKey } from '../../data/site';
+import { ERRORS, FILE_TYPES, LIMITS, NOTICE, isOption, readContact, type RequestData } from '../../../supabase/functions/_shared/forms';
 import { updGo } from '../shell/mbar';
 
 const FILE_HINT = 'Add a sketch, tech pack or photo (optional)';
-/** What an error line can be about: the two required option groups and the two required fields. */
-const CHECKED = ['opts-path', 'opts-product', 'fBrand', 'fContact'] as const;
+const SEND = 'Request a sample', SENDING = 'Sending…';
+/** What an error line can be about: the two required option groups, the two required fields and the files. */
+const CHECKED = ['opts-path', 'opts-product', 'fBrand', 'fContact', 'fFile'] as const;
+/** The field an answer from the server is about. */
+const FIELD: Record<string, string[]> = { brand: ['fBrand'], contact: ['fContact'], files: ['fFile'] };
 
 /** The file picker's label: the files chosen, or the hint. */
 const fileLabel = () => request.files.length ? request.files.map((f) => f.name).join(', ') : FILE_HINT;
 
-/** The summary once the request is sent: its code, and the sent look. */
+/** The contact reads as a WhatsApp number: say so, and offer order updates there. */
+const onWhatsApp = () => readContact(request.contact)?.channel === 'whatsapp';
+
+/** Files the server would turn away: too many, too big, or not an image or a PDF. */
+const filesOk = () => request.files.length <= LIMITS.files
+  && request.files.reduce((n, f) => n + f.size, 0) <= LIMITS.totalBytes
+  && request.files.every((f) => f.size <= LIMITS.fileBytes && (!f.type || (FILE_TYPES as readonly string[]).includes(f.type) || /\.(pdf|heic|heif|avif)$/i.test(f.name)));
+
+/**
+ * The summary once the request is sent: its code, and the sent look. The form goes away (the
+ * prototype's .is-sent rule meant to hide it, but the box's inline display won) and the picks can
+ * no longer change, so a request is never sent twice.
+ */
 function showSent(doc: Document) {
   const g = byId(doc);
   g('sentCode').textContent = request.code; g('reqCode').textContent = request.code; g('summary').classList.add('is-sent');
+  g('summary').querySelector<HTMLElement>('.form-box')!.hidden = true;
+  g('qs').inert = true;
 }
-
-/** A pick from the URL counts only if it is one of that question's own options. */
-const isOption = (k: RequestKey, v: string) => (REQUEST_QUESTIONS.find((q) => q.k === k)!.options as readonly string[]).includes(v);
 
 function renderSummary(doc: Document) {
   const rows = REQUEST_QUESTIONS.map((q) => {
@@ -40,14 +57,23 @@ function renderSummary(doc: Document) {
   doc.getElementById('qtyWarn')!.classList.toggle('show', belowMinimum(request.sel.qty, request.sel.product));
 }
 
+/** The send button while the request is on its way. */
+function showSending(doc: Document) {
+  const b = doc.getElementById('send')!;
+  b.textContent = request.sending ? SENDING : SEND; b.setAttribute('aria-disabled', String(request.sending));
+}
+
 function restore(doc: Document) {
   if (!doc.getElementById('qs')) return;
   doc.querySelectorAll<HTMLElement>('.q').forEach((q) => q.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', String(o.textContent === request.sel[q.dataset.k as RequestKey]))));
   (doc.getElementById('fBrand') as HTMLInputElement).value = request.brand;
   (doc.getElementById('fContact') as HTMLInputElement).value = request.contact;
   (doc.getElementById('fNote') as HTMLTextAreaElement).value = request.note;
+  (doc.getElementById('fWaUpdates') as HTMLInputElement).checked = request.waUpdates;
+  doc.getElementById('waOpt')!.hidden = !onWhatsApp();
   doc.getElementById('fFileT')!.textContent = fileLabel();
   doc.getElementById('err')!.textContent = request.err; markInvalid(doc, CHECKED, request.bad, 'err');
+  showSending(doc);
   if (request.sent) showSent(doc);
   renderSummary(doc);
 }
@@ -58,12 +84,26 @@ function choose(k: RequestKey, v: string) {
   renderSummary(document); updGo();
 }
 
+/** The request as the server takes it. */
+const payload = (turnstile: string) => {
+  const data: RequestData = {
+    path: request.sel.path!, product: request.sel.product!, qty: request.sel.qty, have: request.sel.have,
+    brand: request.brand, contact: request.contact, note: request.note,
+    whatsappUpdates: onWhatsApp() ? request.waUpdates : undefined,
+    notice: NOTICE.version, source, turnstile,
+  };
+  const fd = new FormData();
+  fd.set('data', JSON.stringify(data));
+  request.files.forEach((f) => fd.append('files', f, f.name));
+  return fd;
+};
+
 export const requestFeature: Feature = {
   prepare: restore,
   mount(signal) {
     if (!document.getElementById('qs')) return;
     // picks carried over from another page (not on back/forward, which would undo a later pick)
-    if (arrival !== 'traverse') {
+    if (arrival !== 'traverse' && !request.sent) {
       const params = new URLSearchParams(location.search);
       for (const k of ['path', 'product'] as const) { const v = params.get(k); if (v && isOption(k, v)) request.sel[k] = v; }
     }
@@ -72,27 +112,43 @@ export const requestFeature: Feature = {
     if (request.files.length) { try { const dt = new DataTransfer(); request.files.forEach((f) => dt.items.add(f)); $<HTMLInputElement>('fFile').files = dt.files; } catch { /* old browser: the names stay in the label */ } }
     document.querySelectorAll<HTMLElement>('.q').forEach((q) => q.addEventListener('click', (e) => { const o = (e.target as Element).closest('.opt'); if (o) { vib(); choose(q.dataset.k as RequestKey, o.textContent!); } }, { signal }));
     $('fBrand').addEventListener('input', (e) => { request.brand = (e.target as HTMLInputElement).value; }, { signal });
-    $('fContact').addEventListener('input', (e) => { request.contact = (e.target as HTMLInputElement).value; }, { signal });
+    $('fContact').addEventListener('input', (e) => { request.contact = (e.target as HTMLInputElement).value; $('waOpt').hidden = !onWhatsApp(); }, { signal });
+    $('fWaUpdates').addEventListener('change', (e) => { request.waUpdates = (e.target as HTMLInputElement).checked; }, { signal });
     $('fNote').addEventListener('input', (e) => { request.note = (e.target as HTMLTextAreaElement).value; }, { signal });
     $('fFile').addEventListener('change', (e) => { request.files = [...((e.target as HTMLInputElement).files ?? [])]; $('fFileT').textContent = fileLabel(); }, { signal });
     // the error line is tied to the fields it is about, and focus goes to the first of them (a
     // missing pick: its first option, with the question scrolled to the middle of the screen)
     const fail = (msg: string, bad: string[]) => {
       request.err = msg; request.bad = bad; $('err').textContent = msg; markInvalid(document, CHECKED, bad, 'err');
+      if (!bad.length) return;
       const first = $(bad[0]);
       if (!first.matches('.opts')) { first.focus(); return; }
       first.querySelector('button')!.focus({ preventScroll: true }); first.closest('.q')!.scrollIntoView({ behavior: rm ? 'auto' : 'smooth', block: 'center' });
     };
-    $('send').addEventListener('click', () => {
+    const missingPicks = () => (['path', 'product'] as const).filter((k) => !request.sel[k]).map((k) => `opts-${k}`);
+    $('send').addEventListener('click', async () => {
+      if (request.sending || request.sent) return;
       vib();
-      if (!request.sel.path || !request.sel.product) return fail('Pick the brand stage and a product', (['path', 'product'] as const).filter((k) => !request.sel[k]).map((k) => `opts-${k}`));
-      if (!$<HTMLInputElement>('fBrand').value.trim()) return fail('Add the brand name', ['fBrand']);
-      if ($<HTMLInputElement>('fContact').value.trim().length < 6) return fail('Add an email or WhatsApp number', ['fContact']);
-      // TODO(phase 2): send to the submit-request function, which issues the code and notifies the team
-      const code = demoCode();
-      request.sent = true; request.code = code; request.err = ''; request.bad = []; markInvalid(document, CHECKED, [], 'err');
+      if (!request.sel.path || !request.sel.product) return fail(ERRORS.picks, missingPicks());
+      if (!request.brand.trim()) return fail(ERRORS.brand, ['fBrand']);
+      if (!readContact(request.contact)) return fail(ERRORS.contact, ['fContact']);
+      if (!filesOk()) return fail(ERRORS.files, ['fFile']);
+      request.sending = true; request.err = ''; request.bad = []; $('err').textContent = ''; markInvalid(document, CHECKED, [], 'err'); showSending(document);
+      const out = await submit<{ code: string }>('submit-request', $('rTs'), payload);
+      request.sending = false;
+      // the visitor may have gone to another page meanwhile: the state is kept, and shown when they come back
+      const here = !!document.getElementById('qs');
+      if (here) showSending(document);
+      if (isProblem(out)) {
+        const bad = out.field === 'picks' ? missingPicks() : FIELD[out.field ?? ''] ?? [];
+        if (here) fail(out.error, bad); else { request.err = out.error; request.bad = bad; }
+        return;
+      }
+      request.sent = true; request.code = out.code;
+      toast(out.code + ' / request received'); updGo();
+      if (!here) return;
       // the phone bar reads "Request sent" and slides away on the next scroll, as in the prototype
-      $('err').textContent = ''; showSent(document); toast(code + ' / request received'); updGo();
+      showSent(document);
       focusHeading($('sentH'));
     }, { signal });
   },
