@@ -59,6 +59,23 @@ local provider, and page features bind their listeners with `{ signal }`.
 9. Vocabulary: the contact page's meta description says "production enquiry"; CONTEXT.md says
    "Request" and avoid "enquiry".
 
+**Done 14 Oct 2026**, with no visible change (every page's built HTML is identical to before):
+- 2: the How it works stations take their stage names and terms from `STAGES`. The page's own
+  wording ("Swatches + trim cards" and the like, as in the prototype) and the typical times live
+  there too (`demo`, `time`), so the TBC times get filled in once, in `site.ts`. The demo's products
+  are data (`DEMO_PRODUCTS`), where "Outerwear" maps to the form's "Jackets" instead of being patched
+  in the script.
+- 5: `ring()` replaces both copies of the circle maths, and one `byId(doc)` the six getters. The
+  demo's approved state and photo button, and the request's file label and sent state, are each
+  written by one function, used both when a page comes back and on click. Left as it is: `track.ts`
+  building stage photos as strings, since the demo portal is replaced in phase 3.
+- 6: the minimum-order warning is `belowMinimum()` in `site.ts`, and the type checker holds its
+  option names to the form's options. The phone bar counts the questions.
+- 8: `T` is now `portal`, and `Y` is `yo`.
+- 9: the meta description lost "enquiry" with the new descriptions (B7). The contact page itself
+  still says "production enquiry" twice, as the prototype does; changing it is a copy decision.
+- 1, 3, 4 and 7 were done with fix plan A, or with the 3D work.
+
 ### Spec
 
 Content matches: every text, MOQ, contact, link, title and TBC tag (same count per page) lines up

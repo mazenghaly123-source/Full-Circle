@@ -627,7 +627,8 @@ test.describe('approved changes', () => {
   test('phone: option buttons are at least 44px tall', async ({ page }, info) => {
     test.skip(!isPhone(info), 'phone only');
     await page.goto('/request-a-sample');
-    expect(await page.locator('.opt').first().evaluate((e) => e.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+    // the laid-out height: a box measured while the page's entrance still moves it can read 43.99997
+    expect(await page.locator('.opt').first().evaluate((e) => parseFloat(getComputedStyle(e).height))).toBeGreaterThanOrEqual(44);
   });
 
   test('an error line is Bone with a red dot, and the dot shows only with a message', async ({ page }) => {

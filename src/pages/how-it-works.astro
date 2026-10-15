@@ -2,18 +2,21 @@
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
-import { ROUTES, STAGES, pad } from '../data/site';
+import StageTerms from '../components/StageTerms.astro';
+import { DEMO_PRODUCTS, ROUTES, STAGES, pad, ring } from '../data/site';
 
 // the demo order's ring: a tick per stage, and a label button between ticks
 const yoTicks = STAGES.map((_, i) => {
-  const a = (i / 8 * 360 - 90) * Math.PI / 180;
-  return { x1: 300 + 204 * Math.cos(a), y1: 300 + 204 * Math.sin(a), x2: 300 + 224 * Math.cos(a), y2: 300 + 224 * Math.sin(a) };
+  const [x1, y1] = ring(300, 300, 204, i / 8), [x2, y2] = ring(300, 300, 224, i / 8);
+  return { x1, y1, x2, y2 };
 });
 const yoLabels = STAGES.map((g, i) => {
-  const a = ((i / 8 + 1 / 16) * 360 - 90) * Math.PI / 180;
+  const [left, top] = ring(50, 50, 45, i / 8 + 1 / 16);
   // the name starts with the visible label ("05 Sample"), so voice control finds the button by it
-  return { left: 50 + 45 * Math.cos(a), top: 50 + 45 * Math.sin(a), n: pad(i + 1), s: g.s, label: `${pad(i + 1)} ${g.s}: go to the ${g.n} stage` };
+  return { left, top, n: pad(i + 1), s: g.s, label: `${pad(i + 1)} ${g.s}: go to the ${g.n} stage` };
 });
+/** A station's heading: its number and stage name. */
+const label = (i: number) => `${pad(i + 1)} / ${STAGES[i].n}`;
 ---
 <Base page="how" title="How it works / From idea to bulk / Full Circle" description="Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.">
 <PageHero crumb="How it works" title="Eight stages. One partner." lead="Every stage ends with something you can see and a decision you make. Below, a demo order moves through all eight. Scroll, make the decisions, and watch what happens when you skip one." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(50% 60% at 60% 90%,#243E8F,transparent 72%)">
@@ -22,26 +25,26 @@ const yoLabels = STAGES.map((g, i) => {
 <section class="yo" id="yo">
   <div class="yo-stations">
     <div class="yo-st" data-i="0">
-      <div class="yo-top mono"><span>01 / Research</span><span class="dim">Your order <b id="yoC1">FC-0000</b></span></div>
+      <div class="yo-top mono"><span>{label(0)}</span><span class="dim">Your order <b id="yoC1">FC-0000</b></span></div>
       <h2 class="camp">You have an idea.</h2>
       <p class="yo-big">This page is a demo order. Scroll, and it moves through the same eight stages a real one does. Watch the red dot.</p>
       <p>We start by studying the brand, the customer and the market the product is going into.</p>
-      <dl class="kv2"><dt>You receive</dt><dd>Brief, category, target price</dd><dt>You approve</dt><dd class="ap">The brief</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+      <StageTerms i={0} />
     </div>
     <div class="yo-st" data-i="1">
-      <div class="yo-top mono"><span>02 / Design support</span><span class="dim">Tech pack</span></div>
+      <div class="yo-top mono"><span>{label(1)}</span><span class="dim">Tech pack</span></div>
       <h2 class="camp">Where is the brand?</h2>
       <div class="yo-paths" role="group" aria-label="Brand stage">
         <button class="yo-pb" data-yopath="Starting" aria-pressed="false"><span class="camp">Starting</span><span>An idea or a sketch, no factory yet.</span></button>
         <button class="yo-pb" data-yopath="Scaling" aria-pressed="false"><span class="camp">Scaling</span><span>Already selling. The last run did not match the sample.</span></button>
       </div>
       <p id="yoPathLine">Pick one. Sketches then become technical drawings with measurements, trims and construction notes.</p>
-      <dl class="kv2"><dt>You receive</dt><dd>Tech pack</dd><dt>You approve</dt><dd class="ap">Tech pack sign-off</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+      <StageTerms i={1} />
     </div>
     <div class="yo-st" data-i="2">
-      <div class="yo-top mono"><span>03 / Sourcing</span><span class="dim">Fabric + trims</span></div>
+      <div class="yo-top mono"><span>{label(2)}</span><span class="dim">Fabric + trims</span></div>
       <h2 class="camp">Pick the product.</h2>
-      <div class="opts" role="group" aria-label="Product" id="yoProducts"><button class="opt" aria-pressed="true">Shirts</button><button class="opt" aria-pressed="false">Hoodies</button><button class="opt" aria-pressed="false">Tees</button><button class="opt" aria-pressed="false">Denim</button><button class="opt" aria-pressed="false">Outerwear</button></div>
+      <div class="opts" role="group" aria-label="Product" id="yoProducts">{DEMO_PRODUCTS.map((p, i) => <button class="opt" aria-pressed={i === 0 ? 'true' : 'false'}>{p.label}</button>)}</div>
       <div class="yo-sws" role="group" aria-label="Fabric" id="yoFabrics">
         <button class="yo-sw" data-fab="denim" data-name="Denim 12 oz" aria-pressed="true"><i class="tx-denim"></i><span class="mono">Denim 12 oz</span></button>
         <button class="yo-sw" data-fab="fleece" data-name="Fleece 380 gsm" aria-pressed="false"><i class="tx-fleece"></i><span class="mono">Fleece 380</span></button>
@@ -49,31 +52,31 @@ const yoLabels = STAGES.map((g, i) => {
         <button class="yo-sw" data-fab="twill" data-name="Cotton twill" aria-pressed="false"><i class="tx-twill"></i><span class="mono">Twill</span></button>
       </div>
       <p>Fabric and trims are sourced against the brief. You approve the swatches before anything is cut.</p>
-      <dl class="kv2"><dt>You receive</dt><dd>Swatches + trim cards</dd><dt>You approve</dt><dd class="ap">Fabric selection</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+      <StageTerms i={2} />
     </div>
     <div class="yo-st" data-i="3">
-      <div class="yo-top mono"><span>04 / Development</span><span class="dim">Scaling brands enter here</span></div>
+      <div class="yo-top mono"><span>{label(3)}</span><span class="dim">Scaling brands enter here</span></div>
       <h2 class="camp">Paper first.</h2>
       <p class="yo-big">Every piece is drawn, cut in paper and graded before fabric is touched.</p>
-      <dl class="kv2"><dt>Base size</dt><dd>M</dd><dt>Grade</dt><dd>XS / S / M / L / XL</dd><dt>You receive</dt><dd>Base-size pattern + fit notes</dd><dt>You approve</dt><dd class="ap">Pattern sign-off</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+      <StageTerms i={3}><dt>Base size</dt><dd>M</dd><dt>Grade</dt><dd>XS / S / M / L / XL</dd></StageTerms>
     </div>
     <div class="yo-st" data-i="4">
-      <div class="yo-top mono"><span class="need">05 / Sampling / the gate</span><span class="dim">Bulk waits for this</span></div>
+      <div class="yo-top mono"><span class="need">{label(4)} / the gate</span><span class="dim">Bulk waits for this</span></div>
       <h2 class="camp">Approve the sample.</h2>
       <p class="yo-big">The sample you sign becomes the contract. Bulk is measured against it, piece by piece.</p>
       <p>Production does not move until you approve. Try scrolling past without approving.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center"><button class="btn btn-red" id="yoApprove">Approve sample 03</button><span class="mono dim" id="yoAt"></span></div>
-      <dl class="kv2"><dt>You receive</dt><dd>A physical sample, fitted</dd><dt>You approve</dt><dd class="ap">Sample approval</dd><dt>Typical time</dt><dd>7–25 days, denim longest</dd></dl>
+      <StageTerms i={4} />
     </div>
     <div class="yo-st" data-i="5">
-      <div class="yo-top mono"><span>06 / Production</span><span class="dim">Bulk</span></div>
+      <div class="yo-top mono"><span>{label(5)}</span><span class="dim">Bulk</span></div>
       <h2 class="camp">Then it repeats.</h2>
       <div class="yo-gate" id="yoGate"><span class="d"></span><span>Your order is waiting at sampling. Approve the sample to release bulk.</span><button class="btn btn-line" data-yoapprove style="margin-left:auto;padding:9px 12px">Approve</button></div>
       <div><div class="yo-num"><span id="yoUnits">000</span><small>/ 300 units</small></div><span class="mono dim">Cut and sewn against sample 03 / demo numbers</span></div>
-      <dl class="kv2"><dt>You receive</dt><dd>Progress at each checkpoint</dd><dt>You approve</dt><dd class="ap">Quantity + delivery date</dd><dt>Typical time</dt><dd>— <span class="tbc">TBC</span></dd></dl>
+      <StageTerms i={5} />
     </div>
     <div class="yo-st" data-i="6">
-      <div class="yo-top mono"><span>07 / QC</span><span class="dim">Inspection</span></div>
+      <div class="yo-top mono"><span>{label(6)}</span><span class="dim">Inspection</span></div>
       <h2 class="camp">Checked before packed.</h2>
       <ul class="yo-checks" id="yoChecks">
         <li><span class="bx"></span><span>Measurements against the sample</span><span class="mono">±0.5 cm</span></li>
@@ -85,7 +88,7 @@ const yoLabels = STAGES.map((g, i) => {
       <div><button class="btn btn-line" id="yoPhoto">Request a photo of this stage</button></div>
     </div>
     <div class="yo-st" data-i="7">
-      <div class="yo-top mono"><span>08 / Delivery</span><span class="dim">Circle closed</span></div>
+      <div class="yo-top mono"><span>{label(7)}</span><span class="dim">Circle closed</span></div>
       <h2 class="camp">Make it real.</h2>
       <div class="yo-receipt" id="yoReceipt"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-red" id="yoReal">Turn this into a real request</button><a href={ROUTES.track} class="btn btn-line">See the client portal</a></div>
