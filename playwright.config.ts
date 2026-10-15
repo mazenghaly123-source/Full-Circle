@@ -16,15 +16,18 @@ export default defineConfig({
     // software WebGL, so the 3D hero mark renders in headless Chromium
     launchOptions: { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] },
   },
-  webServer: {
+  // NO_SITE: only the browserless tests run (the CI backend job), so no build is served
+  webServer: process.env.NO_SITE ? undefined : {
     command: `npm run preview -- --port ${port} --host 127.0.0.1`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },
   projects: [
-    { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
-    { name: 'phone-390', use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } },
-    { name: 'phone-375', use: { viewport: { width: 375, height: 667 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } },
+    { name: 'desktop', testIgnore: /unit\//, use: { viewport: { width: 1440, height: 900 } } },
+    { name: 'phone-390', testIgnore: /unit\//, use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } },
+    { name: 'phone-375', testIgnore: /unit\//, use: { viewport: { width: 375, height: 667 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } },
+    // no browser: the forms' rules and emails, and the backend on a local Supabase (tests/unit/backend.spec.ts)
+    { name: 'unit', testMatch: /unit\/.*\.spec\.ts$/ },
   ],
 });

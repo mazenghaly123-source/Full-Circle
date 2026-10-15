@@ -927,15 +927,26 @@ a.copy{color:inherit;text-decoration:none}
 /* skip link: off screen until it has keyboard focus */
 .skip{position:fixed;left:var(--gut);top:12px;z-index:260;transform:translateY(-200%)}
 .skip:focus{transform:none}
-/* controls whose all:unset also removed the focus outline, and the file picker (its input is hidden) */
+/* controls whose all:unset also removed the focus outline */
 .burger:focus-visible,.copy:focus-visible{outline:2px solid var(--red);outline-offset:3px}
-.file:has(input:focus-visible){outline:2px solid var(--red);outline-offset:3px}
 /* the main area and the headings that take focus after a change are not controls: no outline */
 main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:focus{outline:none}
 /* the phone menu scrolls when it is taller than the screen (zoomed in, or a phone held sideways) */
 @media (max-width:1020px){.mmenu{overflow-y:auto;overscroll-behavior:contain}}
 /* the two loops the reduced-motion rules above missed */
 @media (prefers-reduced-motion:reduce){.yo-gate .d{animation:none}.yo-you::after{animation:none;opacity:0}}
+/* the privacy notice (a page the prototype does not have): numbered sections, the heading beside
+   the text on wide screens */
+.priv{padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)}
+.priv section{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px 40px;border-top:1px solid var(--line);padding:24px 0 30px}
+.priv section>div:first-child{display:grid;gap:8px;align-content:start}
+.priv h2{margin:0;font-family:var(--f-camp);font-size:34px;line-height:1;font-weight:700;text-transform:uppercase}
+.priv p,.priv ul{margin:0 0 12px;color:var(--cotton);max-width:64ch}
+.priv ul{padding-left:18px}
+.priv li{margin-bottom:8px}
+.priv b{color:var(--bone);font-weight:500}
+.priv a{color:var(--bone);text-decoration:underline;text-underline-offset:3px}
+@media (max-width:760px){.priv section{grid-template-columns:1fr}}
 /* ===== approved changes (decided by Mazen: site audit part B on 13 Oct 2026, then as dated) =====
    Deliberate departures from the prototype. tests/parity.spec.ts injects this block (between the
    two markers) and the matching markup into the prototype before comparing, so everything else is
@@ -959,4 +970,17 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 @media (max-width:760px){.opt,.tabs2 button{min-height:44px}}
 /* 14 Oct 2026, phones: the hero mark 1.25× bigger inside its ring (the 3D one and the flat fallback) */
 @media (max-width:760px){.ringwrap canvas.mark3{width:80%}.ringwrap svg.heromark{width:42.5%}}
+/* 15 Oct 2026, the form lines (production plan §7, approved by Mazen): a privacy line under each
+   form's button and, once a WhatsApp number is typed, "We'll reply on WhatsApp" with a separate
+   unticked box for order updates there. The Turnstile slot shows only if Cloudflare asks the visitor
+   to tick its box. */
+.notice{margin:0;font-size:13px;line-height:1.5;color:var(--dim);max-width:60ch}
+.notice a{color:var(--cotton);text-decoration:underline;text-underline-offset:3px}
+.wa-opt{display:grid;gap:10px;font-size:15px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:var(--cotton);cursor:pointer}
+.check input{margin:2px 0 0;width:18px;height:18px;flex-shrink:0;accent-color:var(--bone)}
+.ts:empty{display:none}
+/* 15 Oct 2026 (Mazen): requests take no files, so the file picker goes; once a request is sent,
+   "Continue on WhatsApp" opens a chat with its code, where the conversation carries on */
+.sent-box .btn{margin-top:8px}
 /* ===== end approved changes ===== */

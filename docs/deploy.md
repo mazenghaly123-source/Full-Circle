@@ -43,6 +43,37 @@ repo there and build this branch). `vercel.json` only applies on Vercel: it serv
 `noindex` so search engines never index it. Cloudflare stays the host (ADR 0002); delete the
 Vercel project and `vercel.json` once the Cloudflare site is live.
 
+## Backend (Supabase)
+
+The request and contact forms post to two Edge Functions on Supabase (`supabase/functions/`), which
+save to the database and email the team. Until launch there is one project, **full-circle-staging**
+(Frankfurt, free plan), for test data only. Every build of the site sends to it; nothing to set.
+
+**Settings for the functions** (Supabase dashboard → Edge Functions → Secrets):
+
+| Secret | What it is | Until it is set |
+|---|---|---|
+| `RESEND_API_KEY` | Sends the staff alerts and the request receipts | Nothing is emailed; each email is logged as skipped |
+| `STAFF_EMAILS` | Who gets the alerts, comma-separated | fullcircleworks.co@gmail.com |
+| `EMAIL_FROM` | The sender, e.g. `Full Circle <hello@your-domain>` | Resend's test sender, which can only write to the Resend account's own address |
+| `TURNSTILE_SECRET_KEY` | The robot check (Cloudflare Turnstile) | Staging uses Cloudflare's test key, **which lets everything through**; any other project turns every form away |
+
+**At launch** (the live project):
+1. Create the live project in Frankfurt (Pro plan) and apply `supabase/migrations/` to it.
+2. Deploy both functions with their JWT check off (they check Turnstile instead), and set the four
+   secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
+3. In Cloudflare, create a Turnstile widget for the domain (Invisible mode) and set the production
+   build's variables `PUBLIC_SUPABASE_URL` (the live project's URL) and `PUBLIC_TURNSTILE_SITE_KEY`
+   (the widget's site key). Previews keep sending to staging.
+
+With the Supabase CLI (`npx supabase@2.121.0`, signed in): `link --project-ref <ref>`, then
+`db push` for the migrations and `functions deploy submit-request submit-contact --no-verify-jwt`.
+
+**On your computer** (needs Docker): `npx supabase@2.121.0 start` runs the whole backend locally and
+`npx supabase@2.121.0 test db` runs the database access tests. The end-to-end function tests need a
+`supabase/functions/.env` that points the functions at the stand-ins the tests start; the CI
+*backend* job (`.github/workflows/ci.yml`) shows the four lines.
+
 ## Locally
 
 ```sh

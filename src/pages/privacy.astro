@@ -1,0 +1,100 @@
+---
+// The privacy notice the forms link to (docs/production-plan.md §7). Facts still to come carry a TBC
+// tag, like the rest of the site.
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import { EMAIL, ROUTES, WHATSAPP, WHATSAPP_URL } from '../data/site';
+
+const tbc = '<span class="tbc">TBC</span>';
+---
+<Base page="privacy" title="Privacy notice / Full Circle" description="What Full Circle collects when you request a sample, send a message or follow an order, why, where it is kept, and what you can ask for.">
+<PageHero crumb="Privacy" title="Privacy notice." lead="What we collect when you contact us or work with us, why, where it is kept, and what you can ask for." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" />
+<div class="wrap priv">
+  <section>
+    <div><span class="mono dim">01</span><h2>Who we are</h2></div>
+    <div>
+      <p>Full Circle develops and manufactures clothing for brands, in Cairo, Egypt. Registered name and address <span set:html={tbc} />.</p>
+      <p>Questions about your data: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>, or WhatsApp <a href={WHATSAPP_URL} target="_blank" rel="noopener">{WHATSAPP}</a>. Data protection officer <span set:html={tbc} />.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">02</span><h2>What we collect</h2></div>
+    <div>
+      <ul>
+        <li><b>When you request a sample:</b> your brand name, your email or WhatsApp number, your picks (product, quantity, what you have) and your notes. We do not take files through the site: sketches and photos come later, on WhatsApp.</li>
+        <li><b>When you send a message:</b> your name, your email or WhatsApp number and your message.</li>
+        <li><b>With either:</b> the first page you opened on the site and the site or ad that sent you (for example Instagram), so we know which posts bring brands to us.</li>
+        <li><b>When you become a client:</b> your sign-in to the tracking page, your orders, the decisions you approve or ask to change, and photos of your order at each stage.</li>
+      </ul>
+      <p>We do not take payments through the site.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">03</span><h2>Why</h2></div>
+    <div>
+      <ul>
+        <li>To reply to your request or message and give you a price.</li>
+        <li>To develop, make and deliver your order, and show you where it stands.</li>
+        <li>To keep a record of what you approved, which protects you and us.</li>
+        <li>To send you updates on your order by email, and on WhatsApp if you ticked the box for it.</li>
+        <li>To keep the forms free of robots and abuse.</li>
+      </ul>
+      <p>The legal basis for each <span set:html={tbc} />.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">04</span><h2>Who handles it for us</h2></div>
+    <div>
+      <ul>
+        <li><b>Supabase:</b> our database and file storage, in Frankfurt, Germany.</li>
+        <li><b>Cloudflare:</b> hosts the site and checks that a form comes from a person. That check looks at your browser and IP address; we do not keep them.</li>
+        <li><b>Resend:</b> sends our emails (United States).</li>
+        <li><b>Meta:</b> carries our WhatsApp messages (United States and elsewhere).</li>
+        <li><b>Umami:</b> counts visits without cookies, in the EU (once it is switched on).</li>
+      </ul>
+      <p>They use your data only to provide their service to us.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">05</span><h2>Where it is kept</h2></div>
+    <div>
+      <p>Mainly in Frankfurt, Germany. Some of the providers above also process it in the United States and elsewhere. How these transfers outside Egypt are licensed <span set:html={tbc} />.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">06</span><h2>How long</h2></div>
+    <div>
+      <ul>
+        <li>Requests and messages that do not lead to an order: <span set:html={tbc} />.</li>
+        <li>Orders and their approval records: <span set:html={tbc} />.</li>
+        <li>The record that you asked for WhatsApp updates, and the words you agreed to: for as long as we send them, and <span set:html={tbc} /> after.</li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">07</span><h2>What you can ask for</h2></div>
+    <div>
+      <p>A copy of the data we hold about you, a correction, or its deletion (except records we must keep, such as an order's). Ask us by email or WhatsApp; we reply within <span set:html={tbc} />.</p>
+      <p>WhatsApp updates are off unless you tick the box for them. To stop them, tell us on WhatsApp or by email; you will also be able to switch them off on the <a href={ROUTES.track}>tracking page</a>.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">08</span><h2>Cookies</h2></div>
+    <div>
+      <p>The site sets no tracking or advertising cookies. Visit counts are made without cookies. When you sign in to the tracking page, your browser keeps your session so you stay signed in. The site serves its own fonts and scripts; only the robot check comes from Cloudflare.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">09</span><h2>Security</h2></div>
+    <div>
+      <p>Everything travels encrypted, and only Full Circle staff can read what you send us. If a breach affects your data, we tell you and the authorities as the law requires.</p>
+    </div>
+  </section>
+  <section>
+    <div><span class="mono dim">10</span><h2>Changes</h2></div>
+    <div>
+      <p>Last updated 15 October 2026. Every change is dated here.</p>
+    </div>
+  </section>
+</div>
+</Base>

@@ -1,7 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
-import { REQUEST_QUESTIONS } from '../data/site';
+import { REQUEST_QUESTIONS, WHATSAPP_URL } from '../data/site';
+import { PRIVACY } from '../data/backend';
+import { NOTICE } from '../../supabase/functions/_shared/forms';
 ---
 <Base page="start" title="Request a clothing sample / Full Circle" description="Four quick picks and your contact. Full Circle replies with a first call, a price range and the next decision. No commitment.">
 <PageHero crumb="Request a sample" title="Request a sample." lead="Four quick picks and your contact. We reply with a first call, a price range and the next decision. No commitment." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%)" />
@@ -24,13 +26,15 @@ import { REQUEST_QUESTIONS } from '../data/site';
         <input class="field" id="fBrand" placeholder="Brand name" autocomplete="organization">
         <label class="mono dim flabel" for="fContact">Email or WhatsApp</label>
         <input class="field" id="fContact" placeholder="Email or WhatsApp" autocomplete="email">
+        <div class="wa-opt" id="waOpt" hidden><span class="dim">{NOTICE.whatsappReply}</span><label class="check"><input type="checkbox" id="fWaUpdates"><span>{NOTICE.whatsappUpdates}</span></label></div>
         <label class="mono dim flabel" for="fNote">Notes (optional)</label>
         <textarea class="field" id="fNote" placeholder="Anything we should know (optional)" style="min-height:64px"></textarea>
-        <label class="file"><input type="file" id="fFile" multiple accept="image/*,.pdf"><span class="mono">+</span><span id="fFileT">Add a sketch, tech pack or photo (optional)</span></label>
+        <div class="ts" id="rTs"></div>
         <button class="btn btn-red" id="send">Request a sample</button>
         <span class="mono errline" id="err" role="alert"></span>
+        <p class="notice">{NOTICE.request} <a href={PRIVACY}>Privacy notice</a></p>
       </div>
-      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p></div>
+      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a></div>
     </aside>
   </div>
   <div class="next3">

@@ -3,11 +3,14 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
-import { PAGES, isPhone, watchErrors } from './helpers';
+import { PAGES, isPhone, mockBackend, postedData, watchErrors } from './helpers';
+import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
 
 // Software WebGL in headless Chromium needs seconds to draw the 3D hero mark and blocks the page
 // meanwhile, so tests that are not about it get the flat-mark fallback (three.js refuses to load).
 test.beforeEach(async ({ page }, info) => {
+  // no test reaches the real backend: the forms' functions and Turnstile are stood in for
+  await mockBackend(page);
   if (/3D/.test(info.title)) return;
   await page.route(/\/_astro\/three\.module[^/]*\.js$/, (route) => route.fulfill({ body: 'throw new Error("3D off in this test")', contentType: 'text/javascript' }));
 });
@@ -490,17 +493,14 @@ test.describe('pages you come back to (the prototype was one document)', () => {
   });
 });
 
-test('request and track: files, errors and a pending photo survive a trip to another page', async ({ page }, info) => {
+test('request and track: errors and a pending photo survive a trip to another page', async ({ page }, info) => {
   await page.goto('/request-a-sample');
-  await page.locator('#fFile').setInputFiles([{ name: 'sketch.png', mimeType: 'image/png', buffer: Buffer.from('x') }, { name: 'pack.pdf', mimeType: 'application/pdf', buffer: Buffer.from('y') }]);
   await page.locator('#send').click();
   await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
   await openNav(page, '/about', isPhone(info));
   await page.waitForURL('**/about');
   await page.goBack();
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
-  await expect(page.locator('#fFileT')).toHaveText('sketch.png, pack.pdf');
-  expect(await page.locator('#fFile').evaluate((i: HTMLInputElement) => i.files?.length)).toBe(2);
   await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
 
   await page.goto('/track');
@@ -737,5 +737,147 @@ test.describe('approved changes', () => {
     await expect(page.locator('#makeGrid img').first()).toHaveAttribute('alt', '');
     await page.goto('/what-we-make');
     await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', 'Raw and washed denim jeans laid on a workshop table');
+  });
+});
+
+test.describe('the forms send to the backend', () => {
+  /** Fills the request form: four picks, the brand and a contact. */
+  async function fillRequest(page: Page, contact: string) {
+    for (const [k, v] of [['path', 'Scaling'], ['product', 'Denim'], ['qty', '60–150'], ['have', 'A sketch']]) await clickStill(page.locator(`.q[data-k="${k}"] .opt`, { hasText: v }));
+    await page.locator('#fBrand').fill('Acme Studio');
+    await page.locator('#fContact').fill(contact);
+  }
+
+  test('request: the picks, contact, opt-in and source go to the function, its code shows, and WhatsApp opens with it', async ({ page }) => {
+    const sent = await mockBackend(page);
+    await page.goto('/request-a-sample');
+    await fillRequest(page, 'hello@acme.test');
+    // an email: no WhatsApp line or opt-in
+    await expect(page.locator('#waOpt')).toBeHidden();
+    await page.locator('#fContact').fill('0101 143 5406');
+    await expect(page.locator('#waOpt')).toBeVisible();
+    await expect(page.locator('#waOpt')).toContainText(NOTICE.whatsappReply);
+    await expect(page.locator('#fWaUpdates')).not.toBeChecked();
+    await page.locator('#fWaUpdates').check();
+    await page.locator('#fNote').fill('Raw selvedge');
+    // requests take no files: they come later, on WhatsApp
+    await expect(page.locator('input[type=file]')).toHaveCount(0);
+    await expect(page.locator('#sentWa')).toBeHidden();
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#sentCode')).toHaveText('FC-2501');
+    await expect(page.locator('#reqCode')).toHaveText('FC-2501');
+    expect(sent).toHaveLength(1);
+    const data = postedData(sent[0]);
+    expect(data).toMatchObject({
+      path: 'Scaling', product: 'Denim', qty: '60–150', have: 'A sketch', brand: 'Acme Studio', contact: '0101 143 5406', note: 'Raw selvedge',
+      whatsappUpdates: true, notice: NOTICE.version, turnstile: 'XXXX.DUMMY.TOKEN.XXXX',
+    });
+    // where the visitor came from: here, straight to the form
+    expect(data.source).toEqual({ landing: '/request-a-sample' });
+    // once sent, the conversation carries on on WhatsApp, with the code ready to send
+    await expect(page.locator('#sentWa')).toBeVisible();
+    await expect(page.locator('#sentWa')).toHaveText('Continue on WhatsApp');
+    await expect(page.locator('#sentWa')).toHaveAttribute('href', 'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20just%20sent%20sample%20request%20FC-2501%20(Acme%20Studio).');
+    await expect(page.locator('#sentWa')).toHaveAttribute('target', '_blank');
+    // once sent, the picks cannot change and the request is not sent twice
+    expect(await page.locator('#qs').evaluate((e) => (e as HTMLElement).inert)).toBe(true);
+    await expect(page.locator('#send')).toBeHidden();
+  });
+
+  test('request: ad tags from the first page travel with the request', async ({ page }, info) => {
+    const sent = await mockBackend(page);
+    await page.goto('/what-we-make?utm_source=instagram&utm_campaign=denim-drop');
+    // to the form without a full load, as a visitor would
+    if (isPhone(info)) await page.locator('#mbarGo').click(); else await page.locator('header .hdr-r a.btn-red').click();
+    await page.waitForURL((u) => u.pathname === '/request-a-sample');
+    await fillRequest(page, 'hello@acme.test');
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#sentCode')).toHaveText('FC-2501');
+    expect(postedData(sent[0]).source).toEqual({ utm_source: 'instagram', utm_campaign: 'denim-drop', landing: '/what-we-make' });
+    expect(postedData(sent[0]).whatsappUpdates).toBeUndefined();
+  });
+
+  test('request: the server can turn it away, and a failed send can be tried again', async ({ page }) => {
+    let n = 0;
+    await mockBackend(page, () => (++n === 1 ? { status: 400, json: { error: ERRORS.contact, field: 'contact' } } : n === 2 ? { abort: true } : { delayMs: 600 }));
+    await page.goto('/request-a-sample');
+    await fillRequest(page, 'hello@acme.test');
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#err')).toHaveText(ERRORS.contact);
+    await expect(page.locator('#fContact')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('#fContact')).toBeFocused();
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#err')).toHaveText(ERRORS.failed);
+    await expect(page.locator('#send')).toHaveText('Request a sample');
+    // while it is on its way, the button says so and a second press does nothing
+    await page.locator('#send').click();
+    await expect(page.locator('#send')).toHaveText('Sending…');
+    await expect(page.locator('#send')).toHaveAttribute('aria-disabled', 'true');
+    await page.locator('#send').click({ force: true });
+    await expect(page.locator('#sentCode')).toHaveText('FC-2501');
+    expect(n).toBe(3);
+    await expect(page.locator('#err')).toHaveText('');
+  });
+
+  test('request: a contact that is neither an email nor a number is caught', async ({ page }) => {
+    await page.goto('/request-a-sample');
+    await fillRequest(page, 'call me maybe');
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#err')).toHaveText(ERRORS.contact);
+  });
+
+  test('a send that ends after leaving the page shows on the way back', async ({ page }, info) => {
+    await mockBackend(page, () => ({ delayMs: 1500 }));
+    await page.goto('/request-a-sample');
+    await fillRequest(page, 'hello@acme.test');
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#send')).toHaveText('Sending…');
+    await openNav(page, '/about', isPhone(info));
+    await page.waitForURL('**/about');
+    await expect(page.locator('#toast')).toHaveText('FC-2501 / request received', { timeout: 5000 });
+    await page.goBack();
+    await page.waitForURL((u) => u.pathname === '/request-a-sample');
+    await expect(page.locator('#sentCode')).toHaveText('FC-2501');
+    await expect(page.locator('.sent-box')).toBeVisible();
+    await expect(page.locator('#sentWa')).toHaveAttribute('href', 'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20just%20sent%20sample%20request%20FC-2501%20(Acme%20Studio).');
+  });
+
+  test('contact: the message goes to the function, with a WhatsApp line for a number', async ({ page }) => {
+    const sent = await mockBackend(page);
+    await page.goto('/contact');
+    await page.locator('#cName').fill('Sara');
+    await page.locator('#cReach').fill('sara@brand.test');
+    await expect(page.locator('#cWaLine')).toBeHidden();
+    await page.locator('#cReach').fill('+966 50 123 4567');
+    await expect(page.locator('#cWaLine')).toHaveText(NOTICE.whatsappReply);
+    await page.locator('#cMsg').fill('Hello');
+    await page.locator('#cForm button[type=submit]').click();
+    await expect(page.locator('#cDone')).toBeVisible();
+    expect(postedData(sent[0])).toMatchObject({ name: 'Sara', contact: '+966 50 123 4567', text: 'Hello', notice: NOTICE.version, turnstile: 'XXXX.DUMMY.TOKEN.XXXX' });
+  });
+
+  test('contact: a failed send keeps the message and says so', async ({ page }) => {
+    await mockBackend(page, () => ({ status: 500, json: { error: ERRORS.failed } }));
+    await page.goto('/contact');
+    await page.locator('#cName').fill('Sara');
+    await page.locator('#cReach').fill('sara@brand.test');
+    await page.locator('#cMsg').fill('Hello');
+    await page.locator('#cForm button[type=submit]').click();
+    await expect(page.locator('#cErr')).toHaveText(ERRORS.failed);
+    await expect(page.locator('#cForm')).toBeVisible();
+    await expect(page.locator('#cMsg')).toHaveValue('Hello');
+  });
+
+  test('both forms carry the privacy line, and the privacy notice opens', async ({ page }) => {
+    const errors = watchErrors(page);
+    await page.goto('/request-a-sample');
+    await expect(page.locator('#summary .notice', { hasText: NOTICE.request })).toBeVisible();
+    await page.goto('/contact');
+    await expect(page.locator('#cForm .notice', { hasText: NOTICE.contact })).toBeVisible();
+    await page.locator('#cForm .notice a').click();
+    await page.waitForURL('**/privacy');
+    await expect(page.locator('h1')).toHaveText('Privacy notice.');
+    await expect(page).toHaveTitle('Privacy notice / Full Circle');
+    expect(errors).toEqual([]);
   });
 });

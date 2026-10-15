@@ -5,11 +5,15 @@ import { demoCode } from './util';
 export const request = {
   sel: { path: null, product: null, qty: null, have: null } as Record<RequestKey, string | null>,
   sent: false,
+  /** waiting for the server's answer (the button reads "Sending…") */
+  sending: false,
+  /** the code the server gave the request */
   code: '',
   brand: '',
   contact: '',
   note: '',
-  files: [] as File[],
+  /** the opt-in box under a WhatsApp number: order updates on WhatsApp */
+  waUpdates: false,
   /** the error line under the form, kept when the page comes back, and the fields it is about */
   err: '',
   bad: [] as string[],

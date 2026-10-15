@@ -45,3 +45,41 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  # The database and the form functions on a local Supabase (docs/production-plan.md, phase 2): who
+  # can reach which table, the functions' types, and what a request or message leaves behind.
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_CLI: supabase@2.121.0
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Start a local Supabase
+        # the functions talk to stand-ins for Turnstile and Resend, served by tests/unit/backend.spec.ts
+        run: |
+          cat > supabase/functions/.env <<'EOF'
+          TURNSTILE_VERIFY_URL=http://host.docker.internal:54399/siteverify
+          RESEND_API_URL=http://host.docker.internal:54399/emails
+          RESEND_API_KEY=test
+          STAFF_EMAILS=staff@fullcircle.test
+          EOF
+          npx --yes "$SUPABASE_CLI" start -x studio,imgproxy,realtime,logflare,vector,supavisor,postgres-meta,mailpit
+      - name: Database access tests
+        run: npx --yes "$SUPABASE_CLI" test db
+      - name: Type-check the Edge Functions
+        run: docker run --rm -v "$PWD:/app" -w /app denoland/deno:2.5.6 deno check supabase/functions/submit-request/index.ts supabase/functions/submit-contact/index.ts
+      - name: Form functions end to end
+        run: |
+          eval "$(npx --yes "$SUPABASE_CLI" status -o env)"
+          SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY" NO_SITE=1 npx playwright test --project unit
+      - name: Function logs
+        if: failure()
+        run: docker logs supabase_edge_runtime_full-circle 2>&1 | tail -200

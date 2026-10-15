@@ -1,8 +1,11 @@
+import type { OptionOf } from '../../supabase/functions/_shared/forms';
+
 // Site content, copied from prototype/index.html. Pages render it at build time; the browser
 // scripts import the same data, so there is one copy of every stage, category and question.
 
-export const WHATSAPP_URL =
-  'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20found%20you%20through%20your%20website.';
+/** A WhatsApp chat with Full Circle, opened with a message ready to send. */
+export const whatsappLink = (text: string) => `https://wa.me/201011435406?text=${encodeURIComponent(text)}`;
+export const WHATSAPP_URL = whatsappLink('Hi Full Circle, I found you through your website.');
 export const WHATSAPP = '+20 101 143 5406';
 export const PHONE = '+20 2 2698 7277';
 export const PHONE_URL = 'tel:+20226987277';
@@ -10,7 +13,7 @@ export const EMAIL = 'fullcircleworks.co@gmail.com';
 export const INSTAGRAM = '@fullcircle_eg';
 export const INSTAGRAM_URL = 'https://www.instagram.com/fullcircle_eg/';
 
-export type PageKey = 'home' | 'how' | 'make' | 'about' | 'start' | 'track' | 'contact' | 'notfound';
+export type PageKey = 'home' | 'how' | 'make' | 'about' | 'start' | 'track' | 'contact' | 'privacy' | 'notfound';
 
 /** Real URLs for the prototype's hash pages (#how → /how-it-works). */
 export const ROUTES = {
@@ -70,22 +73,10 @@ export const FAQ: [string, string][] = [
   ['Can I visit the floor?', 'Yes. Book a visit when we schedule your first call.'],
 ];
 
-/** Sample request picks, in the order the form asks for them. */
-export const REQUEST_QUESTIONS = [
-  { k: 'path', label: '01 / The brand is', hint: 'Pick one', summary: 'Brand', options: ['Starting', 'Scaling'] },
-  { k: 'product', label: '02 / Product', hint: 'Pick one', summary: 'Product', options: ['Denim', 'Tees', 'Hoodies', 'Shirts', 'Jackets', 'Knitwear', 'Other'] },
-  { k: 'qty', label: '03 / Pieces per style', hint: 'Estimate', summary: 'Pieces per style', options: ['Under 60', '60–150', '150–500', '500+'] },
-  { k: 'have', label: '04 / You have', hint: 'Pick one', summary: 'You have', options: ['An idea', 'A sketch', 'A tech pack', 'A garment'] },
-] as const;
-
-export type RequestKey = (typeof REQUEST_QUESTIONS)[number]['k'];
-/** The options of one question, e.g. OptionOf<'qty'>. */
-type OptionOf<K extends RequestKey> = Extract<(typeof REQUEST_QUESTIONS)[number], { k: K }>['options'][number];
+// The request form's questions and its minimum-order rule live with the functions that receive the
+// form (supabase/functions/_shared/forms.ts), so the site and the server check the same options.
+export { REQUEST_QUESTIONS, belowMinimum, type RequestKey } from '../../supabase/functions/_shared/forms';
 type ProductOption = OptionOf<'product'>;
-
-/** The quantity is under the product's minimum: under 60 for everything, under 150 per colour for denim. */
-export const belowMinimum = (qty: string | null, product: string | null) =>
-  qty === ('Under 60' satisfies OptionOf<'qty'>) || (qty === ('60–150' satisfies OptionOf<'qty'>) && product === ('Denim' satisfies ProductOption));
 
 /** The products in the How it works demo (the first is picked to begin with), and the sample request's name for each. */
 export const DEMO_PRODUCTS = [

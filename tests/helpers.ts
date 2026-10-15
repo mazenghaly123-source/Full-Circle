@@ -2,6 +2,7 @@ import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
+import { NOTICE } from '../supabase/functions/_shared/forms';
 
 export const PROTOTYPE = pathToFileURL(resolve('prototype/index.html')).href;
 
@@ -78,6 +79,9 @@ const FIELD_LABELS: [string, string][] = [
   ['tId', 'Email or WhatsApp number'], ['tCode', '6-digit code'],
 ];
 
+/** The form lines (approved 15 Oct 2026): what shows under each form's button. */
+const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
+
 /**
  * Call before the prototype is opened. The CSS goes in as soon as the document is parsed, before the
  * prototype's scripts run, as the build has it from the start: the phone size of the 3D mark would
@@ -85,7 +89,7 @@ const FIELD_LABELS: [string, string][] = [
  * so the mark would vanish. The markup goes in once the page has loaded.
  */
 export async function approvePrototype(page: Page) {
-  await page.addInitScript(([css, labels]) => {
+  await page.addInitScript(([css, labels, lines]) => {
     document.addEventListener('readystatechange', () => {
       if (document.readyState !== 'interactive') return;
       // last in the document, as the block is last in global.css (the prototype's own styles sit in <body>)
@@ -102,8 +106,20 @@ export async function approvePrototype(page: Page) {
         const l = document.createElement('label'); l.className = 'mono dim flabel'; l.htmlFor = id; l.textContent = text;
         document.getElementById(id)!.before(l);
       }
+      // the form lines: the privacy line under each form's button (the WhatsApp line, the opt-in and
+      // the Turnstile slot stay hidden until used, so they are not added)
+      const notice = (text: string, link: boolean) => {
+        const p = document.createElement('p'); p.className = 'notice'; p.textContent = text;
+        if (link) { const a = document.createElement('a'); a.href = '/privacy'; a.textContent = 'Privacy notice'; p.append(' ', a); }
+        return p;
+      };
+      document.getElementById('err')!.after(notice(lines.request, true));
+      document.getElementById('cErr')!.after(notice(lines.contact, true));
+      // requests take no files (15 Oct 2026), and a sent request offers WhatsApp with its code
+      document.getElementById('fFile')!.closest('label')!.remove();
+      document.querySelector('.sent-box')!.insertAdjacentHTML('beforeend', '<a class="btn btn-line" id="sentWa" target="_blank" rel="noopener">Continue on WhatsApp</a>');
     });
-  }, [APPROVED_CSS, FIELD_LABELS] as const);
+  }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES] as const);
 }
 
 /** Waits for fonts, photos, the 3D mark, intros and count-ups, then stops the hero ring at a fixed stage. */
@@ -135,3 +151,31 @@ export async function settle(page: Page) {
   });
   await page.waitForTimeout(200);
 }
+
+/** What a mocked form function received, and how it should answer. */
+export type Sent = { url: string; body: Buffer | null };
+
+/**
+ * Stands in for the forms' backend: Cloudflare's Turnstile script (answers at once with its test
+ * token) and the submit-request and submit-contact Edge Functions. `answer` decides each reply;
+ * by default a request gets FC-2501 and a message is taken. Returns what was posted.
+ */
+export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 'submit-contact', n: number) => { status?: number; json?: object; abort?: boolean; delayMs?: number } = () => ({})) {
+  const sent: Sent[] = [];
+  await page.route('https://challenges.cloudflare.com/turnstile/**', (route) => route.fulfill({
+    contentType: 'text/javascript',
+    body: 'window.turnstile = { render(el, o) { setTimeout(() => o.callback("XXXX.DUMMY.TOKEN.XXXX"), 10); return "w"; }, remove() {} };',
+  }));
+  await page.route(/\/functions\/v1\/submit-(request|contact)$/, async (route) => {
+    const req = route.request(), fn = req.url().endsWith('submit-request') ? 'submit-request' : 'submit-contact';
+    sent.push({ url: req.url(), body: req.postDataBuffer() });
+    const a = answer(fn, sent.filter((s) => s.url.endsWith(fn)).length);
+    if (a.delayMs) await new Promise((r) => setTimeout(r, a.delayMs));
+    if (a.abort) return route.abort('failed');
+    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501' } : { ok: true }) });
+  });
+  return sent;
+}
+
+/** The JSON a mocked form function received. */
+export const postedData = (s: Sent): Record<string, unknown> => JSON.parse(s.body?.toString('utf8') ?? '');
