@@ -4,7 +4,7 @@
 // POST multipart/form-data: "data" (JSON, RequestData in _shared/forms.ts) and up to 5 "files".
 import { ERRORS, FILE_TYPES, LIMITS, NOTICE, belowMinimum, checkRequest, sniffType } from '../_shared/forms.ts';
 import { clientReceiptEmail, staffRequestEmail } from '../_shared/emails.ts';
-import { WHATSAPP_LATER, crash, db, human, later, logNotification, preflight, refuse, reply, sendEmail, staffEmails } from '../_shared/server.ts';
+import { WHATSAPP_LATER, crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
 
 const BUCKET = 'request-files';
 /** How long the file links in the staff email work. */
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - 3600_000).toISOString();
   let saved: Saved;
   try {
-    if (await client.count('requests', { contact: `eq.${r.contact}`, created_at: `gte.${since}` }) >= PER_HOUR) return refuse(ERRORS.tooMany, 429);
+    if (await client.count('requests', { ...sameContact(r.reach, r.contact), created_at: `gte.${since}` }) >= PER_HOUR) return refuse(ERRORS.tooMany, 429);
     [saved] = await client.insert<Saved>('requests', {
       path: r.path, product: r.product, qty: r.qty, have: r.have, brand: r.brand, contact: r.contact,
       contact_channel: r.reach.channel, email, whatsapp, note: r.note || null, source: r.source, notice_version: r.notice,

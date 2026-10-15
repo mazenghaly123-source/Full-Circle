@@ -3,6 +3,8 @@
 // (Supabase Edge Functions) with no dependencies: the handful of calls below go straight to
 // Supabase's REST and storage APIs.
 
+import type { Contact } from './forms.ts';
+
 const env = (k: string) => Deno.env.get(k)?.trim() || undefined;
 
 /** The database and storage as the service role (row-level security does not apply to it). */
@@ -97,6 +99,13 @@ export async function human(token: string, req: Request): Promise<boolean> {
   const out = await res.json().catch(() => ({}));
   return out.success === true;
 }
+
+/**
+ * A filter for rows from the same contact however it was typed: the email, the number in
+ * international form, or the text itself when the number's country could not be told.
+ */
+export const sameContact = (reach: Contact, typed: string): Record<string, string> =>
+  reach.channel === 'email' ? { email: `eq.${reach.email}` } : reach.whatsapp ? { whatsapp: `eq.${reach.whatsapp}` } : { contact: `eq.${typed}` };
 
 /** Who gets the staff alerts (comma-separated STAFF_EMAILS, otherwise the address on the site). */
 export const staffEmails = () => (env('STAFF_EMAILS') ?? 'fullcircleworks.co@gmail.com').split(',').map((s) => s.trim()).filter(Boolean);

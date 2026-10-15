@@ -119,10 +119,10 @@ test('requests the server must turn away save nothing', async () => {
   expect((await rows('requests', 'select=id')).length).toBe(before);
 });
 
-test('one contact sending over and over is asked to use WhatsApp', async () => {
+test('one contact sending over and over is asked to use WhatsApp, however it is typed', async () => {
   const contact = `again-${run}@acme.test`;
   for (let i = 0; i < 5; i++) expect((await post('submit-request', requestForm({ contact }))).status).toBe(200);
-  const res = await post('submit-request', requestForm({ contact }));
+  const res = await post('submit-request', requestForm({ contact: ` ${contact.toUpperCase()}` }));
   expect(res.status).toBe(429);
   expect(await res.json()).toEqual({ error: ERRORS.tooMany });
 });
@@ -138,6 +138,13 @@ test('a contact message lands and staff are emailed', async () => {
   expect(alert.html).toContain('Hello &lt;there&gt;');
   const bad = await post('submit-contact', JSON.stringify({ name: 'Sara', contact: email, text: 'Hi', notice: NOTICE.version, source: {}, turnstile: 'wrong' }));
   expect(bad.status).toBe(403);
+});
+
+test('a number counts as one contact however it is written', async () => {
+  const local = `011${String(Date.now()).slice(-8)}`, intl = `+20 ${local.slice(1, 3)} ${local.slice(3)}`;
+  const message = (contact: string) => post('submit-contact', JSON.stringify({ name: 'Sara', contact, text: 'Hi', notice: NOTICE.version, source: {}, turnstile: TOKEN }));
+  for (let i = 0; i < 5; i++) expect((await message(i % 2 ? local : intl)).status).toBe(200);
+  expect((await message(`00${intl.slice(1)}`)).status).toBe(429);
 });
 
 test('the publishable key reads and writes nothing', async () => {

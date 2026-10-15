@@ -3,7 +3,7 @@
 // POST application/json: MessageData in _shared/forms.ts.
 import { ERRORS, NOTICE, checkMessage } from '../_shared/forms.ts';
 import { staffMessageEmail } from '../_shared/emails.ts';
-import { crash, db, human, later, logNotification, preflight, refuse, reply, sendEmail, staffEmails } from '../_shared/server.ts';
+import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
 
 /** Messages from one contact in an hour before it is asked to use WhatsApp instead. */
 const PER_HOUR = 5;
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - 3600_000).toISOString();
   let saved: { id: number; created_at: string };
   try {
-    if (await client.count('messages', { contact: `eq.${m.contact}`, created_at: `gte.${since}` }) >= PER_HOUR) return refuse(ERRORS.tooMany, 429);
+    if (await client.count('messages', { ...sameContact(m.reach, m.contact), created_at: `gte.${since}` }) >= PER_HOUR) return refuse(ERRORS.tooMany, 429);
     [saved] = await client.insert<typeof saved>('messages', {
       name: m.name, contact: m.contact, contact_channel: m.reach.channel,
       email: m.reach.channel === 'email' ? m.reach.email : null, whatsapp: m.reach.channel === 'whatsapp' ? m.reach.whatsapp : null,
