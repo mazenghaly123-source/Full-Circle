@@ -124,7 +124,7 @@ export async function approvePrototype(page: Page) {
       const byText = (sel: string, start: string) => [...document.querySelectorAll(sel)].find((e) => e.textContent!.trim().startsWith(start))!;
       for (const tr of document.querySelectorAll('.spec2 tr')) if (['Fabrics', 'Bulk lead time'].includes(tr.querySelector('th')!.textContent!)) tr.remove();
       for (const dt of document.querySelectorAll('.kv2 dt')) if (dt.textContent === 'Typical time' && dt.nextElementSibling!.querySelector('.tbc')) { dt.nextElementSibling!.remove(); dt.remove(); }
-      const techs = document.querySelector('.techs')!;
+      const techs = byText('.sh', 'Techniques').nextElementSibling!;
       techs.previousElementSibling!.remove(); techs.nextElementSibling!.removeAttribute('style'); techs.remove();
       byText('.limits > div', 'Not in scope').remove();
       document.querySelector('.team')!.closest('section')!.remove();
