@@ -1,6 +1,6 @@
 # Production build plan
 
-Status (15 Oct 2026): **phase 1 is built** (the static site at parity with the prototype), and
+Status (15 Oct 2026): **phase 1 is live on Cloudflare** (the static site at parity with the prototype), and
 **phase 2 is built on the staging Supabase project** (the forms send for real, test data only; see
 §2). The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
@@ -310,7 +310,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | # | Phase | Done when |
 |---|---|---|
 | 0 | ✅ Repo, Astro, tests, CI | Done |
-| 1 | ✅ **Static site at parity** | Built and tested. **Next: Mazen connects Cloudflare (steps in `docs/deploy.md`) and signs off on the preview** |
+| 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
 | 3 | Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
@@ -337,9 +337,6 @@ nameservers are then pointed at Cloudflare.
 | PDPC fees (reported as free under 100,000 records, not confirmed) | one-off |
 
 ## 10. What I need from you
-
-**To finish phase 1:** connect the repo to Cloudflare (10 minutes, steps in `docs/deploy.md`) and
-look at the preview.
 
 **Before phase 2:**
 1. Buy the domain.

@@ -5,6 +5,10 @@ The site is static and is hosted on **Cloudflare Workers (static assets)**: see
 the whole configuration (assets only, no Worker code). Once connected, Cloudflare builds every push:
 `main` goes live, and every other branch or pull request gets its own preview URL.
 
+Connected on 15 October 2026: the site answers on <https://full-circle.mazenghaly123.workers.dev/>.
+(The workers.dev address had to be switched on by hand: Worker → **Domains and routes** →
+**workers.dev** → **Enable**.)
+
 ## Connect the repository (once, about 10 minutes)
 
 1. Sign in to Cloudflare (or create a free account) with the account that should own the site.
@@ -34,14 +38,6 @@ The site then answers on `full-circle.<your-subdomain>.workers.dev`.
    phase 5).
 5. In the Cloudflare dashboard for the domain, turn off **Web Analytics** (Cloudflare switches it on
    by default; the plan uses Umami instead).
-
-## Share link on Vercel (until Cloudflare is connected)
-
-The site can also be deployed on Vercel to share a link before Cloudflare is set up (import the
-repo there and build this branch). `vercel.json` only applies on Vercel: it serves the clean URLs
-(`/about` → `about.html`), copies the headers from `public/_headers`, and marks the whole copy
-`noindex` so search engines never index it. Cloudflare stays the host (ADR 0002); delete the
-Vercel project and `vercel.json` once the Cloudflare site is live.
 
 ## Backend (Supabase)
 
