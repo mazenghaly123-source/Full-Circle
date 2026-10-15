@@ -40,7 +40,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - Hero: real 3D extruded logo (three.js, SVGLoader + ExtrudeGeometry, bone ceramic face,
   darker glossy sides, warm key + orange/indigo rim lights). It does NOT rotate: one settle
   on load, then gentle tilt toward the pointer (finger-drag tilt on phones). Flat-mark
-  fallback with a 360° sweep reveal if WebGL fails.
+  fallback with a 360° sweep reveal if WebGL fails. On phones (14 Oct 2026) the mark is 1.25×
+  bigger inside its ring, and a finger turns it 1.7× as far as the mouse (full turn over 90px),
+  following closer. Tilt by gyroscope was considered and dropped: keep it touch only.
 - Mazen REJECTED: the old stacked-layers 3D logo, continuous rotation, magnetic red buttons.
   Keep: custom cursor ring (desktop), photo zoom/card lift, nav underline, row shift with
   red dot, ring-wipe page transitions, count-up numbers, reveal-on-scroll.
@@ -88,7 +90,9 @@ atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
   carousel positions, errors) and replays its CSS entrances, but no transition jumps.
 - Content (stages, categories, FAQ, contacts, request options) lives once in `src/data/site.ts`;
   photos are registered by slot in `src/data/photos.ts`.
-- three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Fonts
+- three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Its mesh
+  is extruded in a Web Worker (`hero-mesh.worker.ts`, importing three's `src/` modules so the worker
+  stays small); the parity suite checks the mark against the prototype's at full size. Fonts
   come from the `@fontsource` packages through Astro's local font provider, so builds need no network.
 
 ## Work rules

@@ -1,6 +1,11 @@
 // Home hero: the real logo, extruded in 3D (three.js). One settle on load, then a gentle tilt toward
-// the pointer (finger-drag on phones). It never spins. If WebGL is missing, or three.js does not
+// the pointer (finger-drag on phones, turning further and following closer than the mouse, as Mazen
+// asked on 14 Oct 2026). It never spins. If WebGL is missing, or three.js does not
 // arrive within 2.6s, the flat mark draws itself in a 360° sweep instead.
+//
+// The mesh is extruded in a worker (hero-mesh.worker.ts), so the page keeps responding meanwhile.
+// In the prototype that build held the main thread, so once three.js had arrived the 3D mark always
+// came up, however long the build took; it still does: the 2.6s limit is for three.js arriving.
 //
 // The canvas and its WebGL context are made once and moved into each new home page, so coming back
 // to Home shows the mark as you left it (no second settle, no fade), as in the prototype.
@@ -8,11 +13,13 @@ import type { Feature } from '../core/lifecycle';
 import { later } from '../core/lifecycle';
 import { fine, rm } from '../core/util';
 import { arrival } from '../core/nav';
+import { WIPE_CLEAR_MS } from '../shell/wipe';
+import type { MeshData } from './hero-mesh.worker';
 
 let gl = false;
 try { const c = document.createElement('canvas'); gl = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { /* no WebGL */ }
 
-let ready = false, failed = false, building: Promise<void> | null = null;
+let ready = false, failed = false, started = false, building: Promise<void> | null = null;
 let canvas: HTMLCanvasElement | null = null, rw: HTMLElement | null = null;
 let io: IntersectionObserver | null = null, loop: () => void = () => {};
 /** Starts the canvas's resize and pointer listeners for the home page on screen, until it is left. */
@@ -27,9 +34,19 @@ function ensureBuilt() {
 async function build() {
   const sym = document.getElementById('fc-mark');
   if (!sym) return;
+  const worker = mesher();
+  try { await setUp(sym, worker.extrude); } finally { worker.stop(); }
+}
+
+async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<MeshData>) {
   const THREE = await import('three');
   const { SVGLoader } = await import('three/addons/loaders/SVGLoader.js');
   const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
+  started = true;
+  // geometry from the real logo, extruded in a worker while the scene is set up here
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sym.getAttribute('viewBox')}">${sym.innerHTML.replace(/currentColor/g, '#000')}</svg>`;
+  const shapes: InstanceType<typeof THREE.Shape>[] = []; new SVGLoader().parse(svg).paths.forEach((p) => SVGLoader.createShapes(p).forEach((sh) => shapes.push(sh)));
+  const extruded = extrude(shapes.map((sh) => sh.toJSON()));
   const cv = canvas ?? document.createElement('canvas');
   cv.className = 'mark3'; cv.id = 'mark3'; cv.setAttribute('aria-hidden', 'true');
   canvas = cv;
@@ -42,11 +59,9 @@ async function build() {
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(renderer), 0.04).texture;
   const camera = new THREE.PerspectiveCamera(26, 1, 10, 5000); camera.position.set(0, 0, 1010);
-  // geometry from the real logo
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sym.getAttribute('viewBox')}">${sym.innerHTML.replace(/currentColor/g, '#000')}</svg>`;
-  const shapes: InstanceType<typeof THREE.Shape>[] = []; new SVGLoader().parse(svg).paths.forEach((p) => SVGLoader.createShapes(p).forEach((sh) => shapes.push(sh)));
-  const geo = new THREE.ExtrudeGeometry(shapes, { depth: 34, curveSegments: 10, bevelEnabled: true, bevelThickness: 4, bevelSize: 2.2, bevelOffset: 0, bevelSegments: 10 });
-  geo.center(); geo.computeVertexNormals();
+  // the mesh's attributes stay empty until the worker sends them, so the shaders can compile meanwhile
+  const geo = new THREE.BufferGeometry();
+  for (const [name, itemSize] of ATTRIBUTES) geo.setAttribute(name, new THREE.BufferAttribute(new Float32Array(0), itemSize));
   const face = new THREE.MeshPhysicalMaterial({ color: 0xE3DCD0, roughness: 0.48, metalness: 0.0, clearcoat: 0.35, clearcoatRoughness: 0.32, envMapIntensity: 0.32 });
   const side = new THREE.MeshPhysicalMaterial({ color: 0x8F8578, roughness: 0.3, metalness: 0.35, clearcoat: 0.9, clearcoatRoughness: 0.15, envMapIntensity: 1.0 });
   const mesh = new THREE.Mesh(geo, [face, side]); mesh.rotation.x = Math.PI; // SVG y runs down
@@ -58,12 +73,13 @@ async function build() {
   scene.add(new THREE.AmbientLight(0xffffff, 0.12));
   let dirty = true;
   function size() { const w = cv.clientWidth || 1, h = cv.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); dirty = true; }
-  size();
   // motion: one settle on entry, then a gentle tilt toward the pointer (or a finger), never a spin
   let tx = 0, ty = 0, cx = 0, cy = 0, t0 = 0, intro = !rm, drag: { x: number; y: number; x0: number; y0: number } | null = null;
+  // a finger turns it 1.7× as far as the mouse, over 90px of travel (the mouse: the prototype's tilt)
+  const reach = fine ? 1 : 1.7, DRAG_PX = 90;
   const move = (e: PointerEvent) => {
     loop();
-    if (drag) { tx = Math.max(-1, Math.min(1, drag.x0 + (e.clientX - drag.x) / 160)); ty = Math.max(-1, Math.min(1, drag.y0 + (e.clientY - drag.y) / 160)); return; }
+    if (drag) { tx = Math.max(-1, Math.min(1, drag.x0 + (e.clientX - drag.x) / DRAG_PX)); ty = Math.max(-1, Math.min(1, drag.y0 + (e.clientY - drag.y) / DRAG_PX)); return; }
     if (!fine || !rw) return; const r = rw.getBoundingClientRect();
     tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth * 0.45)));
     ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight * 0.55)));
@@ -86,17 +102,42 @@ async function build() {
   function tick(now: number) {
     raf = 0; if (!visible || document.hidden || !cv.isConnected || !cv.offsetParent) return;
     if (!t0) t0 = now;
-    const k = rm ? 1 : 0.06; cx += (tx - cx) * k; cy += (ty - cy) * k;
+    const k = rm ? 1 : drag ? 0.16 : 0.06; cx += (tx - cx) * k; cy += (ty - cy) * k;
     let iy = 0, ix = 0, iz = 0;
     if (intro) { const q = Math.min(1, (now - t0) / 1900), e = 1 - Math.pow(1 - q, 4); iy = -0.55 * (1 - e); ix = 0.22 * (1 - e); iz = -260 * (1 - e); if (q >= 1) intro = false; }
-    pivot.rotation.y = 0.24 + cx * 0.5 + iy; pivot.rotation.x = -0.16 + cy * 0.34 + ix; pivot.position.z = iz;
+    pivot.rotation.y = 0.24 + cx * 0.5 * reach + iy; pivot.rotation.x = -0.16 + cy * 0.34 * reach + ix; pivot.position.z = iz;
     key.position.set(-480 + cx * 520, 520 - cy * 360, 380);
     renderer.render(scene, camera);
     const moving = intro || Math.abs(tx - cx) > 0.0005 || Math.abs(ty - cy) > 0.0005;
     if (moving || dirty) { dirty = false; raf = requestAnimationFrame(tick); }
   }
+  renderer.compile(scene, camera);
+  const data = await extruded;
+  for (const [name, itemSize] of ATTRIBUTES) geo.setAttribute(name, new THREE.BufferAttribute(data[name], itemSize));
+  for (const g of data.groups) geo.addGroup(g.start, g.count, g.materialIndex);
+  size();
   renderer.render(scene, camera);
   ready = true;
+}
+
+const ATTRIBUTES = [['position', 3], ['normal', 3], ['uv', 2]] as const;
+
+/**
+ * Starts the worker that extrudes the mesh (hero-mesh.worker.ts), so its script loads alongside
+ * three.js. `extrude` sends it the logo's shapes and resolves with the mesh's arrays.
+ */
+function mesher() {
+  const worker = new Worker(new URL('./hero-mesh.worker.ts', import.meta.url), { type: 'module' });
+  const reply = new Promise<MeshData>((resolve, reject) => {
+    worker.onmessage = (e: MessageEvent<MeshData>) => resolve(e.data);
+    worker.onerror = (e) => reject(new Error(`mesh worker: ${e.message || 'failed to load'}`));
+    worker.onmessageerror = () => reject(new Error('mesh worker: unreadable reply'));
+  });
+  reply.catch(() => {}); // a worker that failed before it was asked is reported when it is asked
+  return {
+    extrude: (shapes: unknown[]) => { worker.postMessage(shapes); return reply; },
+    stop: () => worker.terminate(),
+  };
 }
 
 /** Puts the (one) 3D canvas into the home page on screen and starts watching it until it is left. */
@@ -122,15 +163,17 @@ export const heroMarkFeature: Feature = {
     // no WebGL, or the 3D mark already failed: the flat mark draws itself (again on each visit,
     // as the prototype's CSS sweep restarted whenever Home came back)
     if (!gl || failed) { wrap.classList.remove('m3wait'); return; }
-    // wait briefly for the 3D version, otherwise draw the flat one
+    // wait briefly for three.js, otherwise draw the flat mark; once it has arrived, wait for the build
     if (!canvas) canvas = wrap.querySelector('canvas.mark3');
     wrap.classList.add('m3wait');
-    // building the mesh is heavy, so after a page change it waits for the wipe to finish
-    const delay = arrival === 'load' ? 0 : WIPE_MS;
-    later(signal, () => { if (!wrap.classList.contains('m3on')) wrap.classList.remove('m3wait'); }, 2600 + delay);
-    later(signal, () => ensureBuilt().then(() => { if (ready && !signal.aborted && wrap.isConnected && wrap.classList.contains('m3wait')) attach(wrap, signal); }), delay);
+    let expired = false;
+    const flat = () => { if (!wrap.classList.contains('m3on')) wrap.classList.remove('m3wait'); };
+    // setting up the scene still takes the main thread, so after a page change it waits for the wipe
+    const delay = arrival === 'load' ? 0 : WIPE_CLEAR_MS;
+    later(signal, () => { expired = true; if (!started || failed) flat(); }, 2600 + delay);
+    later(signal, () => ensureBuilt().then(() => {
+      if (signal.aborted || !wrap.isConnected || !wrap.classList.contains('m3wait')) return;
+      if (ready) attach(wrap, signal); else if (expired) flat();
+    }), delay);
   },
 };
-
-/** How long the ring wipe takes to clear after the swap (ring 300ms + close 520ms). */
-const WIPE_MS = 850;
