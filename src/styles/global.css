@@ -947,7 +947,7 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .priv b{color:var(--bone);font-weight:500}
 .priv a{color:var(--bone);text-decoration:underline;text-underline-offset:3px}
 @media (max-width:760px){.priv section{grid-template-columns:1fr}}
-/* ===== approved changes (site audit part B, decided by Mazen on 13 Oct 2026) =====
+/* ===== approved changes (decided by Mazen: site audit part B on 13 Oct 2026, then as dated) =====
    Deliberate departures from the prototype. tests/parity.spec.ts injects this block (between the
    two markers) and the matching markup into the prototype before comparing, so everything else is
    still held to the prototype. Keep every approved visual change inside the markers. */
@@ -968,6 +968,8 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 /* B6 a visible label above each field, and 44px option buttons and tabs on phones */
 .flabel{display:block;font-size:10px;margin-bottom:-8px}
 @media (max-width:760px){.opt,.tabs2 button{min-height:44px}}
+/* 14 Oct 2026, phones: the hero mark 1.25× bigger inside its ring (the 3D one and the flat fallback) */
+@media (max-width:760px){.ringwrap canvas.mark3{width:80%}.ringwrap svg.heromark{width:42.5%}}
 /* 15 Oct 2026, the form lines (production plan §7, approved by Mazen): a privacy line under each
    form's button and, once a WhatsApp number is typed, "We'll reply on WhatsApp" with a separate
    unticked box for order updates there. The Turnstile slot shows only if Cloudflare asks the visitor

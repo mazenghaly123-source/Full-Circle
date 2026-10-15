@@ -61,9 +61,9 @@ export async function serveThreeLocally(page: Page) {
 }
 
 /**
- * The approved departures from the prototype (site audit part B): the CSS between the markers at the
- * end of src/styles/global.css, and the markup the build uses for them. The parity suite applies them
- * to the prototype, so the build is compared with the prototype as approved.
+ * The approved departures from the prototype (site audit part B, then as dated): the CSS between the
+ * markers at the end of src/styles/global.css, and the markup the build uses for them. The parity
+ * suite applies them to the prototype, so the build is compared with the prototype as approved.
  */
 const APPROVED_CSS = (() => {
   const css = readFileSync(resolve('src/styles/global.css'), 'utf8');
@@ -82,32 +82,43 @@ const FIELD_LABELS: [string, string][] = [
 /** The form lines (approved 15 Oct 2026): what shows under each form's button. */
 const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
 
+/**
+ * Call before the prototype is opened. The CSS goes in as soon as the document is parsed, before the
+ * prototype's scripts run, as the build has it from the start: the phone size of the 3D mark would
+ * otherwise resize its canvas after the mark is drawn, and the prototype does not redraw on a resize,
+ * so the mark would vanish. The markup goes in once the page has loaded.
+ */
 export async function approvePrototype(page: Page) {
-  await page.evaluate(([css, labels, lines]) => {
-    // last in the document, as the block is last in global.css (the prototype's own styles sit in <body>)
-    const style = document.createElement('style'); style.textContent = css; document.body.append(style);
-    // B2: error lines and the red labels become Bone with a red dot
-    for (const id of ['err', 'cErr', 'tErr']) { const e = document.getElementById(id)!; e.removeAttribute('style'); e.classList.add('errline'); }
-    for (const e of document.querySelectorAll('.yo-top span[style="color:var(--red)"], #oDecT')) { e.removeAttribute('style'); e.classList.add('need'); }
-    // B3: the scrim over the hero
-    document.querySelector('.hero > .light')!.insertAdjacentHTML('afterend', '<div class="scrim" aria-hidden="true"></div>');
-    // B6: a label above each field
-    for (const [id, text] of labels) {
-      const l = document.createElement('label'); l.className = 'mono dim flabel'; l.htmlFor = id; l.textContent = text;
-      document.getElementById(id)!.before(l);
-    }
-    // the form lines: the privacy line under each form's button (the WhatsApp line, the opt-in and
-    // the Turnstile slot stay hidden until used, so they are not added)
-    const notice = (text: string, link: boolean) => {
-      const p = document.createElement('p'); p.className = 'notice'; p.textContent = text;
-      if (link) { const a = document.createElement('a'); a.href = '/privacy'; a.textContent = 'Privacy notice'; p.append(' ', a); }
-      return p;
-    };
-    document.getElementById('err')!.after(notice(lines.request, true));
-    document.getElementById('cErr')!.after(notice(lines.contact, true));
-    // requests take no files (15 Oct 2026), and a sent request offers WhatsApp with its code
-    document.getElementById('fFile')!.closest('label')!.remove();
-    document.querySelector('.sent-box')!.insertAdjacentHTML('beforeend', '<a class="btn btn-line" id="sentWa" target="_blank" rel="noopener">Continue on WhatsApp</a>');
+  await page.addInitScript(([css, labels, lines]) => {
+    document.addEventListener('readystatechange', () => {
+      if (document.readyState !== 'interactive') return;
+      // last in the document, as the block is last in global.css (the prototype's own styles sit in <body>)
+      const style = document.createElement('style'); style.textContent = css; document.body.append(style);
+    });
+    addEventListener('load', () => {
+      // B2: error lines and the red labels become Bone with a red dot
+      for (const id of ['err', 'cErr', 'tErr']) { const e = document.getElementById(id)!; e.removeAttribute('style'); e.classList.add('errline'); }
+      for (const e of document.querySelectorAll('.yo-top span[style="color:var(--red)"], #oDecT')) { e.removeAttribute('style'); e.classList.add('need'); }
+      // B3: the scrim over the hero
+      document.querySelector('.hero > .light')!.insertAdjacentHTML('afterend', '<div class="scrim" aria-hidden="true"></div>');
+      // B6: a label above each field
+      for (const [id, text] of labels) {
+        const l = document.createElement('label'); l.className = 'mono dim flabel'; l.htmlFor = id; l.textContent = text;
+        document.getElementById(id)!.before(l);
+      }
+      // the form lines: the privacy line under each form's button (the WhatsApp line, the opt-in and
+      // the Turnstile slot stay hidden until used, so they are not added)
+      const notice = (text: string, link: boolean) => {
+        const p = document.createElement('p'); p.className = 'notice'; p.textContent = text;
+        if (link) { const a = document.createElement('a'); a.href = '/privacy'; a.textContent = 'Privacy notice'; p.append(' ', a); }
+        return p;
+      };
+      document.getElementById('err')!.after(notice(lines.request, true));
+      document.getElementById('cErr')!.after(notice(lines.contact, true));
+      // requests take no files (15 Oct 2026), and a sent request offers WhatsApp with its code
+      document.getElementById('fFile')!.closest('label')!.remove();
+      document.querySelector('.sent-box')!.insertAdjacentHTML('beforeend', '<a class="btn btn-line" id="sentWa" target="_blank" rel="noopener">Continue on WhatsApp</a>');
+    });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES] as const);
 }
 
@@ -122,6 +133,13 @@ export async function settle(page: Page) {
   // the 3D hero mark is up (or has given up and drawn the flat mark)
   await page.waitForFunction(() => { const w = document.querySelector('.hero .ringwrap'); return !w || w.classList.contains('m3on') || !w.classList.contains('m3wait'); }, null, { timeout: 90_000 });
   await page.waitForTimeout(4000);
+  // Chromium's full-page capture on a phone can lay the page out narrower for a moment. That resizes
+  // the 3D canvas, and resizing a WebGL canvas clears it (the build redraws a frame later, the
+  // prototype not at all), so the capture could miss the mark. Pin the canvas at its laid-out size.
+  await page.evaluate(() => {
+    const c = document.querySelector<HTMLCanvasElement>('.ringwrap canvas.mark3'); if (!c) return;
+    const { width, height } = getComputedStyle(c); c.style.width = width; c.style.height = height;
+  });
   await page.evaluate(() => {
     ((window as any).__intervals as number[]).forEach((id) => clearInterval(id));
     const arc = document.getElementById('heroArc'), dot = document.getElementById('heroDot'), labels = document.getElementById('heroLabels');

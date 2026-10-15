@@ -1,6 +1,8 @@
 // Behaviour of the production build: navigation, motion that carries meaning, the phone
 // experience, the demos and the forms. Runs at 1440×900, 390×844 and 375×667.
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import pixelmatch from 'pixelmatch';
+import { PNG } from 'pngjs';
 import { PAGES, isPhone, mockBackend, postedData, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
 
@@ -152,7 +154,10 @@ test('home: 3D mark appears and is kept when you come back', async ({ page }, in
   test.skip(isPhone(info), 'checked once, on desktop');
   test.setTimeout(120_000);
   const errors = watchErrors(page);
+  const worker = page.waitForEvent('worker');
   await page.goto('/');
+  // the mesh is extruded off the main thread
+  expect((await worker).url()).toMatch(/\/_astro\/hero-mesh\.worker[^/]*\.js$/);
   await expect(page.locator('.hero .ringwrap')).toHaveClass(/m3on/, { timeout: 60_000 });
   await page.evaluate(() => { (document.getElementById('mark3') as any).__kept = true; });
   await openNav(page, '/about', false);
@@ -162,6 +167,80 @@ test('home: 3D mark appears and is kept when you come back', async ({ page }, in
   await expect(page.locator('.hero .ringwrap')).toHaveClass(/m3on/);
   expect(await page.evaluate(() => (document.getElementById('mark3') as any).__kept)).toBe(true);
   expect(errors).toEqual([]);
+});
+
+/** Records every class the hero's ring wrapper takes, from the first one. */
+async function recordMarkStates(page: Page) {
+  await page.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
+    const w = document.querySelector('.hero .ringwrap')!, seen = ((window as any).__marks = [w.className]);
+    new MutationObserver(() => seen.push(w.className)).observe(w, { attributes: true, attributeFilter: ['class'] });
+  }));
+  return () => page.evaluate(() => (window as any).__marks as string[]);
+}
+
+test('home: once three.js is in, the 3D mark waits for a slow mesh build instead of falling back', async ({ page }, info) => {
+  test.skip(isPhone(info), 'checked once, on desktop');
+  test.setTimeout(120_000);
+  const states = await recordMarkStates(page);
+  // the worker's script arrives only after the 2.6s limit has passed (and the page is free to notice)
+  await page.route(/\/_astro\/hero-mesh\.worker[^/]*\.js$/, async (route) => {
+    await page.waitForFunction(() => performance.now() > 4000, null, { timeout: 60_000, polling: 100 });
+    await route.continue();
+  });
+  await page.goto('/');
+  await expect(page.locator('.hero .ringwrap')).toHaveClass(/m3on/, { timeout: 60_000 });
+  // from the moment it started waiting, the flat mark never showed (the wrapper was never without both)
+  const seen = await states();
+  const from = seen.findIndex((c) => /\bm3wait\b/.test(c));
+  expect(from).toBeGreaterThanOrEqual(0);
+  expect(seen.slice(from).filter((c) => !/\bm3(wait|on)\b/.test(c))).toEqual([]);
+});
+
+/** A screenshot of the element once it has stopped changing (the 3D mark eases toward its tilt). */
+async function stillShot(target: Locator) {
+  let last = await target.screenshot();
+  for (let i = 0; i < 40; i++) {
+    await target.page().waitForTimeout(400);
+    const next = await target.screenshot();
+    if (next.equals(last)) return PNG.sync.read(next);
+    last = next;
+  }
+  throw new Error('the element never stopped changing');
+}
+
+/** Share of pixels that differ between two screenshots of the same size. */
+const differ = (a: PNG, b: PNG) => pixelmatch(a.data, b.data, undefined, a.width, a.height, { threshold: 0.1 }) / (a.width * a.height);
+
+test('home: on a phone a finger turns the 3D mark sideways, and it settles back when let go', async ({ page, context }, info) => {
+  test.skip(info.project.name !== 'phone-390', 'checked once, on a phone');
+  test.setTimeout(180_000);
+  await page.goto('/');
+  await expect(page.locator('.hero .ringwrap')).toHaveClass(/m3on/, { timeout: 90_000 });
+  // only the mark: the grain and the lights behind it never stop moving
+  await page.addStyleTag({ content: '*{visibility:hidden!important} canvas.mark3{visibility:visible!important}' });
+  const mark = page.locator('canvas.mark3');
+  const rest = await stillShot(mark);
+  const box = (await mark.boundingBox())!;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  const cdp = await context.newCDPSession(page);
+  const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', dx = 0) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: x + dx, y }] });
+  await touch('touchStart');
+  for (let dx = 5; dx <= 60; dx += 5) await touch('touchMove', dx);
+  const turned = await stillShot(mark);
+  // a sideways drag turns the mark (well past a slight tilt) and leaves the page where it was
+  expect(differ(rest, turned)).toBeGreaterThan(0.1);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  await touch('touchEnd');
+  expect(differ(rest, await stillShot(mark))).toBeLessThan(0.005);
+});
+
+test('home: if the 3D mesh worker fails, the flat mark draws itself', async ({ page }) => {
+  await page.route(/\/_astro\/hero-mesh\.worker[^/]*\.js$/, (route) => route.fulfill({ body: 'throw new Error("mesh worker off in this test")', contentType: 'text/javascript' }));
+  await page.goto('/');
+  await expect(page.locator('.hero .ringwrap')).not.toHaveClass(/m3wait/, { timeout: 60_000 });
+  await expect(page.locator('.hero .ringwrap')).not.toHaveClass(/m3on/);
+  await expect(page.locator('.hero svg.heromark')).toBeVisible();
 });
 
 test('home: without three.js the flat mark draws itself instead', async ({ page }) => {
