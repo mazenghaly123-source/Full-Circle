@@ -1,13 +1,13 @@
 // Home "Nothing ships unseen": the small portal demo (approve the sample, request a photo).
 import type { Feature } from '../core/lifecycle';
-import { $, nowStamp, pad, vib } from '../core/util';
+import { $, byId, nowStamp, pad, vib } from '../core/util';
 import { STAGES } from '../../data/site';
 
 const demo = { approved: false, photoPending: false, log: [] as { stamp: string; txt: string; tail: string }[] };
 
 function render(doc: Document) {
   const rail = doc.getElementById('pRail'); if (!rail) return;
-  const g = (id: string) => doc.getElementById(id)!;
+  const g = byId(doc);
   const approved = demo.approved, t = approved ? 5 : 4;
   g('pStage').textContent = pad(t + 1) + ' / ' + STAGES[t].n; g('pNext').textContent = approved ? 'QC result' : 'Approve sample 03';
   g('pChip').classList.toggle('ok', approved); g('pChipT').textContent = approved ? 'Approved' : 'Awaiting approval';

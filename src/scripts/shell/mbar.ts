@@ -3,13 +3,14 @@ import { navigate } from 'astro:transitions/client';
 import type { Feature } from '../core/lifecycle';
 import { $, page, rm, vib } from '../core/util';
 import { picked, request, yo } from '../core/state';
-import { ROUTES } from '../../data/site';
+import { REQUEST_QUESTIONS, ROUTES } from '../../data/site';
 
 const mbar = $('mbar'), goBtn = $<HTMLButtonElement>('mbarGo');
 
 export function updGo() {
   const n = picked();
-  if (page() === 'start') goBtn.textContent = request.sent ? 'Request sent' : n < 4 ? `Continue / ${n} of 4 picked` : 'Add your details';
+  const all = REQUEST_QUESTIONS.length;
+  if (page() === 'start') goBtn.textContent = request.sent ? 'Request sent' : n < all ? `Continue / ${n} of ${all} picked` : 'Add your details';
   else goBtn.textContent = 'Request a sample';
 }
 

@@ -4,6 +4,8 @@ export { pad, ring } from '../../data/site';
 
 export const $ = <T extends HTMLElement = HTMLElement>(id: string, root: Document = document) =>
   root.getElementById(id) as T;
+/** Elements by id in one document (the live page, or one coming in): const g = byId(doc). */
+export const byId = (doc: Document) => <T extends HTMLElement = HTMLElement>(id: string) => doc.getElementById(id) as T;
 export const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const fine = matchMedia('(pointer: fine)').matches;
 export const NS = 'http://www.w3.org/2000/svg';

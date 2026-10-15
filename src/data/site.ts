@@ -23,15 +23,21 @@ export const ROUTES = {
   contact: '/contact',
 } as const;
 
-export type Stage = { n: string; s: string; line: string; get: string; ok: string; tone: string };
+export type Stage = {
+  n: string; s: string; line: string; get: string; ok: string; tone: string;
+  /** Typical time for the stage, where it is known (How it works shows TBC for the rest). */
+  time?: string;
+  /** How it works words some of these its own way, as the prototype did. */
+  demo?: { get?: string; ok?: string };
+};
 
 export const STAGES: Stage[] = [
   { n: 'Research', s: 'Research', line: 'We study the brand, the customer and the market the product is going into.', get: 'Brief, category, target price', ok: 'The brief', tone: '#6b5644' },
   { n: 'Design support', s: 'Design', line: 'Sketches become technical drawings with measurements, trims and construction notes.', get: 'Tech pack', ok: 'Tech pack sign-off', tone: '#8a7f6c' },
-  { n: 'Sourcing', s: 'Source', line: 'Fabric and trims are sourced against the brief, with swatches sent to you.', get: 'Swatches and trim cards', ok: 'Fabric selection', tone: '#3d3d38' },
-  { n: 'Development', s: 'Develop', line: 'Patterns are cut and graded, and construction questions are answered.', get: 'Base-size pattern, fit notes', ok: 'Pattern sign-off', tone: '#7a6450' },
-  { n: 'Sampling', s: 'Sample', line: 'Samples are made, fitted and revised until you sign one off. The signed sample becomes the reference for bulk.', get: 'A physical sample', ok: 'Sample approval', tone: '#3b4f7a' },
-  { n: 'Production', s: 'Produce', line: 'Bulk runs against the approved sample, checked along the line.', get: 'Progress at each checkpoint', ok: 'Quantity and delivery date', tone: '#55554d' },
+  { n: 'Sourcing', s: 'Source', line: 'Fabric and trims are sourced against the brief, with swatches sent to you.', get: 'Swatches and trim cards', ok: 'Fabric selection', tone: '#3d3d38', demo: { get: 'Swatches + trim cards' } },
+  { n: 'Development', s: 'Develop', line: 'Patterns are cut and graded, and construction questions are answered.', get: 'Base-size pattern, fit notes', ok: 'Pattern sign-off', tone: '#7a6450', demo: { get: 'Base-size pattern + fit notes' } },
+  { n: 'Sampling', s: 'Sample', line: 'Samples are made, fitted and revised until you sign one off. The signed sample becomes the reference for bulk.', get: 'A physical sample', ok: 'Sample approval', tone: '#3b4f7a', time: '7–25 days, denim longest', demo: { get: 'A physical sample, fitted' } },
+  { n: 'Production', s: 'Produce', line: 'Bulk runs against the approved sample, checked along the line.', get: 'Progress at each checkpoint', ok: 'Quantity and delivery date', tone: '#55554d', demo: { ok: 'Quantity + delivery date' } },
   { n: 'QC', s: 'QC', line: 'Measurements, seams, colour, labels and packing count are inspected before anything is packed.', get: 'Inspection record', ok: 'QC result', tone: '#5b4a3c' },
   { n: 'Delivery', s: 'Deliver', line: 'Finished goods are packed, documented and shipped to you.', get: 'Goods and documents', ok: 'Receipt, next run', tone: '#7a5a44' },
 ];
@@ -73,6 +79,23 @@ export const REQUEST_QUESTIONS = [
 ] as const;
 
 export type RequestKey = (typeof REQUEST_QUESTIONS)[number]['k'];
+/** The options of one question, e.g. OptionOf<'qty'>. */
+type OptionOf<K extends RequestKey> = Extract<(typeof REQUEST_QUESTIONS)[number], { k: K }>['options'][number];
+type ProductOption = OptionOf<'product'>;
+
+/** The quantity is under the product's minimum: under 60 for everything, under 150 per colour for denim. */
+export const belowMinimum = (qty: string | null, product: string | null) =>
+  qty === ('Under 60' satisfies OptionOf<'qty'>) || (qty === ('60–150' satisfies OptionOf<'qty'>) && product === ('Denim' satisfies ProductOption));
+
+/** The products in the How it works demo (the first is picked to begin with), and the sample request's name for each. */
+export const DEMO_PRODUCTS = [
+  { label: 'Shirts', product: 'Shirts' },
+  { label: 'Hoodies', product: 'Hoodies' },
+  { label: 'Tees', product: 'Tees' },
+  { label: 'Denim', product: 'Denim' },
+  // the request form calls outerwear "Jackets" (the prototype passed "Outerwear", which matched no option)
+  { label: 'Outerwear', product: 'Jackets' },
+] as const satisfies readonly { label: string; product: ProductOption }[];
 
 export const pad = (n: number) => String(n).padStart(2, '0');
 

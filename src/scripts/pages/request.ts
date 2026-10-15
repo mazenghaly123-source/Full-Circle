@@ -4,15 +4,24 @@
 // Phase 1 keeps the prototype's behaviour: the request is checked and a code is shown, but nothing
 // is sent yet. Phase 2 sends it to the server, which issues the code and notifies the team.
 import type { Feature } from '../core/lifecycle';
-import { $, demoCode, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
+import { $, byId, demoCode, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
 import { picked, request } from '../core/state';
 import { arrival } from '../core/nav';
-import { REQUEST_QUESTIONS, type RequestKey } from '../../data/site';
+import { REQUEST_QUESTIONS, belowMinimum, type RequestKey } from '../../data/site';
 import { updGo } from '../shell/mbar';
 
 const FILE_HINT = 'Add a sketch, tech pack or photo (optional)';
 /** What an error line can be about: the two required option groups and the two required fields. */
 const CHECKED = ['opts-path', 'opts-product', 'fBrand', 'fContact'] as const;
+
+/** The file picker's label: the files chosen, or the hint. */
+const fileLabel = () => request.files.length ? request.files.map((f) => f.name).join(', ') : FILE_HINT;
+
+/** The summary once the request is sent: its code, and the sent look. */
+function showSent(doc: Document) {
+  const g = byId(doc);
+  g('sentCode').textContent = request.code; g('reqCode').textContent = request.code; g('summary').classList.add('is-sent');
+}
 
 /** A pick from the URL counts only if it is one of that question's own options. */
 const isOption = (k: RequestKey, v: string) => (REQUEST_QUESTIONS.find((q) => q.k === k)!.options as readonly string[]).includes(v);
@@ -28,7 +37,7 @@ function renderSummary(doc: Document) {
   doc.getElementById('srows')!.replaceChildren(...rows);
   const n = picked();
   [...doc.getElementById('meter')!.children].forEach((m, i) => m.classList.toggle('on', i < n));
-  doc.getElementById('qtyWarn')!.classList.toggle('show', request.sel.qty === 'Under 60' || (request.sel.qty === '60–150' && request.sel.product === 'Denim'));
+  doc.getElementById('qtyWarn')!.classList.toggle('show', belowMinimum(request.sel.qty, request.sel.product));
 }
 
 function restore(doc: Document) {
@@ -37,9 +46,9 @@ function restore(doc: Document) {
   (doc.getElementById('fBrand') as HTMLInputElement).value = request.brand;
   (doc.getElementById('fContact') as HTMLInputElement).value = request.contact;
   (doc.getElementById('fNote') as HTMLTextAreaElement).value = request.note;
-  doc.getElementById('fFileT')!.textContent = request.files.length ? request.files.map((f) => f.name).join(', ') : FILE_HINT;
+  doc.getElementById('fFileT')!.textContent = fileLabel();
   doc.getElementById('err')!.textContent = request.err; markInvalid(doc, CHECKED, request.bad, 'err');
-  if (request.sent) { doc.getElementById('sentCode')!.textContent = request.code; doc.getElementById('reqCode')!.textContent = request.code; doc.getElementById('summary')!.classList.add('is-sent'); }
+  if (request.sent) showSent(doc);
   renderSummary(doc);
 }
 
@@ -65,7 +74,7 @@ export const requestFeature: Feature = {
     $('fBrand').addEventListener('input', (e) => { request.brand = (e.target as HTMLInputElement).value; }, { signal });
     $('fContact').addEventListener('input', (e) => { request.contact = (e.target as HTMLInputElement).value; }, { signal });
     $('fNote').addEventListener('input', (e) => { request.note = (e.target as HTMLTextAreaElement).value; }, { signal });
-    $('fFile').addEventListener('change', (e) => { request.files = [...((e.target as HTMLInputElement).files ?? [])]; $('fFileT').textContent = request.files.length ? request.files.map((x) => x.name).join(', ') : FILE_HINT; }, { signal });
+    $('fFile').addEventListener('change', (e) => { request.files = [...((e.target as HTMLInputElement).files ?? [])]; $('fFileT').textContent = fileLabel(); }, { signal });
     // the error line is tied to the fields it is about, and focus goes to the first of them (a
     // missing pick: its first option, with the question scrolled to the middle of the screen)
     const fail = (msg: string, bad: string[]) => {
@@ -83,7 +92,7 @@ export const requestFeature: Feature = {
       const code = demoCode();
       request.sent = true; request.code = code; request.err = ''; request.bad = []; markInvalid(document, CHECKED, [], 'err');
       // the phone bar reads "Request sent" and slides away on the next scroll, as in the prototype
-      $('err').textContent = ''; $('sentCode').textContent = code; $('reqCode').textContent = code; $('summary').classList.add('is-sent'); toast(code + ' / request received'); updGo();
+      $('err').textContent = ''; showSent(document); toast(code + ' / request received'); updGo();
       focusHeading($('sentH'));
     }, { signal });
   },
