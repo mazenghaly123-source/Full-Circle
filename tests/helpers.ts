@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { NOTICE } from '../supabase/functions/_shared/forms';
+import { FAQ } from '../src/data/site';
 
 export const PROTOTYPE = pathToFileURL(resolve('prototype/index.html')).href;
 
@@ -89,7 +90,7 @@ const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
  * so the mark would vanish. The markup goes in once the page has loaded.
  */
 export async function approvePrototype(page: Page) {
-  await page.addInitScript(([css, labels, lines]) => {
+  await page.addInitScript(([css, labels, lines, faq]) => {
     document.addEventListener('readystatechange', () => {
       if (document.readyState !== 'interactive') return;
       // last in the document, as the block is last in global.css (the prototype's own styles sit in <body>)
@@ -118,8 +119,22 @@ export async function approvePrototype(page: Page) {
       // requests take no files (15 Oct 2026), and a sent request offers WhatsApp with its code
       document.getElementById('fFile')!.closest('label')!.remove();
       document.querySelector('.sent-box')!.insertAdjacentHTML('beforeend', '<a class="btn btn-line" id="sentWa" target="_blank" rel="noopener">Continue on WhatsApp</a>');
+      // less text, no TBC left (15 Oct 2026): fabrics, bulk lead times, techniques, the scope list and
+      // the sample price go; stage times show only where known; the team waits for its portraits
+      const byText = (sel: string, start: string) => [...document.querySelectorAll(sel)].find((e) => e.textContent!.trim().startsWith(start))!;
+      for (const tr of document.querySelectorAll('.spec2 tr')) if (['Fabrics', 'Bulk lead time'].includes(tr.querySelector('th')!.textContent!)) tr.remove();
+      for (const dt of document.querySelectorAll('.kv2 dt')) if (dt.textContent === 'Typical time' && dt.nextElementSibling!.querySelector('.tbc')) { dt.nextElementSibling!.remove(); dt.remove(); }
+      const techs = document.querySelector('.techs')!;
+      techs.previousElementSibling!.remove(); techs.nextElementSibling!.removeAttribute('style'); techs.remove();
+      byText('.limits > div', 'Not in scope').remove();
+      document.querySelector('.team')!.closest('section')!.remove();
+      byText('p.note', 'Free first call').textContent = 'Free first call / we reply quickly';
+      byText('.make-foot span', 'Minimums per category').textContent = 'Minimums per category';
+      byText('span.mono', '01 / Within one working day').textContent = '01 / We reply quickly';
+      byText('b', 'Sunday – Thursday').textContent = 'Sunday – Thursday / 9:00 – 17:00';
+      document.getElementById('faqList')!.innerHTML = faq.map(([q, a], i) => `<details><summary><span class="mono dim">${String(i + 1).padStart(2, '0')}</span><h3>${q}</h3><span class="plus"></span></summary><p class="ans">${a}</p></details>`).join('');
     });
-  }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES] as const);
+  }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ] as const);
 }
 
 /** Waits for fonts, photos, the 3D mark, intros and count-ups, then stops the hero ring at a fixed stage. */

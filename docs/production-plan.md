@@ -17,7 +17,7 @@ Status (15 Oct 2026): **phase 1 is live on Cloudflare** (the static site at pari
 | Q6 | Request code vs order code | **One code**: the code given on request stays with the order | [ADR 0004](./adr/0004-one-code-from-request-to-order.md) |
 | Q7 | Who uses the admin view | **About 4 people** (proposed roles in §4) | |
 | Q8 | Domain | **Not bought yet.** It now blocks phases 2–4, not only launch (see §8) | |
-| Q9 | TBC content | **Filled in before launch.** Launch is blocked until no TBC tag remains | |
+| Q9 | TBC content | **Settled 15 Oct 2026:** what was unknown was cut from the site (Mazen wants less text), the rest filled in. No TBC tag remains | |
 | Q10 | Analytics | Recommendation: **Umami Cloud**, free plan, EU region (§6) | |
 | Q11 | Privacy note | §7, as built. **Reviewed by the lawyer and confirmed** (Mazen, 15 Oct 2026) | |
 | — | Hosting | **Cloudflare Workers (static assets)** rather than Pages, following Cloudflare's current advice | [ADR 0002](./adr/0002-cloudflare-workers-static-assets.md) |
@@ -120,15 +120,15 @@ again, was fixed in phase 2.)
   with its code ready to send. (The first build took files; they were removed the same day.)
 - *Form lines* (approved by Mazen on 15 Oct): the privacy line under each button, and "We'll reply
   on WhatsApp" with a separate unticked box for order updates once a number is typed (stored with
-  its exact wording). The **privacy notice** at `/privacy`; its company details and periods are
-  TBC like the rest of the site's open facts.
+  its exact wording). The **privacy notice** at `/privacy`, with the company details and the
+  periods (requests one year, orders five years).
 - *Checked on staging:* requests by email and by WhatsApp (with an opt-in) landed with their
   consent and log rows; the publishable key was refused on every table.
 
 **Left for phase 2 to be done:** a Resend account and key (until then nothing is emailed; every
 email is logged as skipped), then the domain verified at Resend so receipts reach brands; a real
-Turnstile widget (staging's test key lets everything through); the nightly clean-up, once the
-retention periods (TBC on `/privacy`) are known.
+Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
+requests and messages a year old that never became orders (`/privacy`).
 
 **The 3D mark is built off the main thread** (14 Oct 2026, early: it was a phase 5 item but needs
 no domain). The logo mesh has about 724,000 vertices; extruding it took about 0.6 s on the main

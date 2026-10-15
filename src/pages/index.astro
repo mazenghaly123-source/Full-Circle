@@ -35,7 +35,7 @@ const ATELIER = [
       <h1 class="camp">Idea to product. Full circle.</h1>
       <p class="lead">Design, patterns, fabric, samples and bulk production under one roof, for clothing brands that are starting or scaling. What you approve in sampling is what ships.</p>
       <div class="cta"><a href={ROUTES.start} class="btn btn-red">Request a sample</a><a href={ROUTES.how} class="btn btn-line">How it works</a></div>
-      <p class="mono dim note">Free first call / reply within one working day <span class="tbc">TBC</span></p>
+      <p class="mono dim note">Free first call / we reply quickly</p>
     </div>
     <div class="ringwrap">
       <svg viewBox="0 0 400 400" aria-hidden="true">
@@ -98,7 +98,7 @@ const ATELIER = [
   <div class="make snap" id="makeGrid">{MAKE.map((m, i) => (
     <a class="cat" href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[pad(i + 1), 'Photo']} sizes="(max-width: 620px) 56vw, (max-width: 1000px) 33vw, 17vw" /><h3 class="camp">{m.n}</h3><span class="mono">{m.sub}</span></a>
   ))}</div><div class="dots" data-for="makeGrid"></div>
-  <div class="make-foot"><span class="mono dim">Minimums per category / fabric lists coming</span><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
+  <div class="make-foot"><span class="mono dim">Minimums per category</span><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
 </section>
 
 <section class="wrap sec" id="h-how" style="border-top:1px solid var(--faint)">
