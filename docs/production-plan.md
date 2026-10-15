@@ -1,7 +1,8 @@
 # Production build plan
 
-Status (8 Oct 2026): **phase 1 is built** (the static site at parity with the prototype). The
-decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
+Status (15 Oct 2026): **phase 1 is built** (the static site at parity with the prototype), and
+**phase 2 is built on the staging Supabase project** (the forms send for real, test data only; see
+§2). The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
 
 ## 1. Decisions
@@ -35,8 +36,8 @@ decisions below were confirmed by Mazen; the ones that are hard to reverse are r
 - State carries across pages as it did in the one-file prototype. Picks made on the request form,
   the demo order and the portal demo are still there when you come back. Buttons on other pages
   open the request form with their pick filled in (`/request-a-sample?path=Scaling&product=Denim`).
-- **Still demos, by plan:** the request and contact forms check the input and show a code, but send
-  nothing (phase 2). Track order is the prototype's demo portal (phase 3).
+- **Still a demo, by plan:** Track order is the prototype's demo portal (phase 3). The request and
+  contact forms send for real since phase 2 (below).
 
 **How "identical" is checked** (runs in CI on every push, see `tests/`):
 
@@ -90,10 +91,35 @@ Small, deliberate differences from the prototype:
   product photos (not where a link around the photo already names it). The CSS is the marked block
   at the end of `global.css`; the parity tests apply it to the prototype before comparing.
 
-**Prototype bugs kept for now** (the build matches the prototype; fixed when the real form and
-portal replace the demos in phases 2–3): after a request is sent, the form stays visible under
-"Received." and sending again makes a new code; on Track, the line under the order code does not
-update after Approve.
+**Prototype bugs kept for now** (the build matches the prototype; fixed when the real portal
+replaces the demo in phase 3): on Track, the line under the order code does not update after
+Approve. (The request form's bug, where the form stayed visible under "Received." and could be sent
+again, was fixed in phase 2.)
+
+**Phase 2 is built** (15 Oct 2026, branch `claude/phase-2-requests`), on the Supabase project
+**full-circle-staging** (Frankfurt, free plan), with test data only:
+
+- *Database:* requests, their files (a private bucket), contact messages, consent records, the log
+  of every message sent, and staff with their roles. Codes come from one sequence, starting at
+  FC-2501. Row-level security on every table; the publishable key reaches none of them. Tested:
+  33 database checks of who can reach what, run in CI.
+- *Forms:* both post to Edge Functions (`submit-request`, `submit-contact`) that check the same
+  rules as the page, a Turnstile token, file types by their first bytes (up to 5 images or PDFs,
+  10 MB each, 20 MB in all) and a limit of 5 sends an hour per contact. The request answers with
+  its code. Each request and message carries where the visitor came from (ad tags, referring site,
+  first page). Emails: an alert to staff for each, a receipt to a brand that gave an email; the
+  WhatsApp receipt waits for phase 4 and is logged as such.
+- *Form lines* (approved by Mazen on 15 Oct): the privacy line under each button, "We'll reply on
+  WhatsApp" with a separate unticked box for order updates once a number is typed (stored with its
+  exact wording), and the hint not to upload photos of people or IDs. A **draft privacy notice**
+  at `/privacy`, with TBC where only the lawyer or Mazen can answer.
+- *Checked on staging:* a request with a PDF and one with a WhatsApp opt-in landed with their file,
+  consent and log rows; the publishable key was refused on every table and file.
+
+**Left for phase 2 to be done:** a Resend account and key (until then nothing is emailed; every
+email is logged as skipped), then the domain verified at Resend so receipts reach brands; a real
+Turnstile widget (staging's test key lets everything through); the nightly clean-up once the lawyer
+gives retention periods; the Arabic notice decision (§7).
 
 **Found while building, for later:** the 3D logo mesh has about 724,000 vertices, and building it
 takes about 0.6 s on the main thread on a fast computer, more on phones. The prototype has the same
@@ -284,7 +310,7 @@ Full Circle's legal name and use its commercial register and tax card.
 |---|---|---|
 | 0 | ✅ Repo, Astro, tests, CI | Done |
 | 1 | ✅ **Static site at parity** | Built and tested. **Next: Mazen connects Cloudflare (steps in `docs/deploy.md`) and signs off on the preview** |
-| 2 | Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile and uploads, staff emails, request receipts, consent records, privacy notice page, form lines | A test request lands in the database and in the staff inboxes (test data only until the lawyer signs off) |
+| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile and uploads, staff emails, request receipts, consent records, privacy notice page, form lines | A test request lands in the database and in the staff inboxes (test data only until the lawyer signs off). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
 | 3 | Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
 | 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, mesh building in a Web Worker, **no TBC left** | Live on the domain |
@@ -317,10 +343,10 @@ look at the preview.
 **Before phase 2:**
 1. Buy the domain.
 2. Brief the lawyer (§7).
-3. Create the Supabase account (two projects: live and staging, in Frankfurt) and a Resend account,
-   and invite me.
+3. ~~Create the Supabase account~~ (done: staging is up; live comes at launch). Create a Resend
+   account and add its API key to the staging project's function secrets (`RESEND_API_KEY`).
 4. Decide on the Arabic privacy page at launch (§7).
-5. Approve the small form additions (§7).
+5. ~~Approve the small form additions (§7).~~ Approved 15 Oct and built.
 6. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
 
 **Before phase 3–4:**

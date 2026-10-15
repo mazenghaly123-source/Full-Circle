@@ -21,6 +21,8 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - `assets/photos-raw/`: full-size originals of the photos.
 - The production site (Astro, static): `src/` and `tests/`, described under *Site code* below.
   Deploying: [docs/deploy.md](./docs/deploy.md).
+- The backend (Supabase): `supabase/` (migrations, database tests, the form Edge Functions),
+  described under *Backend* below.
 
 ## Design system (V4.1 "Raw Editorial"): do not drift
 - Colours: Obsidian #11110F (bg), Bone #E8E2D8 (text), Charcoal #292925, Raw Cotton #D8D0C3,
@@ -86,10 +88,27 @@ atelier-1..5, about-floor, team-1..4. All of it is filled in before launch.
   `prepare(doc)` writes carried-over state into the incoming page before it shows. The prototype
   was one document: a page you come back to keeps its state (picks, demo progress, open FAQ,
   carousel positions, errors) and replays its CSS entrances, but no transition jumps.
-- Content (stages, categories, FAQ, contacts, request options) lives once in `src/data/site.ts`;
-  photos are registered by slot in `src/data/photos.ts`.
+- Content (stages, categories, FAQ, contacts) lives once in `src/data/site.ts`; photos are
+  registered by slot in `src/data/photos.ts`. The request form's questions, the form rules and the
+  words shown with the forms live in `supabase/functions/_shared/forms.ts`, which the site and the
+  Edge Functions both import (site.ts re-exports the questions).
+- No test reaches the real backend: `mockBackend` (`tests/helpers.ts`) stands in for Turnstile and
+  the form functions in the browser suites.
 - three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Fonts
   come from the `@fontsource` packages through Astro's local font provider, so builds need no network.
+
+## Backend
+- Supabase project `full-circle-staging` (Frankfurt, free plan, **test data only** until the lawyer
+  signs off). The live project is created at launch. Every build sends its forms to staging unless
+  `PUBLIC_SUPABASE_URL` says otherwise (`src/data/backend.ts`).
+- Row-level security on every table, and the publishable key reaches none of them: the forms
+  write through the `submit-request` and `submit-contact` Edge Functions, which check a Turnstile
+  token. `supabase/tests/database/` holds who-can-reach-what tests; run `supabase test db`.
+- The functions have no dependencies (a few REST calls in `_shared/server.ts`); type-check them
+  with `deno check`. `tests/unit/backend.spec.ts` runs them end to end on a local stack
+  (`supabase start`); the CI *backend* job does all three.
+- Migrations reach staging through the Supabase MCP (`apply_migration`); keep each local file
+  named with the version the project records, so the two histories match.
 
 ## Work rules
 - Confirm the plan with Mazen before large builds; don't build unrequested versions.
