@@ -28,7 +28,7 @@ export const ROUTES = {
 
 export type Stage = {
   n: string; s: string; line: string; get: string; ok: string; tone: string;
-  /** Typical time for the stage, where it is known (How it works shows TBC for the rest). */
+  /** Typical time for the stage, where it is known (How it works shows it only then). */
   time?: string;
   /** How it works words some of these its own way, as the prototype did. */
   demo?: { get?: string; ok?: string };
@@ -64,12 +64,11 @@ export const MAKE: Category[] = [
 ];
 
 export const FAQ: [string, string][] = [
-  ['Do I need a tech pack to start?', 'No. Bring a sketch, a reference garment or a mood board. Design support turns it into a tech pack before anything is cut.'],
-  ['What is the minimum order?', 'From 60 pieces per colour for tees, hoodies, sweatpants and shorts. Shirts start at 80 to 100, tailored pants and jackets at 100, and denim at 150 per colour. Knitwear is quoted per order.'],
-  ['How much does a sample cost?', 'Sample pricing depends on the garment and how much development it needs. You get the price before we start.'],
-  ['Who owns my designs and patterns?', 'You do. Patterns and tech packs made for your brand are yours and are never reused for anyone else.'],
-  ['How long does a sample take?', 'Between 7 and 25 days. Cotton pieces are the fastest, denim takes the longest. You get the bulk timeline with the quote, and the tracking page shows where your order stands.'],
-  ['Do you work with brands outside Egypt?', 'Yes. We sell to brands in the Gulf and the Middle East, Turkey and China. Samples, approvals and photos all run through the tracking page, so you can follow every stage from wherever you are.'],
+  ['Do I need a tech pack to start?', 'No. Bring a sketch, a reference garment or a mood board. We turn it into a tech pack.'],
+  ['What is the minimum order?', 'From 60 pieces per colour for most products, and 150 per colour for denim. Knitwear is quoted per order.'],
+  ['Who owns my designs and patterns?', 'You do. Your patterns and tech packs are never reused for anyone else.'],
+  ['How long does a sample take?', 'Between 7 and 25 days. Cotton is the fastest, denim takes the longest.'],
+  ['Do you work with brands outside Egypt?', 'Yes. We work with brands in the Gulf and the Middle East, Turkey and China, and you follow every stage on the tracking page.'],
   ['Can I visit the floor?', 'Yes. Book a visit when we schedule your first call.'],
 ];
 

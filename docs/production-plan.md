@@ -1,6 +1,6 @@
 # Production build plan
 
-Status (15 Oct 2026): **phase 1 is built** (the static site at parity with the prototype), and
+Status (15 Oct 2026): **phase 1 is live on Cloudflare** (the static site at parity with the prototype), and
 **phase 2 is built on the staging Supabase project** (the forms send for real, test data only; see
 §2). The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
@@ -17,7 +17,7 @@ Status (15 Oct 2026): **phase 1 is built** (the static site at parity with the p
 | Q6 | Request code vs order code | **One code**: the code given on request stays with the order | [ADR 0004](./adr/0004-one-code-from-request-to-order.md) |
 | Q7 | Who uses the admin view | **About 4 people** (proposed roles in §4) | |
 | Q8 | Domain | **Not bought yet.** It now blocks phases 2–4, not only launch (see §8) | |
-| Q9 | TBC content | **Filled in before launch.** Launch is blocked until no TBC tag remains | |
+| Q9 | TBC content | **Settled 15 Oct 2026:** what was unknown was cut from the site (Mazen wants less text), the rest filled in. No TBC tag remains | |
 | Q10 | Analytics | Recommendation: **Umami Cloud**, free plan, EU region (§6) | |
 | Q11 | Privacy note | §7, as built. **Reviewed by the lawyer and confirmed** (Mazen, 15 Oct 2026) | |
 | — | Hosting | **Cloudflare Workers (static assets)** rather than Pages, following Cloudflare's current advice | [ADR 0002](./adr/0002-cloudflare-workers-static-assets.md) |
@@ -120,15 +120,15 @@ again, was fixed in phase 2.)
   with its code ready to send. (The first build took files; they were removed the same day.)
 - *Form lines* (approved by Mazen on 15 Oct): the privacy line under each button, and "We'll reply
   on WhatsApp" with a separate unticked box for order updates once a number is typed (stored with
-  its exact wording). The **privacy notice** at `/privacy`; its company details and periods are
-  TBC like the rest of the site's open facts.
+  its exact wording). The **privacy notice** at `/privacy`, with the company details and the
+  periods (requests one year, orders five years).
 - *Checked on staging:* requests by email and by WhatsApp (with an opt-in) landed with their
   consent and log rows; the publishable key was refused on every table.
 
 **Left for phase 2 to be done:** a Resend account and key (until then nothing is emailed; every
 email is logged as skipped), then the domain verified at Resend so receipts reach brands; a real
-Turnstile widget (staging's test key lets everything through); the nightly clean-up, once the
-retention periods (TBC on `/privacy`) are known.
+Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
+requests and messages a year old that never became orders (`/privacy`).
 
 **The 3D mark is built off the main thread** (14 Oct 2026, early: it was a phase 5 item but needs
 no domain). The logo mesh has about 724,000 vertices; extruding it took about 0.6 s on the main
@@ -310,7 +310,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | # | Phase | Done when |
 |---|---|---|
 | 0 | ✅ Repo, Astro, tests, CI | Done |
-| 1 | ✅ **Static site at parity** | Built and tested. **Next: Mazen connects Cloudflare (steps in `docs/deploy.md`) and signs off on the preview** |
+| 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
 | 3 | Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
@@ -337,9 +337,6 @@ nameservers are then pointed at Cloudflare.
 | PDPC fees (reported as free under 100,000 records, not confirmed) | one-off |
 
 ## 10. What I need from you
-
-**To finish phase 1:** connect the repo to Cloudflare (10 minutes, steps in `docs/deploy.md`) and
-look at the preview.
 
 **Before phase 2:**
 1. Buy the domain.

@@ -1,11 +1,9 @@
 ---
-// The privacy notice the forms link to (docs/production-plan.md §7). Facts still to come carry a TBC
-// tag, like the rest of the site.
+// The privacy notice the forms link to (docs/production-plan.md §7).
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import { EMAIL, ROUTES, WHATSAPP, WHATSAPP_URL } from '../data/site';
 
-const tbc = '<span class="tbc">TBC</span>';
 ---
 <Base page="privacy" title="Privacy notice / Full Circle" description="What Full Circle collects when you request a sample, send a message or follow an order, why, where it is kept, and what you can ask for.">
 <PageHero crumb="Privacy" title="Privacy notice." lead="What we collect when you contact us or work with us, why, where it is kept, and what you can ask for." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" />
@@ -13,8 +11,8 @@ const tbc = '<span class="tbc">TBC</span>';
   <section>
     <div><span class="mono dim">01</span><h2>Who we are</h2></div>
     <div>
-      <p>Full Circle develops and manufactures clothing for brands, in Cairo, Egypt. Registered name and address <span set:html={tbc} />.</p>
-      <p>Questions about your data: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>, or WhatsApp <a href={WHATSAPP_URL} target="_blank" rel="noopener">{WHATSAPP}</a>. Data protection officer <span set:html={tbc} />.</p>
+      <p>Full Circle develops and manufactures clothing for brands, in Cairo, Egypt. Registered name: Full Circle. Address: Gisr El Suez, Cairo, Egypt.</p>
+      <p>Questions about your data: <a href={`mailto:${EMAIL}`}>{EMAIL}</a>, or WhatsApp <a href={WHATSAPP_URL} target="_blank" rel="noopener">{WHATSAPP}</a>.</p>
     </div>
   </section>
   <section>
@@ -39,14 +37,13 @@ const tbc = '<span class="tbc">TBC</span>';
         <li>To send you updates on your order by email, and on WhatsApp if you ticked the box for it.</li>
         <li>To keep the forms free of robots and abuse.</li>
       </ul>
-      <p>The legal basis for each <span set:html={tbc} />.</p>
     </div>
   </section>
   <section>
     <div><span class="mono dim">04</span><h2>Who handles it for us</h2></div>
     <div>
       <ul>
-        <li><b>Supabase:</b> our database and file storage, in Frankfurt, Germany.</li>
+        <li><b>Supabase:</b> our database, in Frankfurt, Germany.</li>
         <li><b>Cloudflare:</b> hosts the site and checks that a form comes from a person. That check looks at your browser and IP address; we do not keep them.</li>
         <li><b>Resend:</b> sends our emails (United States).</li>
         <li><b>Meta:</b> carries our WhatsApp messages (United States and elsewhere).</li>
@@ -58,23 +55,23 @@ const tbc = '<span class="tbc">TBC</span>';
   <section>
     <div><span class="mono dim">05</span><h2>Where it is kept</h2></div>
     <div>
-      <p>Mainly in Frankfurt, Germany. Some of the providers above also process it in the United States and elsewhere. How these transfers outside Egypt are licensed <span set:html={tbc} />.</p>
+      <p>Mainly in Frankfurt, Germany. Some of the providers above also process it in the United States and elsewhere.</p>
     </div>
   </section>
   <section>
     <div><span class="mono dim">06</span><h2>How long</h2></div>
     <div>
       <ul>
-        <li>Requests and messages that do not lead to an order: <span set:html={tbc} />.</li>
-        <li>Orders and their approval records: <span set:html={tbc} />.</li>
-        <li>The record that you asked for WhatsApp updates, and the words you agreed to: for as long as we send them, and <span set:html={tbc} /> after.</li>
+        <li>Requests and messages that do not lead to an order: one year, then deleted.</li>
+        <li>Orders and their approval records: five years.</li>
+        <li>The record that you asked for WhatsApp updates, and the words you agreed to: for as long as we send them, and one year after.</li>
       </ul>
     </div>
   </section>
   <section>
     <div><span class="mono dim">07</span><h2>What you can ask for</h2></div>
     <div>
-      <p>A copy of the data we hold about you, a correction, or its deletion (except records we must keep, such as an order's). Ask us by email or WhatsApp; we reply within <span set:html={tbc} />.</p>
+      <p>A copy of the data we hold about you, a correction, or its deletion (except records we must keep, such as an order's). Ask us by email or WhatsApp; we reply as soon as we can.</p>
       <p>WhatsApp updates are off unless you tick the box for them. To stop them, tell us on WhatsApp or by email; you will also be able to switch them off on the <a href={ROUTES.track}>tracking page</a>.</p>
     </div>
   </section>

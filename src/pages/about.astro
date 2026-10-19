@@ -6,6 +6,8 @@ import Photo from '../components/Photo.astro';
 import BgImg from '../components/BgImg.astro';
 import { ROUTES } from '../data/site';
 
+// The team section stays hidden until the names and portraits are in (Mazen, 15 Oct 2026).
+const SHOW_TEAM = false;
 const TEAM = [
   { slot: 'team-1', role: 'Founder / production' },
   { slot: 'team-2', role: 'Design + development' },
@@ -25,12 +27,12 @@ const TEAM = [
       <div class="onering"><svg viewBox="0 0 256.86 262.30" aria-hidden="true" style="color:var(--bone)"><use href="#fc-mark"/></svg><p style="margin:0">One team, one brief, one timeline. The sample you approve is measured against every bulk piece.</p></div></div>
   </div>
 </section>
-<section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
-  <div class="sh"><h2 class="camp">The team</h2><p>The people your brand works with, from first call to delivery. <span class="tbc">Names + portraits TBC</span></p></div>
+{SHOW_TEAM && <section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
+  <div class="sh"><h2 class="camp">The team</h2><p>The people your brand works with, from first call to delivery.</p></div>
   <div class="team">
     {TEAM.map((t) => <div><Photo img={t.slot} caption={['Portrait']} sizes="(max-width: 860px) 50vw, 25vw" /><b>Name</b><span class="mono dim">{t.role}</span></div>)}
   </div>
-</section>
+</section>}
 <section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
   <div class="sh"><h2 class="camp">How we work with you</h2></div>
   <div class="rules">

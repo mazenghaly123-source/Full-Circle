@@ -74,11 +74,16 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - WhatsApp: +20 101 143 5406 (https://wa.me/201011435406), assumed to be the WhatsApp line.
 - Phone: +20 2 2698 7277 · Email: fullcircleworks.co@gmail.com · Instagram: @fullcircle_eg
 
-## Still TBC (marked with a dashed TBC tag in the prototype)
-Working hours, bulk lead time, fabrics/weights per category, techniques, sample pricing,
-who answers requests and how fast, team names/roles/portraits, domain, and the privacy notice's
-company details and periods (`/privacy`). Real photos missing: atelier-1..5, about-floor,
-team-1..4. All of it is filled in before launch.
+- Hours: Sunday – Thursday, 9:00 – 17:00. Replies: "we reply quickly" (no promised time).
+- Registered name: Full Circle, Gisr El Suez, Cairo. Kept: requests that don't become orders one
+  year, orders five years.
+
+## Less text, nothing TBC (Mazen, 15 Oct 2026)
+Keep the site's words short; details are not needed for everything. Removed and not to come back
+unless Mazen asks: fabrics/weights per category, bulk lead times, the techniques list, the "not in
+scope" list, the sample-price FAQ, stage times other than sampling's. No TBC tag is left on the
+site. The team section on About is hidden (`SHOW_TEAM` in `about.astro`) until there are names and
+portraits. Still to come: the domain, and the real photos (atelier-1..5, about-floor, team-1..4).
 
 ## Site code
 - **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at
