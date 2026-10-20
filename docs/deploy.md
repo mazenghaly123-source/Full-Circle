@@ -9,6 +9,10 @@ Connected on 15 October 2026: the site answers on <https://full-circle.mazenghal
 (The workers.dev address had to be switched on by hand: Worker → **Domains and routes** →
 **workers.dev** → **Enable**.)
 
+Domain (20 October 2026): **fullcircle-co.com**, bought at GoDaddy, with its nameservers moved to
+Cloudflare (`alfred.ns.cloudflare.com` and `eve.ns.cloudflare.com`). `wrangler.jsonc` lists it and `www` as Custom
+Domains, so the deploy from `main` attaches them; no DNS record is added by hand for either.
+
 ## Connect the repository (once, about 10 minutes)
 
 1. Sign in to Cloudflare (or create a free account) with the account that should own the site.
