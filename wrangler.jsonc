@@ -10,7 +10,13 @@
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"
   },
-  // set to false once the custom domain is live, so the workers.dev copy is not indexed
+  // the live site: each `wrangler deploy` from main attaches these as Custom Domains (Cloudflare adds
+  // their DNS records and certificates)
+  "routes": [
+    { "pattern": "fullcircle-co.com", "custom_domain": true },
+    { "pattern": "www.fullcircle-co.com", "custom_domain": true }
+  ],
+  // set to false once fullcircle-co.com is confirmed live, so the workers.dev copy is not indexed
   "workers_dev": true,
   "preview_urls": true
 }
