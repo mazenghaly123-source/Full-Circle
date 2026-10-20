@@ -10,7 +10,7 @@ Connected on 15 October 2026: the site answers on <https://full-circle.mazenghal
 **workers.dev** → **Enable**.)
 
 Domain (20 October 2026): **fullcircle-co.com**, bought at GoDaddy, with its nameservers moved to
-Cloudflare (`alfred` and `eve.ns.cloudflare.com`). `wrangler.jsonc` lists it and `www` as Custom
+Cloudflare (`alfred.ns.cloudflare.com` and `eve.ns.cloudflare.com`). `wrangler.jsonc` lists it and `www` as Custom
 Domains, so the deploy from `main` attaches them; no DNS record is added by hand for either.
 
 ## Connect the repository (once, about 10 minutes)
