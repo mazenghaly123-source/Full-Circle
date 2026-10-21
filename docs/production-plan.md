@@ -204,6 +204,17 @@ requests and messages a year old that never became orders (`/privacy`).
 **Left for phase 4:** WhatsApp (sign-in codes, the messages and the reply webhook) once Meta is set
 up (§10 items 7–9); a test order taken through all 8 stages from a phone on staging.
 
+**Phase 5 has begun** (21 Oct 2026, branch `claude/phase-5-seo`, on phase 4), with what needs no
+account or decision:
+- Every page names its address on the domain (`fullcircle-co.com/about`, not `.html`) and carries
+  the tags a shared link is shown with: title, description and one share card (`public/og.jpg`,
+  1200×630: the logo, the home page's line and the ring, rendered by `scripts/og-image.mjs` from the
+  site's own logo files and fonts). The 404 page is kept out of search.
+- Home tells search engines who the business is (name, address in Gisr El Suez, phone, email,
+  Instagram), as structured data.
+- `sitemap.xml` lists the eight pages; `robots.txt` points to it and keeps `/admin` out.
+- Browsers are told to use HTTPS only (HSTS), next to the headers already sent.
+
 **The 3D mark is built off the main thread** (14 Oct 2026, early: it was a phase 5 item but needs
 no domain). The logo mesh has about 724,000 vertices; extruding it took about 0.6 s on the main
 thread of a fast computer and seconds on a phone, with the page frozen meanwhile (the prototype has
@@ -391,7 +402,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; the staff inboxes are still to be confirmed with a test request** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
 | 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin and email messages built; WhatsApp waits on Meta** |
-| 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain |
+| 5 | 🔶 Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain. **Search and sharing built (canonical addresses, the share card, the business on Home, sitemap, robots, HSTS); Umami and Lighthouse wait for the site on its domain** |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 
 **The domain blocked phases 2–4** (bought 20 Oct 2026). Without it, email can only reach the person who owns the email
