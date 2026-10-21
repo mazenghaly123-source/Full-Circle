@@ -30,7 +30,8 @@ function fontsource(pkg, weights, subsets) {
 const SUBSETS = ['latin', 'latin-ext'];
 
 export default defineConfig({
-  // site: set to the real domain once it is bought (needed for the sitemap and canonical URLs)
+  // the live domain (for the sitemap and canonical URLs)
+  site: 'https://fullcircle-co.com',
   prefetch: true,
   // about.html rather than about/index.html: Workers then serves /about without a redirect to /about/
   build: { format: 'file' },
