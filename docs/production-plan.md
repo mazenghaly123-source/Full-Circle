@@ -151,8 +151,7 @@ requests and messages a year old that never became orders (`/privacy`).
   is the only thing kept in the browser. Looks as before: the parity suite passes with the demo note
   gone (an approved change), and the behaviour tests run against a stand-in for Supabase.
 - *Messages:* each client action queues an email to every member of staff, and each staff action an
-  email to the client's people (`order_notifications`). Nothing sends them yet: the `notify` function
-  comes with Resend (it needs the key) and phase 4.
+  email to the client's people (`order_notifications`). The `notify` function (phase 4) sends them.
 
 **Decided in the build, for Mazen to confirm** (each is a small change if he decides otherwise):
 1. An order that did not come through the form (a client on WhatsApp, a repeat order) takes a new
@@ -163,6 +162,32 @@ requests and messages a year old that never became orders (`/privacy`).
    move; WhatsApp waits for phase 4 and the client's opt-in.
 4. A decision may be opened without photos (a tech pack sign-off has none).
 5. When a person is removed, the log keeps their name as it was; their account goes.
+
+**Phase 4 is under way** (21 Oct 2026, branch `claude/phase-4-admin`, built on phase 3):
+
+- *Admin* (`/admin`, noindex): the Studio OS design from the canvas, one page that works on a phone
+  (a tab bar at the bottom) and a computer (a side bar). Staff sign in with an email code, as clients
+  do; an email that is not on the team is told so. Screens:
+  - *Inbox*: requests and messages (New, Replied, Done), each with Reply on WhatsApp or by email,
+    Mark replied, Close, and **Convert to order**, which adds the client (or picks an existing
+    one), opens the order at its entry stage and emails the portal link to the client's person.
+  - *Orders*: every order by whose move it is ("waiting on us" first), with stage and status filters.
+  - *Order*: what it waits on, Move to the next stage (the database holds the sample gate), Open a
+    decision with the photos it is about, Withdraw it, add stage photos (resized in the browser to
+    2,000 px), answer photo requests, edit the details and the specs, the people, the messages sent
+    and the log.
+  - *Clients*: each brand, its people and orders; add a client, add a person (emailed the link).
+  - *Team*: owners add staff or owners (emailed the admin link).
+- *Functions* (deployed to staging): `invite` adds a person to a client or (owners only) to the team
+  and emails them; `notify` sends the queued order messages, one email for several photos at once,
+  and never the same message twice (migration `20261021003118`). WhatsApp messages are logged as
+  skipped until Meta is set up.
+- *Tests:* 11 more database checks (`admin.test.sql`), the two functions end to end
+  (`tests/unit/backend.spec.ts`), and the admin's screens in the browser on the three sizes
+  (`tests/admin.spec.ts`).
+
+**Left for phase 4:** WhatsApp (sign-in codes, the messages and the reply webhook) once Meta is set
+up (§10 items 7–9); a test order taken through all 8 stages from a phone on staging.
 
 **The 3D mark is built off the main thread** (14 Oct 2026, early: it was a phase 5 item but needs
 no domain). The logo mesh has about 724,000 vertices; extruding it took about 0.6 s on the main
@@ -350,7 +375,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; one test request confirms the inboxes** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
-| 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
+| 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin and email messages built; WhatsApp waits on Meta** |
 | 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 

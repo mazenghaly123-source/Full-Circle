@@ -283,6 +283,7 @@ export async function mockPortal(page: Page) {
     if (path === 'orders') return route.fulfill({ json: JSON.parse(JSON.stringify(orders)) });
     return route.fulfill({ status: 404, json: {} });
   });
+  await page.route(new RegExp(`^${SUPABASE}/functions/v1/notify$`), (route) => { calls.push({ fn: 'notify', body: null }); return route.fulfill({ json: { sent: 0 } }); });
   await page.route(new RegExp(`^${SUPABASE}/storage/v1/object/sign/`), async (route) => {
     const req = route.request();
     if (req.method() === 'GET') return route.fulfill({ contentType: 'image/png', body: PIXEL });
@@ -299,4 +300,155 @@ export async function signInPortal(page: Page, id = 'laila@demo.test') {
   await page.locator('#tCode').fill('123456');
   await page.locator('#tVerify').click();
   await page.locator('#tList .ord').first().waitFor();
+}
+
+/**
+ * Stands in for Supabase on the admin (/admin): staff sign-in (123456 is the right code; the
+ * account is an owner, or not on the team with `{ staff: false }`), the inbox, orders, clients and
+ * team, and the staff's database functions, which change the data as the real ones would (the
+ * sample gate included). Returns the calls made and the data, which the tests can look into.
+ */
+export async function mockAdmin(page: Page, o: { staff?: boolean } = {}) {
+  const calls: { fn: string; method: string; body: any }[] = [];
+  const now = () => new Date().toISOString();
+  const ago = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  let next = 1000;
+  const staff = o.staff === false ? [] : [{ user_id: 'me', name: 'Mazen', role: 'owner', created_at: ago(400) }];
+  const requests: any[] = [
+    { id: 1, code: 'FC-2510', path: 'Scaling', product: 'Denim', qty: '150–300', have: 'A tech pack', brand: 'Atelier Sahel', contact: 'laila@sahel.test', contact_channel: 'email', email: 'laila@sahel.test', whatsapp: null, note: 'Raw selvedge, two washes', status: 'new', source: { utm_source: 'instagram' }, created_at: ago(5), orders: [] },
+    { id: 2, code: 'FC-2511', path: 'Starting', product: 'Tees', qty: '60–150', have: 'A sketch', brand: 'Nile Club', contact: '0101 143 5406', contact_channel: 'whatsapp', email: null, whatsapp: '+201011435406', note: null, status: 'new', source: {}, created_at: ago(30), orders: [] },
+    { id: 3, code: 'FC-2509', path: 'Starting', product: 'Hoodies', qty: null, have: null, brand: 'Rawda', contact: 'hi@rawda.test', contact_channel: 'email', email: 'hi@rawda.test', whatsapp: null, note: null, status: 'replied', source: {}, created_at: ago(80), orders: [] },
+  ];
+  const messages: any[] = [{ id: 1, name: 'Sara', contact: 'sara@x.test', contact_channel: 'email', email: 'sara@x.test', whatsapp: null, text: 'Do you make swimwear?', status: 'new', created_at: ago(2) }];
+  const clients: any[] = [{ id: 1, brand: 'Demo Studio', notes: null, created_at: ago(500), client_members: [{ id: 1, name: 'Laila', email: 'laila@demo.test', whatsapp: '+201011435406', created_at: ago(480) }] }];
+  const ev = (order: any, kind: string, extra: object = {}) => order.order_events.push({ id: ++next, kind, side: ['approved', 'changes_asked', 'photo_asked'].includes(kind) ? 'client' : 'staff', actor_id: 'me', actor_label: ['approved', 'changes_asked', 'photo_asked'].includes(kind) ? 'Laila' : 'Mazen', stage: order.stage, to_stage: null, decision_id: null, title: null, note: null, created_at: now(), ...extra });
+  const blank = (id: number, code: string, client_id: number, name: string, product: string, stage: number): any => ({
+    id, code, client_id, request_id: null, name, product, summary: null, fabric: null, qty: null, stage, status: 'active', due_on: null, created_at: now(),
+    order_specs: [], order_decisions: [], stage_photos: [], photo_requests: [], order_events: [], order_notifications: [],
+  });
+  const orders: any[] = [];
+  const o1 = blank(1, 'FC-2418', 1, 'Overshirt', 'Shirts', 5); o1.summary = 'Sample 03 / denim 12 oz / 300 pcs'; o1.qty = 300; o1.due_on = '2026-11-28';
+  ev(o1, 'order_opened', { stage: 4, to_stage: 4 }); ev(o1, 'stage_moved', { stage: 5, to_stage: 5 });
+  o1.order_decisions.push({ id: 11, stage: 5, title: 'Approve sample 03', body: 'Fit revised', photo_ids: [], status: 'approved', note: null, opened_label: 'Mazen', opened_at: ago(30), closed_label: 'Laila', closed_at: ago(3) });
+  ev(o1, 'decision_opened', { decision_id: 11, title: 'Approve sample 03' }); ev(o1, 'approved', { decision_id: 11, title: 'Approve sample 03' });
+  const o2 = blank(2, 'FC-2455', 1, 'Boxy tee', 'Tees', 3);
+  o2.order_decisions.push({ id: 12, stage: 3, title: 'Choose the fabric', body: null, photo_ids: [], status: 'open', note: null, opened_label: 'Mazen', opened_at: ago(20), closed_label: null, closed_at: null });
+  ev(o2, 'decision_opened', { decision_id: 12, title: 'Choose the fabric' });
+  const o3 = blank(3, 'FC-2440', 1, 'Heavy hoodie', 'Hoodies', 2);
+  o3.photo_requests.push({ id: 21, stage: 2, note: 'The collar', asked_label: 'Laila', created_at: ago(6), answered_at: null });
+  ev(o3, 'photo_asked', { note: 'The collar' });
+  orders.push(o1, o2, o3);
+  const shapeOrder = (x: any) => ({ ...x, clients: (() => { const c = clients.find((cc) => cc.id === x.client_id); return c ? { id: c.id, brand: c.brand, client_members: c.client_members } : null; })() });
+  const shapeClient = (c: any) => ({ ...c, orders: orders.filter((x) => x.client_id === c.id).map((x) => ({ id: x.id, code: x.code, name: x.name, stage: x.stage, status: x.status })) });
+  const fail = (message: string) => ({ status: 400, json: { code: '55000', message } });
+
+  const rpcs: Record<string, (b: any) => { status?: number; json?: any }> = {
+    create_order: (b) => {
+      const r = requests.find((x) => x.id === b.p_request);
+      const code = r ? (orders.some((x) => x.code === r.code) ? `${r.code}-B` : r.code) : `FC-${2600 + orders.length}`;
+      const x = blank(++next, code, b.p_client, b.p_name, b.p_product, b.p_entry_stage ?? (r?.path === 'Scaling' ? 4 : 1));
+      Object.assign(x, { request_id: r?.id ?? null, summary: b.p_summary, fabric: b.p_fabric, qty: b.p_qty, due_on: b.p_due_on });
+      ev(x, 'order_opened', { to_stage: x.stage }); orders.unshift(x);
+      if (r) { r.status = 'converted'; r.orders = [{ id: x.id, code }]; }
+      return { json: x.id };
+    },
+    move_stage: (b) => {
+      const x = orders.find((y) => y.id === b.p_order);
+      if (x.stage <= 5 && b.p_to >= 6 && !x.order_decisions.some((d: any) => d.stage === 5 && d.status === 'approved')) return fail('The client has not approved a sample yet');
+      const from = x.stage; x.stage = b.p_to; ev(x, 'stage_moved', { stage: b.p_to, to_stage: b.p_to, note: b.p_note });
+      x.order_notifications.push({ id: ++next, event: 'stage_moved', audience: 'client', channel: 'email', recipient: 'laila@demo.test', status: 'queued', detail: null, created_at: now() });
+      return { json: null, from } as any;
+    },
+    open_decision: (b) => {
+      const x = orders.find((y) => y.id === b.p_order);
+      if (x.order_decisions.some((d: any) => d.status === 'open')) return fail('This order already has a decision open');
+      const d = { id: ++next, stage: x.stage, title: b.p_title, body: b.p_body, photo_ids: b.p_photo_ids, status: 'open', note: null, opened_label: 'Mazen', opened_at: now(), closed_label: null, closed_at: null };
+      x.order_decisions.push(d); ev(x, 'decision_opened', { decision_id: d.id, title: d.title });
+      return { json: d.id };
+    },
+    withdraw_decision: (b) => {
+      const x = orders.find((y) => y.order_decisions.some((d: any) => d.id === b.p_decision)), d = x.order_decisions.find((dd: any) => dd.id === b.p_decision);
+      Object.assign(d, { status: 'withdrawn', closed_at: now(), closed_label: 'Mazen' }); ev(x, 'decision_withdrawn', { decision_id: d.id, title: d.title });
+      return { json: null };
+    },
+    add_stage_photo: (b) => {
+      const x = orders.find((y) => y.id === b.p_order), p = { id: ++next, stage: b.p_stage, object_path: b.p_object_path, caption: b.p_caption, created_at: now() };
+      x.stage_photos.push(p); ev(x, 'photo_added', { stage: b.p_stage, note: b.p_caption });
+      x.photo_requests.filter((r: any) => r.stage === b.p_stage).forEach((r: any) => { r.answered_at = now(); });
+      return { json: p.id };
+    },
+  };
+
+  await page.route(new RegExp(`^${SUPABASE}/auth/v1/`), async (route) => {
+    const req = route.request(), fn = new URL(req.url()).pathname.split('/').pop()!, body = req.postDataJSON?.() ?? null;
+    calls.push({ fn: `auth/${fn}`, method: req.method(), body });
+    if (fn === 'verify') return body.token === '123456'
+      ? route.fulfill({ json: { access_token: 'staff-token', refresh_token: 'r', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: 'me' } } })
+      : route.fulfill({ status: 403, json: { error_code: 'otp_expired', msg: 'Token has expired or is invalid' } });
+    return route.fulfill({ status: fn === 'logout' ? 204 : 200, json: {} });
+  });
+  await page.route(new RegExp(`^${SUPABASE}/rest/v1/`), async (route) => {
+    const req = route.request(), url = new URL(req.url()), path = url.pathname.replace('/rest/v1/', ''), method = req.method();
+    const body = method === 'GET' || method === 'DELETE' ? null : req.postDataJSON();
+    const eq = (k: string) => url.searchParams.get(k)?.replace(/^eq\./, '');
+    calls.push({ fn: path, method, body });
+    if (path.startsWith('rpc/')) {
+      const a = rpcs[path.slice(4)]?.(body) ?? { status: 404, json: { message: 'no such function' } };
+      return route.fulfill({ status: a.status ?? 200, json: a.json ?? null });
+    }
+    if (path === 'staff') {
+      if (method === 'GET') return route.fulfill({ json: eq('user_id') ? staff.filter((s) => s.user_id === eq('user_id')) : staff });
+    }
+    if (path === 'requests' || path === 'messages') {
+      const list = path === 'requests' ? requests : messages;
+      if (method === 'PATCH') { const x = list.find((y) => y.id === Number(eq('id'))); Object.assign(x, body); return route.fulfill({ status: 204, body: '' }); }
+      return route.fulfill({ json: list });
+    }
+    if (path === 'orders') {
+      if (method === 'PATCH') { const x = orders.find((y) => y.id === Number(eq('id'))); Object.assign(x, body); return route.fulfill({ status: 204, body: '' }); }
+      const id = eq('id');
+      return route.fulfill({ json: (id ? orders.filter((x) => x.id === Number(id)) : orders).map(shapeOrder) });
+    }
+    if (path === 'order_specs') {
+      const x = orders.find((y) => y.id === Number(eq('order_id') ?? body?.[0]?.order_id));
+      if (method === 'DELETE') { if (x) x.order_specs = []; return route.fulfill({ status: 204, body: '' }); }
+      for (const r of body) orders.find((y) => y.id === r.order_id).order_specs.push({ id: ++next, ...r });
+      return route.fulfill({ status: 201, body: '' });
+    }
+    if (path === 'clients') {
+      if (method === 'POST') { const c = { id: ++next, brand: body.brand, notes: null, created_at: now(), client_members: [] }; clients.push(c); return route.fulfill({ status: 201, json: [{ id: c.id }] }); }
+      return route.fulfill({ json: clients.map(shapeClient) });
+    }
+    return route.fulfill({ status: 404, json: { message: `not mocked: ${method} ${path}` } });
+  });
+  await page.route(new RegExp(`^${SUPABASE}/functions/v1/(invite|notify)$`), async (route) => {
+    const req = route.request(), fn = req.url().endsWith('invite') ? 'invite' : 'notify', body = req.postDataJSON?.() ?? null;
+    calls.push({ fn, method: 'POST', body });
+    if (fn === 'notify') return route.fulfill({ json: { sent: 0 } });
+    if (body.kind === 'staff') { staff.push({ user_id: `u${++next}`, name: body.name, role: body.role, created_at: now() }); return route.fulfill({ json: { ok: true, email: 'sent' } }); }
+    const c = clients.find((x) => x.id === body.client_id);
+    if (c.client_members.some((m: any) => m.email === body.email)) return route.fulfill({ status: 409, json: { error: 'They are already on this client', field: 'email' } });
+    c.client_members.push({ id: ++next, name: body.name, email: body.email, whatsapp: body.whatsapp ?? null, created_at: now() });
+    return route.fulfill({ json: { ok: true, email: 'sent' } });
+  });
+  await page.route(new RegExp(`^${SUPABASE}/storage/v1/object/`), async (route) => {
+    const req = route.request(), path = new URL(req.url()).pathname;
+    if (path.includes('/object/sign/')) {
+      if (req.method() === 'GET') return route.fulfill({ contentType: 'image/png', body: PIXEL });
+      const { paths } = req.postDataJSON();
+      return route.fulfill({ json: paths.map((p: string) => ({ path: p, signedURL: `/object/sign/stage-photos/${p}?token=t`, error: null })) });
+    }
+    calls.push({ fn: 'upload', method: req.method(), body: path });
+    return route.fulfill({ json: { Key: path } });
+  });
+  return { calls, requests, messages, orders, clients, staff };
+}
+
+/** Signs in to the mocked admin (mockAdmin) with the right code. */
+export async function signInAdmin(page: Page) {
+  await page.locator('#si-e').fill('mazen@fullcircle.test');
+  await page.getByRole('button', { name: 'Send me a code' }).click();
+  await page.locator('#si-c').fill('123456');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.locator('#main h1').waitFor();
 }

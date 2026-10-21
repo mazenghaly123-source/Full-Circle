@@ -41,7 +41,7 @@ export default defineConfig({
     build: { cssTarget: ['chrome111', 'edge111', 'firefox114', 'safari15', 'ios15'] },
   },
   fonts: [
-    { provider: fontProviders.local(), name: 'Saira Condensed', cssVariable: '--font-saira-condensed', fallbacks: ['Arial Narrow', 'sans-serif'], options: fontsource('@fontsource/saira-condensed', [700], SUBSETS) },
+    { provider: fontProviders.local(), name: 'Saira Condensed', cssVariable: '--font-saira-condensed', fallbacks: ['Arial Narrow', 'sans-serif'], options: fontsource('@fontsource/saira-condensed', [600, 700], SUBSETS) },
     { provider: fontProviders.local(), name: 'Geist', cssVariable: '--font-geist', fallbacks: ['system-ui', 'sans-serif'], options: fontsource('@fontsource/geist', [400, 500, 600], SUBSETS) },
     { provider: fontProviders.local(), name: 'IBM Plex Mono', cssVariable: '--font-plex-mono', fallbacks: ['ui-monospace', 'monospace'], options: fontsource('@fontsource/ibm-plex-mono', [400, 500], SUBSETS) },
   ],

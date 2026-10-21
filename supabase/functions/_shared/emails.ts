@@ -1,5 +1,6 @@
-// The emails the forms send: an alert to staff for each request and message, and a receipt to a
-// brand that gave an email. Plain functions of their inputs, so the tests can read them too.
+// The emails the functions send: an alert to staff for each request and message, a receipt to a
+// brand that gave an email, the messages about orders (notify) and the invitations to sign in
+// (invite). Plain functions of their inputs, so the tests can read them too.
 import { REQUEST_QUESTIONS, type Contact, type Source } from './forms.ts';
 
 const SITE = { whatsapp: '+20 101 143 5406', whatsappUrl: 'https://wa.me/201011435406', email: 'fullcircleworks.co@gmail.com' };

@@ -126,6 +126,13 @@ portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the
   staff change orders only through database functions that write the append-only approval log
   (migrations `20261020221044` and `20261021002550`); the browser tests stand in for Supabase with
   `mockPortal`.
+- The admin (`/admin`, phase 4) is a separate page with its own layout and stylesheet
+  (`src/layouts/Admin.astro`, `src/styles/admin.css`: the Studio OS design, not the site's), no
+  ClientRouter and no parity check; screens are hash routes (`#/inbox`, `#/order/12`) in
+  `src/scripts/admin/`. Staff sign in with the same code flow as the portal (`core/auth.ts`, a
+  session of its own) and act through the same database functions. Adding people goes through the
+  `invite` function, and every action asks `notify` to send what it queued (email now, WhatsApp
+  after Meta). Its tests are `tests/admin.spec.ts`, on `mockAdmin`.
 - The functions have no dependencies (a few REST calls in `_shared/server.ts`); type-check them
   with `deno check`. `tests/unit/backend.spec.ts` runs them end to end on a local stack
   (`supabase start`); the CI *backend* job does all three.

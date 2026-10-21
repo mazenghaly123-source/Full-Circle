@@ -46,7 +46,9 @@ The site then answers on `full-circle.<your-subdomain>.workers.dev`.
 ## Backend (Supabase)
 
 The request and contact forms post to two Edge Functions on Supabase (`supabase/functions/`), which
-save to the database and email the team. Until launch there is one project, **full-circle-staging**
+save to the database and email the team. Two more serve the portal and the admin: `invite` (staff add
+a person to a client or to the team, who is emailed where to sign in) and `notify` (sends the queued
+messages about orders). Until launch there is one project, **full-circle-staging**
 (Frankfurt, free plan), for test data only. Every build of the site sends to it; nothing to set.
 
 **Settings for the functions** (Supabase dashboard → Edge Functions → Secrets):
@@ -57,11 +59,12 @@ save to the database and email the team. Until launch there is one project, **fu
 | `STAFF_EMAILS` | Who gets the alerts, comma-separated | fullcircleworks.co@gmail.com |
 | `EMAIL_FROM` | The sender, e.g. `Full Circle <hello@your-domain>` | Resend's test sender, which can only write to the Resend account's own address |
 | `TURNSTILE_SECRET_KEY` | The robot check (Cloudflare Turnstile) | Staging uses Cloudflare's test key, **which lets everything through**; any other project turns every form away |
+| `SITE_URL` | Where the links in the order emails and invitations point | https://fullcircle-co.com |
 
 **At launch** (the live project):
 1. Create the live project in Frankfurt (Pro plan) and apply `supabase/migrations/` to it.
-2. Deploy both functions with their JWT check off (they check Turnstile instead), and set the four
-   secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
+2. Deploy the four functions with their JWT check off (the form functions check Turnstile instead;
+   `invite` and `notify` check the signed-in caller themselves), and set the secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
 3. In Cloudflare, create a Turnstile widget for the domain (Invisible mode) and set the production
    build's variables `PUBLIC_SUPABASE_URL` (the live project's URL), `PUBLIC_SUPABASE_KEY` (its
    publishable key, for the portal's sign-in) and `PUBLIC_TURNSTILE_SITE_KEY` (the widget's site key).
@@ -71,7 +74,7 @@ save to the database and email the team. Until launch there is one project, **fu
    under Attack Protection.
 
 With the Supabase CLI (`npx supabase@2.121.0`, signed in): `link --project-ref <ref>`, then
-`db push` for the migrations and `functions deploy submit-request submit-contact --no-verify-jwt`.
+`db push` for the migrations and `functions deploy submit-request submit-contact invite notify --no-verify-jwt`.
 
 **On your computer** (needs Docker): `npx supabase@2.121.0 start` runs the whole backend locally and
 `npx supabase@2.121.0 test db` runs the database access tests. Without Docker,
