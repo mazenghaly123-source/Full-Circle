@@ -1,8 +1,10 @@
 # Production build plan
 
-Status (15 Oct 2026): **phase 1 is live on Cloudflare** (the static site at parity with the prototype), and
-**phase 2 is built on the staging Supabase project** (the forms send for real, test data only; see
-§2). The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
+Status (21 Oct 2026): **phase 1 is live on Cloudflare** (the static site at parity with the prototype),
+**phase 2 is built on the staging Supabase project** (the forms send for real, test data only), and
+**phase 3's database and portal are built** on a branch (`claude/phase-3-portal`): the real sign-in
+and the client's own orders replace Track's demo. Real codes need the dashboard settings in §10 and,
+for anyone but Mazen, the domain and Resend. See §2. The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
 
 ## 1. Decisions
@@ -97,10 +99,8 @@ Small, deliberate differences from the prototype:
   mouse on a computer keeps the prototype's tilt. (Tilting with the phone's gyroscope was looked at
   and dropped: on iPhones it needs a permission prompt.)
 
-**Prototype bugs kept for now** (the build matches the prototype; fixed when the real portal
-replaces the demo in phase 3): on Track, the line under the order code does not update after
-Approve. (The request form's bug, where the form stayed visible under "Received." and could be sent
-again, was fixed in phase 2.)
+**Prototype bugs:** both are fixed. On Track, the line under the order code now follows the order
+(phase 3); the request form no longer stays visible under "Received." (phase 2).
 
 **Phase 2 is built** (15 Oct 2026, branch `claude/phase-2-requests`), on the Supabase project
 **full-circle-staging** (Frankfurt, free plan), with test data only:
@@ -129,6 +129,37 @@ again, was fixed in phase 2.)
 email is logged as skipped), then the domain verified at Resend so receipts reach brands; a real
 Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
 requests and messages a year old that never became orders (`/privacy`).
+
+**Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, not yet merged or deployed):
+
+- *Database* (migration `20261020221044`, applied to staging): clients and their people, orders,
+  specs, decisions, stage photos (a private bucket, opened through signed links), photo requests, the
+  approval log and a queue of order messages. A client's people read only their own client's orders.
+  They change nothing directly: Approve, Ask for changes and Request a photo are database functions
+  that check who is asking and write the log in the same step. Staff work through functions too
+  (create an order, move a stage, open or withdraw a decision, add a photo), so nothing skips the log.
+  The log is append-only: a trigger refuses any edit, and a delete unless the order itself is gone.
+  Tested: 104 checks of who can do what (`supabase/tests/database/orders.test.sql`), with the 29 from
+  phase 2.
+- *Portal* (`/track`): the prototype's two steps, now real. A code goes to the email (or, once phase 4
+  switches it on, the WhatsApp number) only if that person is on an order, and the page never says
+  which. Then the client's orders, each with its stage ring, the decision waiting, photos, specs and
+  the log, and a box to turn order updates on WhatsApp on or off (stored with its words). The session
+  is the only thing kept in the browser. Looks as before: the parity suite passes with the demo note
+  gone (an approved change), and the behaviour tests run against a stand-in for Supabase.
+- *Messages:* each client action queues an email to every member of staff, and each staff action an
+  email to the client's people (`order_notifications`). Nothing sends them yet: the `notify` function
+  comes with Resend (it needs the key) and phase 4.
+
+**Decided in the build, for Mazen to confirm** (each is a small change if he decides otherwise):
+1. An order that did not come through the form (a client on WhatsApp, a repeat order) takes a new
+   code from the same sequence; a second order from one request gets `-B`.
+2. The sample gate is held by the database: no move past 05 until the client has approved a decision
+   opened at stage 05.
+3. No Undo: a stage can be moved back, and both moves stay in the log. The client is emailed on every
+   move; WhatsApp waits for phase 4 and the client's opt-in.
+4. A decision may be opened without photos (a tech pack sign-off has none).
+5. When a person is removed, the log keeps their name as it was; their account goes.
 
 **The 3D mark is built off the main thread** (14 Oct 2026, early: it was a phase 5 item but needs
 no domain). The logo mesh has about 724,000 vertices; extruding it took about 0.6 s on the main
@@ -176,19 +207,22 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
 | `client_members` | user ↔ client (a brand can have several people) | staff; user reads own rows |
 | `requests` | code, path, product, qty, have, brand, contact, contact type, note, status, UTM/referrer | insert **only through the Edge Function**; staff read and update |
 | `messages` | contact form | function inserts; staff read |
-| `orders` | code, client, name, product, fabric, qty, stage (1–8), open decision | staff full; members read their client's orders |
+| `orders` | code, client, request, name, product, summary, fabric, qty, stage (1–8), status, due date | staff read and edit the details (the stage moves only through `move_stage`); members read their client's orders |
+| `order_decisions` | what staff ask the client to approve: stage, title, words, photos shown, open / approved / changes asked / withdrawn; one open per order | functions write; staff and members read |
+| `photo_requests` | a client asking for a photo of a stage, answered when staff add one | functions write; staff and members read |
 | `order_specs` | key/value rows per order | staff write; members read |
 | `order_events` | **append-only** log: approved, changes asked, photo asked, stage moved, photo added; who, when, note, **and a copy of the decision text and photo ids that were approved** | members write only through RPCs; nobody edits or deletes |
 | `stage_photos` | order, stage, file, caption | staff write; members read (signed URLs, private bucket) |
 | `contact_consents` | email or WhatsApp number, channel, wording version, time, source (request code / portal), opted in or out | written by functions and the portal; staff read |
-| `notifications` | every message sent: event, recipient, channel, status | functions write; staff read |
+| `notifications` | every message sent about a request or contact message: event, recipient, channel, status | functions write; staff read |
+| `order_notifications` | the same for orders: queued by the functions, sent by `notify` | functions write; staff read |
 
 - **Codes** (ADR 0004): one database sequence issues `FC-####` for requests, and the same code
   becomes the order's. If one request turns into two orders, the second gets a suffix
   (`FC-2418-B`). A code identifies an order but never grants access; access always comes from
   being a member of the client.
 - **Client actions** go through checked database functions (`approve_decision`, `request_changes`,
-  `request_photo`). Each checks membership and that a decision is open, writes the event, and
+  `request_photo`, and `set_updates_consent` for WhatsApp updates). Each checks membership and that a decision is open, writes the event, and
   triggers a notification. Clients never write to `orders`.
 - **Approve** (ADR 0005) closes the decision and writes the event; **it does not move the stage**.
   The portal then shows "Approved, waiting on Full Circle" until staff move the order on. (The
@@ -312,7 +346,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 0 | ✅ Repo, Astro, tests, CI | Done |
 | 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
-| 3 | Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample |
+| 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
 | 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
@@ -346,6 +380,17 @@ nameservers are then pointed at Cloudflare.
 4. ~~Decide on the Arabic privacy page at launch (§7).~~ English as built; Arabic with the Arabic site.
 5. ~~Approve the small form additions (§7).~~ Approved 15 Oct and built.
 6. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
+
+**Before phase 3 can be tried** (Supabase dashboard → Authentication, staging first; I cannot change
+these from here):
+1. *Sign In / Providers:* turn off "Allow new users to sign up" (the portal is invite-only), and set the
+   email OTP expiry to 600 seconds (10 minutes).
+2. *Emails → Magic Link* template: put the code in it, for example "Your Full Circle code is
+   {{ .Token }}. It works for 10 minutes." Without `{{ .Token }}` the email carries a link, not a code.
+3. Until Resend is set up as the project's SMTP sender (after the domain), Supabase's own sender only
+   reaches the members of the Supabase organisation, a few emails an hour: enough for Mazen to try it.
+4. *Attack Protection:* once the real Turnstile widget exists, turn on its check here with the
+   widget's secret.
 
 **Before phase 3–4:**
 7. Set up Meta: a Meta Business portfolio and a WhatsApp app. You may already have a portfolio
