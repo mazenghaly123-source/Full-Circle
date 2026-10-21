@@ -219,8 +219,9 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# The email provider itself (the CLI turns it into GOTRUE_EXTERNAL_EMAIL_ENABLED): off, nobody signs in
-# by email at all. New accounts are refused by enable_signup under [auth]; staff add people (invite).
+# Email sign-in stays on, so the people staff invite can sign in with a code (the CLI turns this into
+# GOTRUE_EXTERNAL_EMAIL_ENABLED: false would turn email sign-in off for everyone). New accounts stay
+# invite-only through enable_signup = false under [auth].
 enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.

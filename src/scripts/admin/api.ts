@@ -68,6 +68,11 @@ export async function me(): Promise<Staff | null> {
 }
 export const team = () => get<Staff[]>('staff?select=user_id,name,role,created_at&order=name');
 export const requests = () => get<Request[]>('requests?select=*,orders(id,code)&order=created_at.desc&limit=300');
+/** A request as the figures count it. */
+export type Counted = Pick<Request, 'id' | 'product' | 'path' | 'source' | 'created_at'> & { orders: { id: number }[] };
+/** Every request since a time, for the figures (the inbox list above stops at its newest 300). */
+export const requestsSince = (iso: string) =>
+  get<Counted[]>(`requests?select=id,product,path,source,created_at,orders(id)&created_at=gte.${encodeURIComponent(iso)}&order=created_at.desc`);
 export const messages = () => get<Message[]>('messages?select=*&order=created_at.desc&limit=300');
 export const setStatus = (table: 'requests' | 'messages', id: number, status: string) => write(`${table}?id=eq.${id}`, 'PATCH', { status });
 
