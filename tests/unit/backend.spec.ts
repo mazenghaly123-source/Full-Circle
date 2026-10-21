@@ -136,7 +136,7 @@ test('a number counts as one contact however it is written', async () => {
 test('the publishable key reads and writes nothing', async () => {
   test.skip(!PUBLISHABLE, 'no publishable key');
   const headers = { apikey: PUBLISHABLE, 'Content-Type': 'application/json' };
-  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff']) {
+  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff', 'clients', 'client_members', 'orders', 'order_decisions', 'order_events', 'stage_photos', 'order_notifications']) {
     const res = await fetch(`${URL_}/rest/v1/${table}?select=*`, { headers });
     expect(res.status, table).toBe(401);
   }
@@ -144,7 +144,10 @@ test('the publishable key reads and writes nothing', async () => {
   expect(insert.status).toBe(401);
 });
 
-test('no files are kept: storage has no buckets', async () => {
+test('visitors leave no files: the one bucket is the private one for stage photos, which staff fill', async () => {
   const res = await fetch(`${URL_}/storage/v1/bucket`, { headers: { apikey: SECRET } });
-  expect(await res.json()).toEqual([]);
+  const buckets: { id: string; public: boolean; allowed_mime_types: string[] }[] = await res.json();
+  expect(buckets.map((b) => b.id)).toEqual(['stage-photos']);
+  expect(buckets[0].public).toBe(false);
+  expect(buckets[0].allowed_mime_types.every((t) => t.startsWith('image/'))).toBe(true);
 });
