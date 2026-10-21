@@ -1,9 +1,11 @@
 // What the Edge Functions share: the database calls they make, who is calling, replies with CORS,
-// the Turnstile check, sending email through Resend and logging every message sent. Runs in Deno
+// the Turnstile check, sending email through Resend and logging every message sent (WhatsApp is in
+// whatsapp.ts). Runs in Deno
 // (Supabase Edge Functions) with no dependencies: the handful of calls below go straight to
 // Supabase's REST APIs.
 
 import type { Contact } from './forms.ts';
+import type { Sent } from './whatsapp.ts';
 
 const env = (k: string) => Deno.env.get(k)?.trim() || undefined;
 
@@ -24,9 +26,14 @@ export function db() {
   const json = { 'Content-Type': 'application/json' };
   const query = (filters: Record<string, string>) => new URLSearchParams(filters).toString();
   return {
-    /** Inserts rows; with `select`, returns the inserted rows' columns. */
-    async insert<T = unknown>(table: string, rows: object | object[], select?: string): Promise<T[]> {
-      const res = await call(`/rest/v1/${table}${select ? `?select=${select}` : ''}`, { method: 'POST', headers: { ...json, Prefer: select ? 'return=representation' : 'return=minimal' }, body: JSON.stringify(rows) });
+    /**
+     * Inserts rows; with `select`, returns the inserted rows' columns. With `unique` (a column), a row
+     * whose value is already there is left out, and not returned.
+     */
+    async insert<T = unknown>(table: string, rows: object | object[], select?: string, unique?: string): Promise<T[]> {
+      const params = new URLSearchParams({ ...(select ? { select } : {}), ...(unique ? { on_conflict: unique } : {}) }).toString();
+      const prefer = [select ? 'return=representation' : 'return=minimal', ...(unique ? ['resolution=ignore-duplicates'] : [])].join(',');
+      const res = await call(`/rest/v1/${table}${params ? `?${params}` : ''}`, { method: 'POST', headers: { ...json, Prefer: prefer }, body: JSON.stringify(rows) });
       return select ? res.json() : [];
     },
     /** Counts rows matching PostgREST filters ({ contact: 'eq.x' }). */
@@ -55,6 +62,17 @@ export function db() {
     async createUser(email: string): Promise<string> {
       const res = await call('/auth/v1/admin/users', { method: 'POST', headers: json, body: JSON.stringify({ email, email_confirm: true }) });
       return (await res.json()).id;
+    },
+    /**
+     * Lets an account sign in with a WhatsApp number too, unless it has one already. False when Auth
+     * turns the number down (another account has it).
+     */
+    async addPhone(id: string, phone: string): Promise<boolean> {
+      const user = await (await call(`/auth/v1/admin/users/${id}`)).json();
+      if (user.phone) return true;
+      const res = await fetch(`${url}/auth/v1/admin/users/${id}`, { method: 'PUT', headers: { ...auth, ...json }, body: JSON.stringify({ phone, phone_confirm: true }) });
+      if (res.status >= 500) throw new Error(`PUT /auth/v1/admin/users: ${res.status} ${await res.text()}`);
+      return res.ok;
     },
   };
 }
@@ -136,7 +154,6 @@ export const sameContact = (reach: Contact, typed: string): Record<string, strin
 export const staffEmails = () => (env('STAFF_EMAILS') ?? 'fullcircleworks.co@gmail.com').split(',').map((s) => s.trim()).filter(Boolean);
 
 type Email = { to: string[]; subject: string; text: string; html: string; replyTo?: string };
-type Sent = { status: 'sent' | 'failed' | 'skipped'; providerId?: string; detail?: string };
 
 /** Sends one email through Resend. Without RESEND_API_KEY nothing is sent and it says so. */
 export async function sendEmail(m: Email): Promise<Sent> {
@@ -170,9 +187,6 @@ export async function logNotification(client: ReturnType<typeof db>, n: Note) {
   }));
   try { await client.insert('notifications', rows); } catch (err) { console.error('[notifications]', err); }
 }
-
-/** WhatsApp messages from the system number start in phase 4; until then they are logged as skipped. */
-export const WHATSAPP_LATER: Sent = { status: 'skipped', detail: 'WhatsApp messages start in phase 4' };
 
 /** Turns a form away: the message for the error line, and the field it is about. */
 export const refuse = (error: string, status = 400, field?: string) => reply(field ? { error, field } : { error }, status);

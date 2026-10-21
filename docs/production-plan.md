@@ -195,14 +195,23 @@ requests and messages a year old that never became orders (`/privacy`).
   not built: no data behind them yet.
 - *Functions* (deployed to staging): `invite` adds a person to a client or (owners only) to the team
   and emails them; `notify` sends the queued order messages, one email for several photos at once,
-  and never the same message twice (migration `20261021003118`). WhatsApp messages are logged as
-  skipped until Meta is set up.
-- *Tests:* 11 more database checks (`admin.test.sql`), the two functions end to end
-  (`tests/unit/backend.spec.ts`), and the admin's screens in the browser on the three sizes
+  and never the same message twice (migration `20261021003118`).
+- *WhatsApp* (branch `claude/phase-4-whatsapp`, [whatsapp.md](./whatsapp.md)): built and tested
+  against a stand-in for Meta; nothing goes out until Meta is set up, and until then each message is
+  logged as skipped. Portal sign-in by number (Auth's Send SMS hook calls `send-sms`, which sends the
+  code as an authentication template); the request receipt, the portal invitation and the order
+  updates as templates, to the numbers that opted in, besides the email; replies to the number in
+  the admin's inbox (marked WhatsApp), answered once a day with the main line to write to, and STOP
+  turning the updates off (`whatsapp-webhook`); delivered and read receipts on the order's "Messages
+  sent" (migration `20261021064023`).
+- *Tests:* 11 more database checks (`admin.test.sql`) and 13 for WhatsApp (`whatsapp.test.sql`), the
+  functions end to end (`tests/unit/backend.spec.ts`), the signature checks and Meta's payloads
+  (`tests/unit/whatsapp.spec.ts`), and the admin's screens in the browser on the three sizes
   (`tests/admin.spec.ts`).
 
-**Left for phase 4:** WhatsApp (sign-in codes, the messages and the reply webhook) once Meta is set
-up (§10 items 7–9); a test order taken through all 8 stages from a phone on staging.
+**Left for phase 4:** Meta's set-up (§10 items 7–9: the portfolio, the SIM, the templates in
+[whatsapp.md](./whatsapp.md)) and the secrets that switch WhatsApp on; a test order taken through all
+8 stages from a phone on staging.
 
 **Phase 5 has begun** (21 Oct 2026, branch `claude/phase-5-seo`, on phase 4), with what needs no
 account or decision:
@@ -401,7 +410,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; the staff inboxes are still to be confirmed with a test request** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
-| 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin and email messages built; WhatsApp waits on Meta** |
+| 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin, email and WhatsApp built; WhatsApp switches on once Meta is set up** |
 | 5 | 🔶 Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain. **Search and sharing built (canonical addresses, the share card, the business on Home, sitemap, robots, HSTS); Umami and Lighthouse wait for the site on its domain** |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 
@@ -451,4 +460,4 @@ these from here):
 7. Set up Meta: a Meta Business portfolio and a WhatsApp app. You may already have a portfolio
    behind the Instagram account. Business verification uses Full Circle's documents.
 8. Get a new SIM for the system WhatsApp number.
-9. Approve the template wording for each WhatsApp message in §5.
+9. Approve the template wording for each WhatsApp message (drafted in [whatsapp.md](./whatsapp.md)).

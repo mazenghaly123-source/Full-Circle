@@ -1,5 +1,6 @@
-// Inbox: sample requests and contact messages, newest first. Pick one to see it whole, reply on
-// WhatsApp or by email, mark it replied or closed, and turn a request into an order.
+// Inbox: sample requests, contact messages and replies to the WhatsApp number, newest first. Pick one
+// to see it whole, reply on WhatsApp or by email, mark it replied or closed, and turn a request into
+// an order.
 import { REQUEST_QUESTIONS } from '../../../../supabase/functions/_shared/forms';
 import * as api from '../api';
 import type { View } from '../app';
@@ -45,7 +46,7 @@ export async function inboxView(v: View) {
 
   function row(i: Item, on: boolean) {
     const [mark, word] = MARK[status(i)];
-    const head = i.kind === 'r' ? `<span style="font-weight:500">${esc(i.r.brand)}</span><span class="mono t3">${esc(i.r.code)}</span>` : `<span style="font-weight:500">${esc(i.m.name)}</span><span class="mono t3">Message</span>`;
+    const head = i.kind === 'r' ? `<span style="font-weight:500">${esc(i.r.brand)}</span><span class="mono t3">${esc(i.r.code)}</span>` : `<span style="font-weight:500">${esc(i.m.name)}</span><span class="mono t3">${i.m.via === 'whatsapp' ? 'WhatsApp' : 'Message'}</span>`;
     const line = i.kind === 'r' ? [i.r.path, i.r.product, i.r.qty].filter(Boolean).join(' · ') : i.m.text;
     return `<a class="li${on ? ' on' : ''}" href="#/inbox/${key(i)}" aria-current="${on}" style="grid-template-columns:minmax(0,1fr) auto">
 <span style="display:flex;flex-direction:column;gap:4px;min-width:0"><span class="row" style="gap:8px">${head}</span>
@@ -57,7 +58,7 @@ export async function inboxView(v: View) {
   function detail(i: Item | null) {
     if (!i) return '<div class="ch"><span><span class="kick">02 — Detail</span><h2 class="sc ct" style="margin-top:6px">Nothing to show</h2></span></div><div class="cb"><div class="empty">Nothing matches this view. Pick another tab, or clear the search.</div></div>';
     const c = contactOf(i), st = status(i), [mark, word] = MARK[st];
-    const wa = c.whatsapp ? `https://wa.me/${c.whatsapp.slice(1)}?text=${encodeURIComponent(i.kind === 'r' ? `Hello ${i.r.brand}, this is Full Circle about your sample request ${i.r.code}.` : `Hello ${i.m.name}, this is Full Circle, about your message.`)}` : '';
+    const wa = c.whatsapp ? `https://wa.me/${c.whatsapp.slice(1)}?text=${encodeURIComponent(i.kind === 'r' ? `Hello ${i.r.brand}, this is Full Circle about your sample request ${i.r.code}.` : `Hello ${i.m.name}, this is Full Circle, about your message${i.m.via === 'whatsapp' ? ' to our updates number' : ''}.`)}` : '';
     const mail = c.email ? `mailto:${c.email}?subject=${encodeURIComponent(i.kind === 'r' ? `Your sample request ${i.r.code} / Full Circle` : 'Your message to Full Circle')}` : '';
     const rows: [string, string][] = i.kind === 'r'
       ? [...REQUEST_QUESTIONS.map((qq): [string, string] => [qq.k === 'path' ? 'The brand is' : qq.summary, (i.r as unknown as Record<string, string | null>)[qq.k] ?? '—']),
@@ -67,7 +68,7 @@ export async function inboxView(v: View) {
       : [['Contact', c.whatsapp ? `${c.whatsapp} on WhatsApp` : c.email ?? c.typed], ['Message', i.m.text], ['Received', when(i.m.created_at)]];
     const order = i.kind === 'r' ? i.r.orders[0] : undefined;
     return `<div class="ch"><span style="display:flex;flex-direction:column;gap:6px;min-width:0">
-<span class="kick">02 — ${i.kind === 'r' ? 'Sample request' : 'Contact message'}</span>
+<span class="kick">02 — ${i.kind === 'r' ? 'Sample request' : i.m.via === 'whatsapp' ? 'WhatsApp reply' : 'Contact message'}</span>
 <span class="row"><h2 class="sc ct">${esc(i.kind === 'r' ? i.r.brand : i.m.name)}</h2>${i.kind === 'r' ? `<span class="mono t3">${esc(i.r.code)}</span>` : ''}</span></span>
 <span class="pillS"><span class="mk ${mark}" aria-hidden="true"></span>${word}</span></div>
 <div class="cb">
@@ -81,6 +82,7 @@ ${st === 'closed' || (st === 'replied' && i.kind === 'm') ? '<button type="butto
 ${st === 'new' || st === 'replied' ? '<button type="button" class="pill ghost" data-act="close">Close</button>' : ''}
 </div>
 ${!c.whatsapp && !c.email ? `<span class="hint">The number could not be read with its country. Check it before you reply: ${esc(c.typed)}</span>` : ''}
+${i.kind === 'm' && i.m.via === 'whatsapp' ? '<span class="hint">Sent to the number that sends order updates. It told them the team answers from the main line: reply from there.</span>' : ''}
 <div class="well" style="padding:4px 16px"><table class="tbl"><tbody>${rows.map(([k, x]) => `<tr><th scope="row" style="padding:12px 12px 12px 0;border-bottom:1px solid var(--bd);width:34%;vertical-align:top">${esc(k)}</th><td style="white-space:pre-wrap">${esc(x)}</td></tr>`).join('')}</tbody></table></div>
 </div>`;
   }
@@ -88,7 +90,7 @@ ${!c.whatsapp && !c.email ? `<span class="hint">The number could not be read wit
   function draw() {
     const list = shown(), it = picked();
     v.main.innerHTML = `<section class="mast"><div style="display:flex;flex-direction:column;gap:6px"><span class="kick">Requests and messages</span><h1 class="sc">Inbox</h1></div>
-<p>${fresh.length ? `${fresh.length} ${fresh.length === 1 ? 'needs' : 'need'} a reply, oldest ${age(created(fresh[fresh.length - 1]))} ago.` : 'Nothing waits for a reply.'} Requests come from the site's form; messages from the contact page.</p></section>
+<p>${fresh.length ? `${fresh.length} ${fresh.length === 1 ? 'needs' : 'need'} a reply, oldest ${age(created(fresh[fresh.length - 1]))} ago.` : 'Nothing waits for a reply.'} Requests come from the site's form; messages from the contact page and replies to the WhatsApp updates.</p></section>
 <div class="split">
 <section class="card" aria-labelledby="q-h"><div class="ch"><span><span class="kick">01 — Queue</span><h2 id="q-h" class="sc ct" style="margin-top:6px">Requests and messages</h2></span></div>
 <div class="cb">

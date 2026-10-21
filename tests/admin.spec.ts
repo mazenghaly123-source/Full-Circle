@@ -109,6 +109,8 @@ test('admin: ask for a decision with a photo, answer a photo request, and edit s
   await page.locator('#sp .kv').last().locator('[name=v]').fill('Fleece 400 gsm');
   await page.getByRole('button', { name: 'Save specs' }).click();
   await expect.poll(() => orders[2].order_specs).toEqual([expect.objectContaining({ key: 'Fabric', value: 'Fleece 400 gsm', position: 0 })]);
+  // the page is drawn again once saved: only then is the details form the one to fill
+  await expect(page.locator('#toast')).toHaveText('Specs saved');
   await page.locator('#det [name=summary]').fill('Sample 01 / fleece');
   await page.getByRole('button', { name: 'Save details' }).click();
   await expect.poll(() => orders[2].summary).toBe('Sample 01 / fleece');
@@ -189,6 +191,27 @@ test('admin: analytics counts requests, and which became orders, by source', asy
   const sources = page.locator('section:has(#sr-h) tbody tr');
   await expect(sources).toHaveText([/Direct or unknown\s*2\s*0/, /instagram\s*1\s*0/, /google\.com\s*1\s*1\s*100%/]);
   await expect(page.locator('.bcol')).toHaveCount(6);
+});
+
+test('admin: a reply to the WhatsApp number waits in the inbox, and an order shows what was read', async ({ page }) => {
+  const { messages, orders } = await mockAdmin(page);
+  messages.push({ id: 2, name: 'Laila (Demo Studio)', contact: '+201011435406', contact_channel: 'whatsapp', email: null, whatsapp: '+201011435406', text: 'Is the jacket sample ready?', status: 'new', created_at: new Date().toISOString(), via: 'whatsapp' });
+  const o1 = orders.find((o) => o.id === 1);
+  o1.order_notifications.push(
+    { id: 901, event: 'stage_moved', audience: 'client', channel: 'whatsapp', recipient: '+201011435406', status: 'sent', detail: null, created_at: new Date().toISOString(), delivered_at: new Date().toISOString(), read_at: new Date().toISOString() },
+    { id: 902, event: 'stage_moved', audience: 'client', channel: 'email', recipient: 'laila@demo.test', status: 'sent', detail: null, created_at: new Date().toISOString(), delivered_at: null, read_at: null });
+  await page.goto('/admin#/inbox/m/2');
+  await signInAdmin(page);
+  await expect(page.locator('.li', { hasText: 'Laila (Demo Studio)' })).toContainText('WhatsApp');
+  await expect(page.locator('#detail .kick')).toHaveText('02 — WhatsApp reply');
+  await expect(page.locator('#detail')).toContainText('Is the jacket sample ready?');
+  expect(await page.getByRole('link', { name: 'Reply on WhatsApp' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/201011435406\?text=/);
+  // the figures count the contact page's messages, not the replies
+  await page.goto('/admin#/analytics');
+  await expect(page.locator('.kp').nth(3)).toContainText('Messages, 30 days1');
+  await page.goto('/admin#/order/1');
+  await expect(page.locator('tr', { hasText: '+201011435406 · whatsapp' }).first()).toContainText('read');
+  await expect(page.locator('tr', { hasText: 'laila@demo.test · email' }).first()).toContainText('sent');
 });
 
 test('admin: on a phone the sidebar becomes a tab bar', async ({ page }, info) => {

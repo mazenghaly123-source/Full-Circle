@@ -46,7 +46,7 @@ export async function analyticsView(v: View) {
   const now = Date.now(), within = (iso: string, from: number, to = 0) => { const t = now - Date.parse(iso); return t >= to * DAY && t < from * DAY; };
   const r30 = requests.filter((r) => within(r.created_at, 30)), r60 = requests.filter((r) => within(r.created_at, 60, 30));
   const r90 = requests.filter((r) => within(r.created_at, WINDOW_DAYS)), o90 = r90.filter((r) => r.orders.length).length;
-  const opened30 = orders.filter((o) => within(o.created_at, 30)).length, m30 = messages.filter((m) => within(m.created_at, 30)).length;
+  const opened30 = orders.filter((o) => within(o.created_at, 30)).length, m30 = messages.filter((m) => m.via !== 'whatsapp' && within(m.created_at, 30)).length;
 
   const months = yms.map((ym) => { const list = requests.filter((r) => month(r.created_at) === ym); return { ym, n: list.length, o: list.filter((r) => r.orders.length).length }; });
   const top = ceilNice(Math.max(4, ...months.map((m) => m.n)));

@@ -76,16 +76,18 @@ export function clientReceiptEmail(r: { code: string; brand: string }) {
   };
 }
 
-export type MessageMail = { at: Date; name: string; typed: string; reach: Contact; text: string; source: Source };
+export type MessageMail = { at: Date; name: string; typed: string; reach: Contact; text: string; source: Source; via?: 'contact' | 'whatsapp' };
 
-/** The alert staff get for a contact message. */
+/** The alert staff get for a contact message, or for a reply to the WhatsApp number. */
 export function staffMessageEmail(m: MessageMail) {
   const reach = reachLink(m.typed, m.reach);
   const rows: Row[] = [['From', m.name], ['Contact', reach.label, reach.href], ['Message', m.text]];
   const from = sourceLine(m.source);
   if (from) rows.push(['Came from', from]);
   rows.push(['Received', cairoTime(m.at)]);
-  return { subject: `New message from ${m.name}`, ...render(`Message from ${m.name}`, 'Sent from the contact page.', rows) };
+  return m.via === 'whatsapp'
+    ? { subject: `WhatsApp reply from ${m.name}`, ...render(`WhatsApp from ${m.name}`, `Sent to the number that sends order updates. Answer from the main WhatsApp line (${SITE.whatsapp}); it is in the admin's inbox.`, rows) }
+    : { subject: `New message from ${m.name}`, ...render(`Message from ${m.name}`, 'Sent from the contact page.', rows) };
 }
 
 /** The eight stages, as the site names them (src/data/site.ts). */

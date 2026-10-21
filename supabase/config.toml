@@ -259,8 +259,9 @@ otp_expiry = 3600
 # content_path = "./supabase/templates/password_changed_notification.html"
 
 [auth.sms]
-# Allow/disallow new user signups via SMS to your project.
-enable_signup = false
+# Sign-in with a WhatsApp number stays on, for the people staff add with one (the CLI turns this into
+# GOTRUE_EXTERNAL_PHONE_ENABLED, as with email). New accounts stay invite-only through [auth].
+enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 # Template for sending OTP to users
@@ -278,6 +279,14 @@ max_frequency = "5s"
 # timebox = "24h"
 # Force log out if the user has been inactive longer than the specified duration.
 # inactivity_timeout = "8h"
+
+# The sign-in codes go on WhatsApp: Auth hands each one to the send-sms function (docs/whatsapp.md).
+# SEND_SMS_HOOK_SECRET ("v1,whsec_" and base64) must be set before `supabase start`, and the same
+# value in supabase/functions/.env; the CI backend job makes one for each run.
+[auth.hook.send_sms]
+enabled = true
+uri = "http://host.docker.internal:54321/functions/v1/send-sms"
+secrets = "env(SEND_SMS_HOOK_SECRET)"
 
 # This hook runs before a new user is created and allows developers to reject the request based on the incoming user object.
 # [auth.hook.before_user_created]
@@ -430,4 +439,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.notify]
+verify_jwt = false
+
+# Called by Supabase Auth (send-sms) and by Meta (whatsapp-webhook), which send no JWT: each checks
+# the caller's signature instead.
+[functions.send-sms]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
 verify_jwt = false

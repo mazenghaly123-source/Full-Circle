@@ -23,7 +23,7 @@ export async function overviewView(v: View) {
     const open = orders.filter(isOpen), flow = new Map(open.map((o) => [o.id, flowOf(o)]));
     const orderNeeds = open.flatMap(needsOf);
     const inbox = [...requests.filter((r) => r.status === 'new').map((r) => ({ at: r.created_at, row: inboxRow(r.brand, r.code, `Sample request: ${[r.product, r.qty].filter(Boolean).join(', ')}`, r.created_at, `#/inbox/r/${r.id}`) })),
-      ...messages.filter((m) => m.status === 'new').map((m) => ({ at: m.created_at, row: inboxRow(m.name, 'Message', m.text, m.created_at, `#/inbox/m/${m.id}`) }))];
+      ...messages.filter((m) => m.status === 'new').map((m) => ({ at: m.created_at, row: inboxRow(m.name, m.via === 'whatsapp' ? 'WhatsApp' : 'Message', m.text, m.created_at, `#/inbox/m/${m.id}`) }))];
     const needs = [...(ui.needs === 'orders' ? [] : inbox), ...(ui.needs === 'inbox' ? [] : orderNeeds.map((n) => ({ at: n.at, row: needRow(n) })))].sort((a, b) => a.at.localeCompare(b.at));
     const withThem = open.filter((o) => flow.get(o.id) === 'client');
     const longest = withThem.flatMap((o) => o.order_decisions.filter((d) => d.status === 'open')).sort((a, b) => a.opened_at.localeCompare(b.opened_at))[0];

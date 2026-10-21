@@ -63,13 +63,23 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Start a local Supabase
-        # the functions talk to stand-ins for Turnstile and Resend, served by tests/unit/backend.spec.ts
+        # the functions talk to stand-ins for Turnstile, Resend and Meta, served by
+        # tests/unit/backend.spec.ts; Auth signs its calls to send-sms with a secret made for this run
         run: |
-          cat > supabase/functions/.env <<'EOF'
+          SEND_SMS_HOOK_SECRET="v1,whsec_$(openssl rand -base64 32)"
+          export SEND_SMS_HOOK_SECRET
+          echo "SEND_SMS_HOOK_SECRET=$SEND_SMS_HOOK_SECRET" >> "$GITHUB_ENV"
+          cat > supabase/functions/.env <<EOF
           TURNSTILE_VERIFY_URL=http://host.docker.internal:54399/siteverify
           RESEND_API_URL=http://host.docker.internal:54399/emails
           RESEND_API_KEY=test
           STAFF_EMAILS=staff@fullcircle.test
+          WHATSAPP_API_URL=http://host.docker.internal:54399/whatsapp
+          WHATSAPP_TOKEN=test
+          WHATSAPP_PHONE_ID=100200300
+          WHATSAPP_APP_SECRET=test-app-secret
+          WHATSAPP_VERIFY_TOKEN=test-verify-token
+          SEND_SMS_HOOK_SECRET=$SEND_SMS_HOOK_SECRET
           EOF
           npx --yes "$SUPABASE_CLI" start -x studio,imgproxy,realtime,logflare,vector,supavisor,postgres-meta,mailpit
       - name: Database access tests
@@ -80,6 +90,8 @@ jobs:
         run: |
           eval "$(npx --yes "$SUPABASE_CLI" status -o env)"
           SUPABASE_URL="$API_URL" SUPABASE_SECRET_KEY="$SECRET_KEY" SUPABASE_PUBLISHABLE_KEY="$PUBLISHABLE_KEY" NO_SITE=1 npx playwright test --project unit
-      - name: Function logs
+      - name: Function and Auth logs
         if: failure()
-        run: docker logs supabase_edge_runtime_full-circle 2>&1 | tail -200
+        run: |
+          docker logs supabase_edge_runtime_full-circle 2>&1 | tail -200
+          docker logs supabase_auth_full-circle 2>&1 | tail -60

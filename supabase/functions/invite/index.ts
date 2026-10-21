@@ -1,5 +1,7 @@
 // Adds a person to a client (they can then sign in to the portal) or to staff (the admin). Creates
-// their sign-in account when the email has none, and emails them where to sign in.
+// their sign-in account when the email has none, and emails them where to sign in. A client's person
+// with a WhatsApp number can sign in with it too, and is told on WhatsApp as well when that number
+// asked for updates there.
 //
 // POST application/json, signed in as staff:
 //   { kind: 'client', client_id, name, email, whatsapp? }   any member of staff
@@ -7,6 +9,7 @@
 import { readContact, toInternational } from '../_shared/forms.ts';
 import { inviteEmail } from '../_shared/emails.ts';
 import { caller, crash, db, preflight, refuse, reply, sendEmail, siteUrl } from '../_shared/server.ts';
+import { sendWhatsApp, template, type Sent } from '../_shared/whatsapp.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();
@@ -43,7 +46,22 @@ Deno.serve(async (req) => {
       if (await client.count('client_members', { client_id: `eq.${clientId}`, user_id: `eq.${id}` })) return refuse('They are already on this client', 409, 'email');
       const [row] = await client.insert<{ id: number }>('client_members', { client_id: clientId, user_id: id, name, email: reach.email, whatsapp }, 'id');
       const sent = await sendEmail({ to: [reach.email], ...inviteEmail({ kind: 'client', name, brand: brand.brand, url: `${siteUrl()}/track`, by: staff[0].name }) });
-      return reply({ ok: true, member_id: row.id, email: sent.status });
+      let wa: Sent | null = null, phone = false;
+      // they are added by now: the number is a bonus, so a failure here is reported, not thrown
+      if (whatsapp) {
+        try {
+          phone = await client.addPhone(id, whatsapp);
+          const [choice] = await client.select<{ opted_in: boolean }>('contact_consents', 'opted_in',
+            { channel: 'eq.whatsapp', address: `eq.${whatsapp}`, purpose: 'eq.order_updates', order: 'created_at.desc,id.desc', limit: '1' });
+          wa = choice?.opted_in ? await sendWhatsApp(whatsapp, template('portal_invite', [name, staff[0].name, brand.brand]))
+            : { status: 'skipped', detail: 'The number has not asked for WhatsApp updates' };
+        } catch (err) {
+          console.error('[invite whatsapp]', err);
+          wa = { status: 'failed', detail: String(err) };
+        }
+      }
+      // phone: whether they can sign in with the number (another account may have it)
+      return reply({ ok: true, member_id: row.id, email: sent.status, ...(wa ? { whatsapp: wa.status, phone } : {}) });
     }
     if ((await client.select('staff', 'user_id', { user_id: `eq.${id}` })).length) return refuse('They are already on the team', 409, 'email');
     await client.insert('staff', { user_id: id, name, role: b.role === 'owner' ? 'owner' : 'staff' });
