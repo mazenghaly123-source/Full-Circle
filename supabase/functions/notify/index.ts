@@ -19,7 +19,7 @@ type Order = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();
   if (req.method !== 'POST') return refuse('Send it with POST', 405);
-  if (!(await caller(req))) return refuse('Sign in again', 401);
+  try { if (!(await caller(req))) return refuse('Sign in again', 401); } catch (err) { return crash('caller', err, 'Could not check who you are. Try again'); }
 
   const client = db();
   try {

@@ -39,6 +39,12 @@ const started = (r: { access_token: string; refresh_token: string; expires_at?: 
  */
 export function authClient(store: string) {
   let session: Session | null = (() => { try { const s = JSON.parse(localStorage.getItem(store) ?? 'null'); return s?.access_token ? s : null; } catch { return null; } })();
+  /** Moves on at each sign-in and sign-out, so work started for an earlier session cannot bring it back. */
+  let generation = 0;
+  /** The refresh under way, which calls made at the same moment share (a refresh token is used once). */
+  let refreshing: Promise<string> | null = null;
+  /** A session starts or ends: what was under way for the one before is left behind. */
+  function turn(s: Session | null) { generation++; refreshing = null; keep(s); }
   function keep(s: Session | null) {
     session = s;
     try { if (s) localStorage.setItem(store, JSON.stringify(s)); else localStorage.removeItem(store); } catch { /* private mode: the session lasts for this page */ }
@@ -68,7 +74,7 @@ export function authClient(store: string) {
     try {
       const res = await auth('verify', { ...who, token, type: 'phone' in who ? 'sms' : 'email' });
       const r = await res.json().catch(() => ({}));
-      if (res.ok && r.access_token) { keep(started(r)); return null; }
+      if (res.ok && r.access_token) { turn(started(r)); return null; }
       if (res.status === 429) return { error: AUTH_ERRORS.tooMany };
       return { error: res.status >= 500 ? AUTH_ERRORS.failed : AUTH_ERRORS.wrong };
     } catch {
@@ -77,37 +83,38 @@ export function authClient(store: string) {
   }
 
   function signOut() {
-    const s = session; keep(null);
+    const s = session; turn(null);
     if (s) auth('logout', {}, { Authorization: `Bearer ${s.access_token}` }).catch(() => { /* the session is gone here either way */ });
   }
-
-  /** The refresh under way, which calls made at the same moment share (a refresh token is used once). */
-  let refreshing: Promise<string> | null = null;
 
   /** A current access token: refreshed a minute before it runs out. */
   async function token(force = false) {
     if (!session) throw new SignedOut();
     if (!force && !refreshing && session.expires_at - 60 > Date.now() / 1000) return session.access_token;
-    refreshing ??= (async () => {
-      const s = session!;
+    if (refreshing) return refreshing;
+    const p: Promise<string> = (async () => {
+      const s = session!, gen = generation;
       const res = await auth('token?grant_type=refresh_token', { refresh_token: s.refresh_token }).catch(() => null);
+      const r = res?.ok ? await res.json().catch(() => ({})) : {};
+      // signed out (or in as someone else) meanwhile: this refresh belongs to a session that has ended
+      if (gen !== generation) throw new SignedOut();
       // offline, or Auth busy or down: keep the session and let the caller say it could not reach us
       if (!res || res.status === 429 || res.status >= 500) throw new Error('auth unavailable');
-      const r = await res.json().catch(() => ({}));
       if (!res.ok || !r.access_token) { keep(null); throw new SignedOut(); }
       keep(started(r, s.user.id));
       return r.access_token as string;
-    })().finally(() => { refreshing = null; });
-    return refreshing;
+    })().finally(() => { if (refreshing === p) refreshing = null; });
+    return (refreshing = p);
   }
 
   /** A call as the signed-in person; a rejected token is refreshed once before giving up. */
   async function call(path: string, init: RequestInit = {}) {
+    const gen = generation;
     for (const force of [false, true]) {
       const res = await fetch(`${BACKEND.url}${path}`, { ...init, headers: { ...json, Authorization: `Bearer ${await token(force)}`, ...(init.headers as Record<string, string>) } });
       if (res.status !== 401) return res;
     }
-    keep(null);
+    if (gen === generation) keep(null);
     throw new SignedOut();
   }
 

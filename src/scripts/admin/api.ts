@@ -31,7 +31,7 @@ export type Note = { id: number; event: string; audience: 'staff' | 'client'; ch
 export type Status = 'active' | 'paused' | 'delivered' | 'cancelled';
 /** An order as the lists show it. */
 export type OrderRow = {
-  id: number; code: string; name: string; product: string; summary: string | null; stage: number; status: Status; due_on: string | null; created_at: string;
+  id: number; code: string; name: string; product: string; summary: string | null; qty: number | null; stage: number; status: Status; due_on: string | null; created_at: string;
   client_id: number; clients: { brand: string } | null;
   order_decisions: Pick<Decision, 'id' | 'stage' | 'title' | 'status'>[];
   photo_requests: Pick<PhotoRequest, 'stage' | 'answered_at'>[];
@@ -71,7 +71,7 @@ export const requests = () => get<Request[]>('requests?select=*,orders(id,code)&
 export const messages = () => get<Message[]>('messages?select=*&order=created_at.desc&limit=300');
 export const setStatus = (table: 'requests' | 'messages', id: number, status: string) => write(`${table}?id=eq.${id}`, 'PATCH', { status });
 
-export const orders = () => get<OrderRow[]>('orders?select=id,code,name,product,summary,stage,status,due_on,created_at,client_id,clients(brand),'
+export const orders = () => get<OrderRow[]>('orders?select=id,code,name,product,summary,qty,stage,status,due_on,created_at,client_id,clients(brand),'
   + 'order_decisions(id,stage,title,status),photo_requests(stage,answered_at),order_events(id,kind,decision_id)&order=created_at.desc');
 export async function order(id: number): Promise<Order | null> {
   const rows = await get<Order[]>(`orders?id=eq.${id}&select=*,clients(id,brand,client_members(id,name,email,whatsapp,created_at)),order_specs(id,key,value,position),`
@@ -79,6 +79,15 @@ export async function order(id: number): Promise<Order | null> {
     + 'order_events(id,kind,side,actor_id,actor_label,stage,to_stage,decision_id,title,note,created_at),order_notifications(id,event,audience,channel,recipient,status,detail,created_at)');
   return rows[0] ?? null;
 }
+/** Every order with its decisions, photo requests and whole log: what Overview, Production and Approvals read. */
+export type BoardOrder = Omit<OrderRow, 'clients' | 'order_decisions' | 'photo_requests' | 'order_events'> & {
+  qty: number | null;
+  clients: { brand: string; client_members: Pick<Member, 'name' | 'email' | 'whatsapp'>[] } | null;
+  order_decisions: Decision[]; photo_requests: PhotoRequest[]; order_events: LogEntry[];
+};
+export const board = () => get<BoardOrder[]>('orders?select=id,code,name,product,summary,qty,stage,status,due_on,created_at,client_id,clients(brand,client_members(name,email,whatsapp)),'
+  + 'order_decisions(*),photo_requests(id,stage,note,asked_label,created_at,answered_at),order_events(id,kind,side,actor_id,actor_label,stage,to_stage,decision_id,title,note,created_at)&order=created_at.desc');
+
 export const updateOrder = (id: number, fields: Partial<Pick<Order, 'name' | 'product' | 'summary' | 'fabric' | 'qty' | 'status' | 'due_on'>>) =>
   write(`orders?id=eq.${id}`, 'PATCH', fields);
 /** Replaces an order's spec rows with these, in this order. */

@@ -1,6 +1,6 @@
-// The admin (/admin, phase 4) against a stand-in for Supabase (mockAdmin): staff sign-in, the inbox,
-// turning a request into an order, an order's page (stage, decision, photos, specs, details), clients
-// and team. Runs at 1440×900, 390×844 and 375×667.
+// The admin (/admin, phase 4) against a stand-in for Supabase (mockAdmin): staff sign-in, the overview,
+// the inbox, turning a request into an order, an order's page (stage, decision, photos, specs,
+// details), production, approvals, analytics, clients and team. Runs at 1440×900, 390×844 and 375×667.
 import { expect, test } from '@playwright/test';
 import { isPhone, mockAdmin, mockBackend, signInAdmin, watchErrors } from './helpers';
 
@@ -29,7 +29,7 @@ test('admin: staff sign in by code; someone not on the team is told so', async (
 
 test('admin: the inbox, marking replied, and converting a request into an order', async ({ page }, info) => {
   const { calls, requests } = await mockAdmin(page);
-  await page.goto('/admin');
+  await page.goto('/admin#/inbox');
   await signInAdmin(page);
   await expect(page.locator('#main h1')).toHaveText('Inbox');
   await expect(page.locator(isPhone(info) ? '.tabbar [data-count="inbox"]' : '.side [data-count="inbox"]')).toHaveText('3');
@@ -132,6 +132,65 @@ test('admin: add someone to a client, and an owner adds staff', async ({ page })
   expect(staff.map((s) => s.name)).toEqual(['Mazen', 'Salma']);
 });
 
+test('admin: the overview says what needs us, and an approval moves the order on from it', async ({ page }) => {
+  const { calls, orders } = await mockAdmin(page);
+  await page.goto('/admin');
+  await signInAdmin(page);
+  await expect(page.locator('#main h1')).toHaveText('Overview');
+  // three in the inbox, and two orders: the approved sample and the photo asked for
+  await expect(page.locator('.kp').first()).toContainText(/Needs you\s*5things/);
+  await expect(page.locator('.kp', { hasText: 'Running late' })).toContainText('FC-2390');
+  await expect(page.locator('.fcol').nth(4).locator('.blk')).toHaveText(['FC-2418300 pcs']);
+  await expect(page.locator('.blk', { hasText: 'FC-2301' })).toHaveCount(0);
+  await page.locator('[data-needs="orders"]').click();
+  await expect(page.locator('.focus .q')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Move to 06 Production' }).click();
+  await expect(page.locator('#toast')).toHaveText('FC-2418 moved to 06 Production');
+  expect(calls.find((c) => c.fn === 'rpc/move_stage')!.body).toEqual({ p_order: 1, p_to: 6, p_note: null });
+  expect(orders[0].stage).toBe(6);
+  await expect(page.locator('.focus .q')).toHaveCount(1);
+  await expect(page.locator('a.dlr.late')).toContainText('FC-2390');
+  await expect(page.locator('.log')).toContainText('Moved to 06 Production');
+});
+
+test('admin: the production board, its filters, and the approvals screen', async ({ page }) => {
+  await mockAdmin(page);
+  await page.goto('/admin#/production');
+  await signInAdmin(page);
+  await expect(page.locator('#main h1')).toHaveText('Production');
+  await expect(page.locator('.bcl')).toHaveCount(8);
+  await expect(page.locator('.bcl').nth(5).locator('.oc')).toContainText('past the delivery date');
+  await expect(page.locator('.bcl').nth(1).locator('.oc')).toContainText('Photo asked of 02');
+  await page.locator('[data-show="late"]').click();
+  await expect(page.locator('.oc:not(.dim)')).toHaveText([/FC-2390/]);
+
+  await page.goto('/admin#/approvals');
+  await expect(page.locator('#main h1')).toHaveText('Approvals');
+  const theirs = page.locator('#w-h').locator('xpath=ancestor::section[1]');
+  await expect(theirs.locator('.q')).toHaveCount(1);
+  await expect(theirs.locator('.q')).toContainText('Choose the fabric');
+  expect(await theirs.getByRole('link', { name: 'WhatsApp Laila' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/201011435406\?text=Hello%20Laila%2C/);
+  await expect(page.locator('.focus .q')).toHaveCount(2);
+  // answered in the last 30 days: the two samples of FC-2390 and the approved one of FC-2418
+  await expect(page.locator('section:has(#h-h) tbody tr')).toHaveCount(3);
+  await page.locator('[data-t="changes_asked"]').click();
+  await expect(page.locator('section:has(#h-h) tbody tr')).toHaveText([/Shorter sleeves/]);
+  // two samples approved, one at the first try
+  await expect(page.locator('section:has(#g-h) .facts')).toContainText('First try50%1 of 2');
+});
+
+test('admin: analytics counts requests, and which became orders, by source', async ({ page }) => {
+  await mockAdmin(page);
+  await page.goto('/admin#/analytics');
+  await signInAdmin(page);
+  await expect(page.locator('#main h1')).toHaveText('Analytics');
+  await expect(page.locator('.kp').first()).toContainText('Requests, 30 days3');
+  await expect(page.locator('.kp').nth(2)).toContainText('25%1 of 4 requests');
+  const sources = page.locator('section:has(#sr-h) tbody tr');
+  await expect(sources).toHaveText([/Direct or unknown\s*2\s*0/, /instagram\s*1\s*0/, /google\.com\s*1\s*1\s*100%/]);
+  await expect(page.locator('.bcol')).toHaveCount(6);
+});
+
 test('admin: on a phone the sidebar becomes a tab bar', async ({ page }, info) => {
   test.skip(!isPhone(info), 'phones only');
   await mockAdmin(page);
@@ -143,4 +202,15 @@ test('admin: on a phone the sidebar becomes a tab bar', async ({ page }, info) =
   await expect(page.locator('#main h1')).toHaveText('Orders');
   await expect(page.locator('.tabbar a[aria-current="page"]')).toHaveText(/Orders/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // the rest are under More
+  await page.locator('#more-tab').click();
+  await page.getByRole('dialog').getByRole('link', { name: /Approvals/ }).click();
+  await expect(page.locator('#main h1')).toHaveText('Approvals');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('#more-tab')).toHaveAttribute('aria-current', 'page');
+  for (const screen of ['overview', 'production', 'approvals', 'analytics']) {
+    await page.goto(`/admin#/${screen}`);
+    await page.locator('#main h1').waitFor();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), screen).toBe(true);
+  }
 });

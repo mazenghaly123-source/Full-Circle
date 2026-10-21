@@ -156,8 +156,9 @@ requests and messages a year old that never became orders (`/privacy`).
 **Decided in the build, for Mazen to confirm** (each is a small change if he decides otherwise):
 1. An order that did not come through the form (a client on WhatsApp, a repeat order) takes a new
    code from the same sequence; a second order from one request gets `-B`.
-2. The sample gate is held by the database: no move past 05 until the client has approved a decision
-   opened at stage 05.
+2. The sample gate is held by the database: no move past 05 until the client has approved the latest
+   sample decision opened at stage 05 (an earlier approval does not count once a revision is sent;
+   migration `20261021022945`).
 3. No Undo: a stage can be moved back, and both moves stay in the log. The client is emailed on every
    move; WhatsApp waits for phase 4 and the client's opt-in.
 4. A decision may be opened without photos (a tech pack sign-off has none).
@@ -167,8 +168,11 @@ requests and messages a year old that never became orders (`/privacy`).
 
 - *Admin* (`/admin`, noindex): the Studio OS design from the canvas, one page that works on a phone
   (a tab bar at the bottom) and a computer (a side bar). Staff sign in with an email code, as clients
-  do; an email that is not on the team is told so. Screens:
-  - *Inbox*: requests and messages (New, Replied, Done), each with Reply on WhatsApp or by email,
+  do; an email that is not on the team is told so. On a phone the tab bar holds Overview, Inbox,
+  Orders and Production, and More the rest. Screens:
+  - *Overview*: what needs us (new requests and messages, approvals to move on, changes to make,
+    photos asked for), the headline figures, every open order as a block in its stage, the delivery
+    dates of the next two weeks and the latest entries of every order's log. requests and messages (New, Replied, Done), each with Reply on WhatsApp or by email,
     Mark replied, Close, and **Convert to order**, which adds the client (or picks an existing
     one), opens the order at its entry stage and emails the portal link to the client's person.
   - *Orders*: every order by whose move it is ("waiting on us" first), with stage and status filters.
@@ -176,8 +180,19 @@ requests and messages a year old that never became orders (`/privacy`).
     decision with the photos it is about, Withdraw it, add stage photos (resized in the browser to
     2,000 px), answer photo requests, edit the details and the specs, the people, the messages sent
     and the log.
+  - *Production*: the floor as a board, a card per open order in its stage with its days there,
+    its delivery date and whose move it is; what waits on us above it.
+  - *Approvals*: the decisions with clients, longest first, with links to nudge them on WhatsApp or
+    by email; the answers that wait on us (an approval moves the order on from its row); what
+    clients answered in the last 30 days; and how often a sample is approved at the first try.
   - *Clients*: each brand, its people and orders; add a client, add a person (emailed the link).
+  - *Analytics*: requests and how many became orders, month by month, and over 90 days by source
+    (the ad tags and referring site saved with each request), product and brand stage. Website
+    visits come with Umami at launch.
   - *Team*: owners add staff or owners (emailed the admin link).
+
+  The canvas's Settings screen (stage targets, currencies) and the money and team-load panels are
+  not built: no data behind them yet.
 - *Functions* (deployed to staging): `invite` adds a person to a client or (owners only) to the team
   and emails them; `notify` sends the queued order messages, one email for several photos at once,
   and never the same message twice (migration `20261021003118`). WhatsApp messages are logged as
@@ -373,7 +388,7 @@ Full Circle's legal name and use its commercial register and tax card.
 |---|---|---|
 | 0 | ✅ Repo, Astro, tests, CI | Done |
 | 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
-| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; one test request confirms the inboxes** |
+| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; the staff inboxes are still to be confirmed with a test request** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
 | 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin and email messages built; WhatsApp waits on Meta** |
 | 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain |

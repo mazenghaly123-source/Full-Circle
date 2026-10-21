@@ -36,7 +36,7 @@ ${pick.orders.length ? `<table class="tbl"><tbody>${pick.orders.map((o) => `<tr>
   }
   draw();
   // on a phone the client sits under the list: a picked one scrolls to it
-  if (v.parts[1] && matchMedia('(max-width: 860px)').matches) document.getElementById('detail')!.scrollIntoView({ block: 'start' });
+  if (v.parts[1] && matchMedia('(max-width: 860px)').matches) v.main.querySelector('#detail')?.scrollIntoView({ block: 'start' });
   q.addEventListener('input', draw, { signal: v.signal });
 
   v.main.addEventListener('click', (e) => {

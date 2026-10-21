@@ -59,7 +59,7 @@ messages about orders). Until launch there is one project, **full-circle-staging
 | `STAFF_EMAILS` | Who gets the alerts, comma-separated | fullcircleworks.co@gmail.com |
 | `EMAIL_FROM` | The sender, e.g. `Full Circle <hello@your-domain>` | Resend's test sender, which can only write to the Resend account's own address |
 | `TURNSTILE_SECRET_KEY` | The robot check (Cloudflare Turnstile) | Staging uses Cloudflare's test key, **which lets everything through**; any other project turns every form away |
-| `SITE_URL` | Where the links in the order emails and invitations point | https://fullcircle-co.com |
+| `SITE_URL` | Where the links in the order emails and invitations point. On staging, once the live site uses the live project, set it to a preview that builds against staging, or invited test clients land on the live site | https://fullcircle-co.com |
 
 **At launch** (the live project):
 1. Create the live project in Frankfurt (Pro plan) and apply `supabase/migrations/` to it.

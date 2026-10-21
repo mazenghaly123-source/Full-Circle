@@ -36,6 +36,8 @@ ${field('WhatsApp (optional)', 'whatsapp', r?.whatsapp ?? '', { ph: '+20 10 …'
   form.querySelector('[name=client]')!.addEventListener('change', sync); sync();
 
   let busy = false;
+  /** A client this dialog already added: trying again after a failed order reuses it. */
+  let added: number | null = null;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (busy) return;
@@ -54,7 +56,7 @@ ${field('WhatsApp (optional)', 'whatsapp', r?.whatsapp ?? '', { ph: '+20 10 …'
     busy = true; say('');
     const btn = el.querySelector<HTMLButtonElement>('button[type=submit]')!; btn.disabled = true; btn.textContent = 'Opening…';
     try {
-      const clientId = f.client === 'new' ? await api.addClient(f.brand) : Number(f.client);
+      const clientId = f.client === 'new' ? (added ??= await api.addClient(f.brand)) : Number(f.client);
       const orderId = await api.rpc<number>('create_order', {
         p_client: clientId, p_name: f.name, p_product: f.product, p_request: r?.id ?? null, p_entry_stage: Number(f.stage),
         p_summary: f.summary || null, p_fabric: f.fabric || null, p_qty: qty, p_due_on: f.due || null,

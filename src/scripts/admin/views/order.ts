@@ -3,28 +3,13 @@
 // change goes through a database function that writes the log; the client is emailed by notify.
 import * as api from '../api';
 import type { View } from '../app';
-import type { LogEntry } from '../../core/portal';
-import { day, dialog, esc, failed, field, fields, pad, select, stageName, toast, waitingOn, when } from '../ui';
+import { day, dialog, esc, failed, field, fields, logLine, pad, sampleApproved, select, stageName, toast, waitingOn, when } from '../ui';
 
 const STATUS: [api.Status, string][] = [['active', 'Active'], ['paused', 'Paused'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']];
 const EVENT: Record<string, string> = {
   decision_opened: 'Decision waiting', stage_moved: 'Stage moved', photo_added: 'New photo',
   decision_approved: 'Approved', changes_asked: 'Changes asked', photo_asked: 'Photo asked',
 };
-
-function logLine(e: LogEntry) {
-  const t = e.title ?? 'Decision';
-  switch (e.kind) {
-    case 'order_opened': return `Order opened at ${stageName(e.stage ?? 1)}`;
-    case 'decision_opened': return `${t} / sent to the client`;
-    case 'approved': return `${t} / approved`;
-    case 'changes_asked': return `${t} / changes asked${e.note ? `: “${e.note}”` : ''}`;
-    case 'decision_withdrawn': return `${t} / withdrawn`;
-    case 'photo_asked': return `Photo asked of ${stageName(e.stage ?? 1)}${e.note ? `: “${e.note}”` : ''}`;
-    case 'photo_added': return `Photo added at ${stageName(e.stage ?? 1)}${e.note ? `: ${e.note}` : ''}`;
-    case 'stage_moved': return `Moved to ${stageName(e.to_stage ?? 1)}${e.note ? ` / ${e.note}` : ''}`;
-  }
-}
 
 export async function orderView(v: View) {
   const id = Number(v.parts[1]);
@@ -59,7 +44,7 @@ ${pick ? `<input type="checkbox" name="photo" value="${p.id}" aria-label="Show p
     const answered = events.find((e) => e.kind === 'approved' || e.kind === 'changes_asked');
     const movedSince = answered && events.some((e) => e.kind === 'stage_moved' && e.id > answered.id);
     const askedPhotos = x.photo_requests.filter((r) => !r.answered_at);
-    const gateOpen = x.order_decisions.some((d) => d.stage === 5 && d.status === 'approved');
+    const gateOpen = sampleApproved(x.order_decisions);
     const next = Math.min(x.stage + 1, 8);
 
     // what needs us, with the action that answers it
@@ -158,7 +143,7 @@ ${x.stage_photos.length ? `<div class="fl"><span class="lab">Photos to show with
     const pf = t.closest<HTMLElement>('[data-photo-for]');
     if (pf) {
       ui.photoStage = Number(pf.dataset.photoFor); draw();
-      document.getElementById('photos')!.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      v.main.querySelector('#photos')!.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return v.main.querySelector<HTMLInputElement>('#up input[type=file]')!.click();
     }
     if (t.closest('[data-add-spec]')) { v.main.querySelector('#sp-rows')!.insertAdjacentHTML('beforeend', specRow()); v.main.querySelector<HTMLInputElement>('#sp-rows .kv:last-child input')!.focus(); return; }

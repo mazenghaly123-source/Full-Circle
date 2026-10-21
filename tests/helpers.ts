@@ -318,6 +318,7 @@ export async function mockAdmin(page: Page, o: { staff?: boolean } = {}) {
     { id: 1, code: 'FC-2510', path: 'Scaling', product: 'Denim', qty: '150–300', have: 'A tech pack', brand: 'Atelier Sahel', contact: 'laila@sahel.test', contact_channel: 'email', email: 'laila@sahel.test', whatsapp: null, note: 'Raw selvedge, two washes', status: 'new', source: { utm_source: 'instagram' }, created_at: ago(5), orders: [] },
     { id: 2, code: 'FC-2511', path: 'Starting', product: 'Tees', qty: '60–150', have: 'A sketch', brand: 'Nile Club', contact: '0101 143 5406', contact_channel: 'whatsapp', email: null, whatsapp: '+201011435406', note: null, status: 'new', source: {}, created_at: ago(30), orders: [] },
     { id: 3, code: 'FC-2509', path: 'Starting', product: 'Hoodies', qty: null, have: null, brand: 'Rawda', contact: 'hi@rawda.test', contact_channel: 'email', email: 'hi@rawda.test', whatsapp: null, note: null, status: 'replied', source: {}, created_at: ago(80), orders: [] },
+    { id: 4, code: 'FC-2390', path: 'Scaling', product: 'Jackets', qty: '150–500', have: 'A garment', brand: 'Demo Studio', contact: 'laila@demo.test', contact_channel: 'email', email: 'laila@demo.test', whatsapp: null, note: null, status: 'converted', source: { referrer: 'https://www.google.com/' }, created_at: ago(24 * 45), orders: [{ id: 4, code: 'FC-2390' }] },
   ];
   const messages: any[] = [{ id: 1, name: 'Sara', contact: 'sara@x.test', contact_channel: 'email', email: 'sara@x.test', whatsapp: null, text: 'Do you make swimwear?', status: 'new', created_at: ago(2) }];
   const clients: any[] = [{ id: 1, brand: 'Demo Studio', notes: null, created_at: ago(500), client_members: [{ id: 1, name: 'Laila', email: 'laila@demo.test', whatsapp: '+201011435406', created_at: ago(480) }] }];
@@ -337,7 +338,14 @@ export async function mockAdmin(page: Page, o: { staff?: boolean } = {}) {
   const o3 = blank(3, 'FC-2440', 1, 'Heavy hoodie', 'Hoodies', 2);
   o3.photo_requests.push({ id: 21, stage: 2, note: 'The collar', asked_label: 'Laila', created_at: ago(6), answered_at: null });
   ev(o3, 'photo_asked', { note: 'The collar' });
-  orders.push(o1, o2, o3);
+  // past its delivery date, and one delivered
+  const o4 = blank(4, 'FC-2390', 1, 'Raw denim jacket', 'Jackets', 6); o4.qty = 150; o4.due_on = '2026-01-15';
+  ev(o4, 'order_opened', { stage: 4, to_stage: 4, created_at: ago(24 * 40) }); ev(o4, 'stage_moved', { stage: 6, to_stage: 6, created_at: ago(24 * 9) });
+  o4.order_decisions.push({ id: 13, stage: 5, title: 'Approve sample 01', body: null, photo_ids: [], status: 'changes_asked', note: 'Shorter sleeves', opened_label: 'Mazen', opened_at: ago(24 * 20), closed_label: 'Laila', closed_at: ago(24 * 18) },
+    { id: 14, stage: 5, title: 'Approve sample 02', body: null, photo_ids: [], status: 'approved', note: null, opened_label: 'Mazen', opened_at: ago(24 * 14), closed_label: 'Laila', closed_at: ago(24 * 12) });
+  const o5 = blank(5, 'FC-2301', 1, 'Logo tee', 'Tees', 8); o5.qty = 60; o5.status = 'delivered';
+  ev(o5, 'order_opened', { stage: 6, to_stage: 6, created_at: ago(24 * 90) });
+  orders.push(o1, o2, o3, o4, o5);
   const shapeOrder = (x: any) => ({ ...x, clients: (() => { const c = clients.find((cc) => cc.id === x.client_id); return c ? { id: c.id, brand: c.brand, client_members: c.client_members } : null; })() });
   const shapeClient = (c: any) => ({ ...c, orders: orders.filter((x) => x.client_id === c.id).map((x) => ({ id: x.id, code: x.code, name: x.name, stage: x.stage, status: x.status })) });
   const fail = (message: string) => ({ status: 400, json: { code: '55000', message } });
@@ -354,7 +362,9 @@ export async function mockAdmin(page: Page, o: { staff?: boolean } = {}) {
     },
     move_stage: (b) => {
       const x = orders.find((y) => y.id === b.p_order);
-      if (x.stage <= 5 && b.p_to >= 6 && !x.order_decisions.some((d: any) => d.stage === 5 && d.status === 'approved')) return fail('The client has not approved a sample yet');
+      // as move_stage: the latest sample decision at 05, withdrawn ones aside, must be approved
+      const sample = x.order_decisions.filter((d: any) => d.stage === 5 && d.status !== 'withdrawn').sort((a: any, c: any) => c.opened_at.localeCompare(a.opened_at) || c.id - a.id)[0];
+      if (x.stage <= 5 && b.p_to >= 6 && sample?.status !== 'approved') return fail('The client has not approved a sample yet');
       const from = x.stage; x.stage = b.p_to; ev(x, 'stage_moved', { stage: b.p_to, to_stage: b.p_to, note: b.p_note });
       x.order_notifications.push({ id: ++next, event: 'stage_moved', audience: 'client', channel: 'email', recipient: 'laila@demo.test', status: 'queued', detail: null, created_at: now() });
       return { json: null, from } as any;

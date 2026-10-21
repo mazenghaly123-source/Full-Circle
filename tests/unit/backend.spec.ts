@@ -166,6 +166,7 @@ async function person(email: string) {
   expect(made.ok, await made.clone().text()).toBe(true);
   const { id } = await made.json();
   const res = await fetch(`${URL_}/auth/v1/token?grant_type=password`, { method: 'POST', headers: { apikey: PUBLISHABLE, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'test-password-1' }) });
+  expect(res.ok, await res.clone().text()).toBe(true);
   const { access_token } = await res.json();
   return { id: id as string, headers: { apikey: PUBLISHABLE, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' } };
 }

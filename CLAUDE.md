@@ -124,11 +124,11 @@ portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the
 - The portal (`/track`, phase 3) signs in through Supabase Auth with a 6-digit code and reads the
   client's orders under row-level security (`src/scripts/core/portal.ts`, no library). Clients and
   staff change orders only through database functions that write the append-only approval log
-  (migrations `20261020221044` and `20261021002550`); the browser tests stand in for Supabase with
+  (migrations `20261020221044`, `20261021002550` and `20261021022945`); the browser tests stand in for Supabase with
   `mockPortal`.
 - The admin (`/admin`, phase 4) is a separate page with its own layout and stylesheet
   (`src/layouts/Admin.astro`, `src/styles/admin.css`: the Studio OS design, not the site's), no
-  ClientRouter and no parity check; screens are hash routes (`#/inbox`, `#/order/12`) in
+  ClientRouter and no parity check; screens are hash routes (`#/overview`, `#/order/12`) in
   `src/scripts/admin/`. Staff sign in with the same code flow as the portal (`core/auth.ts`, a
   session of its own) and act through the same database functions. Adding people goes through the
   `invite` function, and every action asks `notify` to send what it queued (email now, WhatsApp

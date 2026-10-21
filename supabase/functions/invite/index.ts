@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return preflight();
   if (req.method !== 'POST') return refuse('Send it with POST', 405);
 
-  const me = await caller(req);
+  let me: string | null;
+  try { me = await caller(req); } catch (err) { return crash('caller', err, 'Could not check who you are. Try again'); }
   if (!me) return refuse('Sign in again', 401);
   const client = db();
   let staff: { role: 'owner' | 'staff'; name: string }[];

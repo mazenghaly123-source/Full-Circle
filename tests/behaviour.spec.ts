@@ -18,8 +18,16 @@ test.beforeEach(async ({ page }, info) => {
 const scrollToY = (page: Page, y: number) => page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
 
 /** Scrolls in steps, so scroll listeners see a real scroll. */
+/**
+ * Scrolls in steps, each seen by the page as a scroll of its own. A step waits for the frame that
+ * reports it: on a busy machine frames come late, and steps taken between two frames reach the page
+ * as one scroll event (down 450px and back up 300px reads as a scroll down).
+ */
 async function scrollBy(page: Page, dy: number, steps = 8) {
-  for (let i = 0; i < steps; i++) { await page.evaluate((d) => window.scrollBy({ top: d, behavior: 'instant' }), dy / steps); await page.waitForTimeout(40); }
+  for (let i = 0; i < steps; i++) {
+    await page.evaluate((d) => new Promise((done) => { window.scrollBy({ top: d, behavior: 'instant' }); requestAnimationFrame(() => requestAnimationFrame(done)); }), dy / steps);
+    await page.waitForTimeout(40);
+  }
 }
 
 /**
@@ -428,16 +436,21 @@ test('track: a session is kept, order updates on WhatsApp can be turned on, and 
 });
 
 test('track: a WhatsApp number asks for its code on WhatsApp, and says so when that is not switched on', async ({ page }) => {
-  const { calls } = await mockPortal(page);
-  await page.route(/\/auth\/v1\/otp$/, (route) => route.fulfill({ status: 400, json: { code: 400, error_code: 'phone_provider_disabled', msg: 'Unsupported phone provider' } }));
+  await mockPortal(page);
+  // this route comes after mockPortal's, so it answers every code request: it keeps what was asked
+  const asked: Record<string, unknown>[] = [];
+  await page.route(/\/auth\/v1\/otp$/, (route) => { asked.push(route.request().postDataJSON()); return route.fulfill({ status: 400, json: { code: 400, error_code: 'phone_provider_disabled', msg: 'Unsupported phone provider' } }); });
   await page.goto('/track');
   await page.locator('#tId').fill('0101 143 5406');
   await page.locator('#tSendCode').click();
   await expect(page.locator('#tErr')).toHaveText('Codes on WhatsApp are not switched on yet. Use the email on your order');
+  expect(asked).toHaveLength(1);
+  expect(asked[0]).toMatchObject({ phone: '+201011435406', channel: 'whatsapp', create_user: false });
+  // too short to be a number: nothing is asked
   await page.locator('#tId').fill('5406');
   await page.locator('#tSendCode').click();
   await expect(page.locator('#tErr')).toHaveText('Add the email or WhatsApp number on your order');
-  expect(calls.filter((c) => c.fn === 'auth/otp')).toHaveLength(0);
+  expect(asked).toHaveLength(1);
 });
 
 test('contact: copy, and the form checks before sending', async ({ page }) => {

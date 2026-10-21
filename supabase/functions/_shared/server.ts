@@ -60,15 +60,18 @@ export function db() {
 }
 
 /**
- * The signed-in person behind a request (from its Authorization header), or null. The functions
- * that act for staff check this against the staff table themselves.
+ * The signed-in person behind a request (from its Authorization header), or null when Auth turns
+ * the token down. Throws when Auth cannot be reached or is busy: the token may still be good, and a
+ * 401 would sign the person out. The functions that act for staff check this against the staff
+ * table themselves.
  */
 export async function caller(req: Request): Promise<string | null> {
   const bearer = req.headers.get('authorization');
   const key = req.headers.get('apikey') ?? env('SUPABASE_ANON_KEY');
   if (!bearer?.startsWith('Bearer ') || !key) return null;
   const res = await fetch(`${env('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: key, Authorization: bearer } }).catch(() => null);
-  if (!res?.ok) return null;
+  if (!res || res.status === 429 || res.status >= 500) throw new Error(`auth unavailable (${res?.status ?? 'offline'})`);
+  if (!res.ok) return null;
   return (await res.json().catch(() => ({}))).id ?? null;
 }
 

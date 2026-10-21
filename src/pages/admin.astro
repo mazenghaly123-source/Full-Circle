@@ -1,20 +1,25 @@
 ---
-// /admin: the staff's app (phase 4). The screens are drawn by src/scripts/admin/app.ts.
+// /admin: the staff's app (phase 4). The screens are drawn by src/scripts/admin/app.ts. On a phone the
+// first four sit in the tab bar and the rest under More.
 import Admin from '../layouts/Admin.astro';
 import { ICON } from '../scripts/admin/ui';
 
 const NAV = [
-  { k: 'inbox', n: '01', label: 'Inbox', icon: ICON.inbox },
-  { k: 'orders', n: '02', label: 'Orders', icon: ICON.orders },
-  { k: 'clients', n: '03', label: 'Clients', icon: ICON.clients },
-  { k: 'team', n: '04', label: 'Team', icon: ICON.team },
+  { k: 'overview', n: '01', label: 'Overview', icon: ICON.overview, tab: true },
+  { k: 'inbox', n: '02', label: 'Inbox', icon: ICON.inbox, tab: true },
+  { k: 'orders', n: '03', label: 'Orders', icon: ICON.orders, tab: true },
+  { k: 'production', n: '04', label: 'Production', icon: ICON.production, tab: true },
+  { k: 'approvals', n: '05', label: 'Approvals', icon: ICON.approvals },
+  { k: 'clients', n: '06', label: 'Clients', icon: ICON.clients },
+  { k: 'analytics', n: '07', label: 'Analytics', icon: ICON.analytics },
+  { k: 'team', n: '08', label: 'Team', icon: ICON.team },
 ];
 ---
 <Admin>
 <div id="signin" class="signin" hidden></div>
 <div class="page" id="app" hidden>
   <aside class="side">
-    <a href="#/inbox" aria-label="Full Circle Studio OS" style="display:flex;flex-direction:column;gap:8px;padding:0 10px">
+    <a href="#/overview" aria-label="Full Circle Studio OS" style="display:flex;flex-direction:column;gap:8px;padding:0 10px">
       <svg class="logo" viewBox="0 0 889.35 147.50" aria-hidden="true"><use href="#fc-h"/></svg><span class="kick">Studio OS</span>
     </a>
     <nav aria-label="Studio OS" style="display:flex;flex-direction:column;gap:2px">
@@ -36,8 +41,10 @@ const NAV = [
   </div>
 </div>
 <nav class="tabbar" id="tabbar" hidden aria-label="Studio OS">
-  {NAV.map((i) => <a href={`#/${i.k}`} data-nav={i.k} data-label={i.label}><Fragment set:html={i.icon} />{i.label}<span class="c" data-count={i.k} style="position:absolute;top:4px;right:10px;font-size:12px"></span></a>)}
+  {NAV.filter((i) => i.tab).map((i) => <a href={`#/${i.k}`} data-nav={i.k} data-label={i.label}><Fragment set:html={i.icon} />{i.label}<span class="c" data-count={i.k}></span></a>)}
+  <button type="button" id="more-tab" data-label="More" aria-haspopup="dialog"><Fragment set:html={ICON.more} />More<span class="c" data-count="more"></span></button>
 </nav>
+<template id="more-items">{NAV.filter((i) => !i.tab).map((i) => <a href={`#/${i.k}`} data-nav={i.k} data-label={i.label}><Fragment set:html={i.icon} />{i.label}<span class="c" data-count={i.k}></span></a>)}</template>
 <div id="dlg"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>import '../scripts/admin/app';</script>

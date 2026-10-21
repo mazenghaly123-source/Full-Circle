@@ -101,7 +101,7 @@ ${!c.whatsapp && !c.email ? `<span class="hint">The number could not be read wit
 
   draw();
   // on a phone the detail sits under the list: a picked item scrolls to it
-  if (v.parts[1] && matchMedia('(max-width: 860px)').matches) document.getElementById('detail')!.scrollIntoView({ block: 'start' });
+  if (v.parts[1] && matchMedia('(max-width: 860px)').matches) v.main.querySelector('#detail')?.scrollIntoView({ block: 'start' });
   q.addEventListener('input', draw, { signal: v.signal });
   v.main.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement;
