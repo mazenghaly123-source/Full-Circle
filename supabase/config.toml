@@ -260,7 +260,8 @@ otp_expiry = 3600
 
 [auth.sms]
 # Sign-in with a WhatsApp number stays on, for the people staff add with one (the CLI turns this into
-# GOTRUE_EXTERNAL_PHONE_ENABLED, as with email). New accounts stay invite-only through [auth].
+# GOTRUE_EXTERNAL_PHONE_ENABLED, as with email, when an SMS provider is on: see [auth.sms.twilio]).
+# New accounts stay invite-only through [auth].
 enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
@@ -298,13 +299,14 @@ secrets = "env(SEND_SMS_HOOK_SECRET)"
 # enabled = true
 # uri = "pg-functions://<database>/<schema>/<hook_name>"
 
-# Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
+# The CLI turns phone sign-in off unless an SMS provider is on. This one is a stand-in that never
+# sends: with the send_sms hook on, Auth gives every code to the hook (docs/whatsapp.md). These are
+# not credentials.
 [auth.sms.twilio]
-enabled = false
-account_sid = ""
-message_service_sid = ""
-# DO NOT commit your Twilio auth token to git. Use environment variable substitution instead:
-auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
+enabled = true
+account_sid = "local-stand-in"
+message_service_sid = "local-stand-in"
+auth_token = "local-stand-in"
 
 # Multi-factor-authentication is available to Supabase Pro plan.
 [auth.mfa]

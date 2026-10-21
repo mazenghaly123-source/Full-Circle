@@ -59,7 +59,8 @@ receipts show on the order's "Messages sent".
 3. Meta's app → WhatsApp → Configuration: callback URL
    `https://<project>.supabase.co/functions/v1/whatsapp-webhook`, verify token as above; subscribe to
    `messages`.
-4. Supabase, Authentication → Sign In / Providers → Phone: on, no SMS provider. Authentication →
+4. Supabase, Authentication → Sign In / Providers → Phone: on (if it asks for an SMS provider, any
+   with placeholder values does: with the hook on, Auth never uses it). Authentication →
    Hooks → Send SMS: HTTPS, `https://<project>.supabase.co/functions/v1/send-sms`; generate its secret
    and put the same value in `SEND_SMS_HOOK_SECRET`. Set the SMS code to 6 digits, 10 minutes.
 5. Try it on staging with Meta's test number first: sign in to the portal with a number, then move a
