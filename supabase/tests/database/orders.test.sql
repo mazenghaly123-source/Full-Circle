@@ -3,7 +3,7 @@
 -- log; staff work through functions too; the approval log is never edited or deleted.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(104);
+select plan(106);
 
 truncate public.requests, public.messages, public.contact_consents, public.notifications, public.clients cascade;
 create temp table k (name text primary key, id bigint);
@@ -239,6 +239,14 @@ select is((select count(*)::int from public.client_members where name = 'Ana'), 
 -- retention: an order goes, its log goes with it
 select lives_ok($$delete from public.orders where id = (select id from k where name = 'oA')$$, 'an order can be deleted at the end of its retention');
 select is((select count(*)::int from public.order_events where order_id = (select id from k where name = 'oA')), 0, 'and takes its log with it');
+
+-- an order deleted in between does not make the next order from the request reuse a code
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000b", "role": "authenticated"}';
+select lives_ok($$select public.create_order((select id from k where name = 'cA'), 'Overshirt again', 'Denim', (select id from k where name = 'rA'))$$,
+  'another order from the request after one was deleted');
+select is((select right(code, 2) from public.orders where name = 'Overshirt again'), '-C', 'it takes the next suffix not in use');
+reset role;
 
 select * from finish();
 rollback;

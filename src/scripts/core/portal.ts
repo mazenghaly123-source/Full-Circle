@@ -97,16 +97,24 @@ export function signOut() {
   if (s) auth('logout', {}, { Authorization: `Bearer ${s.access_token}` }).catch(() => { /* the session is gone here either way */ });
 }
 
+/** The refresh under way, which calls made at the same moment share (a refresh token is used once). */
+let refreshing: Promise<string> | null = null;
+
 /** A current access token: refreshed a minute before it runs out. */
 async function token(force = false) {
   if (!session) throw new SignedOut();
-  if (!force && session.expires_at - 60 > Date.now() / 1000) return session.access_token;
-  const res = await auth('token?grant_type=refresh_token', { refresh_token: session.refresh_token }).catch(() => null);
-  if (!res) throw new Error('offline');
-  const r = await res.json().catch(() => ({}));
-  if (!res.ok || !r.access_token) { keep(null); throw new SignedOut(); }
-  keep({ access_token: r.access_token, refresh_token: r.refresh_token, expires_at: r.expires_at ?? Math.floor(Date.now() / 1000) + (r.expires_in ?? 3600), user: { id: r.user?.id ?? session.user.id } });
-  return session!.access_token;
+  if (!force && !refreshing && session.expires_at - 60 > Date.now() / 1000) return session.access_token;
+  refreshing ??= (async () => {
+    const s = session!;
+    const res = await auth('token?grant_type=refresh_token', { refresh_token: s.refresh_token }).catch(() => null);
+    // offline, or Auth busy or down: keep the session and let the caller say it could not reach us
+    if (!res || res.status === 429 || res.status >= 500) throw new Error('auth unavailable');
+    const r = await res.json().catch(() => ({}));
+    if (!res.ok || !r.access_token) { keep(null); throw new SignedOut(); }
+    keep({ access_token: r.access_token, refresh_token: r.refresh_token, expires_at: r.expires_at ?? Math.floor(Date.now() / 1000) + (r.expires_in ?? 3600), user: { id: r.user?.id ?? s.user.id } });
+    return r.access_token as string;
+  })().finally(() => { refreshing = null; });
+  return refreshing;
 }
 
 /** A call as the signed-in person; a rejected token is refreshed once before giving up. */

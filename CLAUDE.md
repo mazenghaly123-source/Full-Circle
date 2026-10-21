@@ -124,7 +124,8 @@ portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the
 - The portal (`/track`, phase 3) signs in through Supabase Auth with a 6-digit code and reads the
   client's orders under row-level security (`src/scripts/core/portal.ts`, no library). Clients and
   staff change orders only through database functions that write the append-only approval log
-  (migration `20261020221044`); the browser tests stand in for Supabase with `mockPortal`.
+  (migrations `20261020221044` and `20261021002550`); the browser tests stand in for Supabase with
+  `mockPortal`.
 - The functions have no dependencies (a few REST calls in `_shared/server.ts`); type-check them
   with `deno check`. `tests/unit/backend.spec.ts` runs them end to end on a local stack
   (`supabase start`); the CI *backend* job does all three.

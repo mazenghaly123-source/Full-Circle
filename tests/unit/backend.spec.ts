@@ -136,7 +136,7 @@ test('a number counts as one contact however it is written', async () => {
 test('the publishable key reads and writes nothing', async () => {
   test.skip(!PUBLISHABLE, 'no publishable key');
   const headers = { apikey: PUBLISHABLE, 'Content-Type': 'application/json' };
-  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff', 'clients', 'client_members', 'orders', 'order_decisions', 'order_events', 'stage_photos', 'order_notifications']) {
+  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff', 'clients', 'client_members', 'orders', 'order_specs', 'order_decisions', 'order_events', 'stage_photos', 'photo_requests', 'order_notifications']) {
     const res = await fetch(`${URL_}/rest/v1/${table}?select=*`, { headers });
     expect(res.status, table).toBe(401);
   }
@@ -150,4 +150,8 @@ test('visitors leave no files: the one bucket is the private one for stage photo
   expect(buckets.map((b) => b.id)).toEqual(['stage-photos']);
   expect(buckets[0].public).toBe(false);
   expect(buckets[0].allowed_mime_types.every((t) => t.startsWith('image/'))).toBe(true);
+  // and the publishable key cannot put a file in it
+  if (!PUBLISHABLE) return;
+  const upload = await fetch(`${URL_}/storage/v1/object/stage-photos/1/visitor.jpg`, { method: 'POST', headers: { apikey: PUBLISHABLE, 'Content-Type': 'image/jpeg' }, body: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]) });
+  expect(upload.ok).toBe(false);
 });
