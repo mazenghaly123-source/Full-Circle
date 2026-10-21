@@ -70,9 +70,21 @@ export const team = () => get<Staff[]>('staff?select=user_id,name,role,created_a
 export const requests = () => get<Request[]>('requests?select=*,orders(id,code)&order=created_at.desc&limit=300');
 /** A request as the figures count it. */
 export type Counted = Pick<Request, 'id' | 'product' | 'path' | 'source' | 'created_at'> & { orders: { id: number }[] };
-/** Every request since a time, for the figures (the inbox list above stops at its newest 300). */
-export const requestsSince = (iso: string) =>
-  get<Counted[]>(`requests?select=id,product,path,source,created_at,orders(id)&created_at=gte.${encodeURIComponent(iso)}&order=created_at.desc`);
+/** Rows the server sends per call at most (max_rows in supabase/config.toml). */
+const PAGE = 1000;
+/**
+ * Every request since a time, for the figures (the inbox list above stops at its newest 300), read
+ * a page at a time in a fixed order until a page comes back short.
+ */
+export async function requestsSince(iso: string): Promise<Counted[]> {
+  const out: Counted[] = [];
+  for (let offset = 0; ; offset += PAGE) {
+    const page = await get<Counted[]>(`requests?select=id,product,path,source,created_at,orders(id)&created_at=gte.${encodeURIComponent(iso)}`
+      + `&order=created_at.desc,id.desc&limit=${PAGE}&offset=${offset}`);
+    out.push(...page);
+    if (page.length < PAGE) return out;
+  }
+}
 export const messages = () => get<Message[]>('messages?select=*&order=created_at.desc&limit=300');
 export const setStatus = (table: 'requests' | 'messages', id: number, status: string) => write(`${table}?id=eq.${id}`, 'PATCH', { status });
 
