@@ -421,3 +421,11 @@ verify_jwt = false
 
 [functions.submit-contact]
 verify_jwt = false
+
+# The admin's functions check who is calling themselves (the staff table, or any signed-in person for
+# notify), so the gateway's JWT check is off as for the forms.
+[functions.invite]
+verify_jwt = false
+
+[functions.notify]
+verify_jwt = false

@@ -155,3 +155,78 @@ test('visitors leave no files: the one bucket is the private one for stage photo
   const upload = await fetch(`${URL_}/storage/v1/object/stage-photos/1/visitor.jpg`, { method: 'POST', headers: { apikey: PUBLISHABLE, 'Content-Type': 'image/jpeg' }, body: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]) });
   expect(upload.ok).toBe(false);
 });
+
+// The admin's functions (phase 4) ------------------------------------------------------------------
+
+/** A signed-in person: an account with a password (tests only; real people sign in by code). */
+async function person(email: string) {
+  // a secret key (sb_secret_…) goes in apikey alone; a JWT also as the bearer token
+  const admin: Record<string, string> = { apikey: SECRET, 'Content-Type': 'application/json', ...(SECRET.startsWith('sb_') ? {} : { Authorization: `Bearer ${SECRET}` }) };
+  const made = await fetch(`${URL_}/auth/v1/admin/users`, { method: 'POST', headers: admin, body: JSON.stringify({ email, password: 'test-password-1', email_confirm: true }) });
+  expect(made.ok, await made.clone().text()).toBe(true);
+  const { id } = await made.json();
+  const res = await fetch(`${URL_}/auth/v1/token?grant_type=password`, { method: 'POST', headers: { apikey: PUBLISHABLE, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'test-password-1' }) });
+  const { access_token } = await res.json();
+  return { id: id as string, headers: { apikey: PUBLISHABLE, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' } };
+}
+
+/** Writes rows as the service role. */
+async function insert<T = Record<string, unknown>>(table: string, row: object): Promise<T> {
+  const res = await fetch(`${URL_}/rest/v1/${table}`, { method: 'POST', headers: { apikey: SECRET, 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify(row) });
+  expect(res.ok, await res.clone().text()).toBe(true);
+  return (await res.json())[0];
+}
+
+test('staff add a client\'s person, who is emailed a link to the portal; others cannot', async () => {
+  test.skip(!PUBLISHABLE, 'no publishable key');
+  const owner = await person(`owner-${run}@fullcircle.test`), stranger = await person(`stranger-${run}@x.test`);
+  await insert('staff', { user_id: owner.id, name: 'Mazen', role: 'owner' });
+  const brand = await insert<{ id: number }>('clients', { brand: `Atelier ${run}` });
+  const email = `laila-${run}@brand.test`;
+  const body = JSON.stringify({ kind: 'client', client_id: brand.id, name: 'Laila', email: email.toUpperCase(), whatsapp: '0101 143 5406' });
+
+  expect((await fetch(fn('invite'), { method: 'POST', body })).status).toBe(401);
+  expect((await fetch(fn('invite'), { method: 'POST', headers: stranger.headers, body })).status).toBe(403);
+  const res = await fetch(fn('invite'), { method: 'POST', headers: owner.headers, body });
+  expect(res.status, await res.clone().text()).toBe(200);
+  const [member] = await rows('client_members', `client_id=eq.${brand.id}&select=name,email,whatsapp`);
+  expect(member).toEqual({ name: 'Laila', email, whatsapp: '+201011435406' });
+  const [mail] = await mailsTo(email, 1);
+  expect(mail.subject).toBe('Follow your orders with Full Circle');
+  expect(mail.text).toContain('/track');
+  expect((await fetch(fn('invite'), { method: 'POST', headers: owner.headers, body })).status).toBe(409);
+});
+
+test('only an owner adds staff', async () => {
+  test.skip(!PUBLISHABLE, 'no publishable key');
+  const owner = await person(`owner2-${run}@fullcircle.test`), member = await person(`staff2-${run}@fullcircle.test`);
+  await insert('staff', { user_id: owner.id, name: 'Mazen', role: 'owner' });
+  await insert('staff', { user_id: member.id, name: 'Salma', role: 'staff' });
+  const body = (email: string) => JSON.stringify({ kind: 'staff', name: 'Nadia', email, role: 'staff' });
+  expect((await fetch(fn('invite'), { method: 'POST', headers: member.headers, body: body(`nadia-${run}@fullcircle.test`) })).status).toBe(403);
+  const res = await fetch(fn('invite'), { method: 'POST', headers: owner.headers, body: body(`nadia-${run}@fullcircle.test`) });
+  expect(res.status, await res.clone().text()).toBe(200);
+  const { user_id } = await res.json();
+  expect(await rows('staff', `user_id=eq.${user_id}&select=name,role`)).toEqual([{ name: 'Nadia', role: 'staff' }]);
+  const [mail] = await mailsTo(`nadia-${run}@fullcircle.test`, 1);
+  expect(mail.text).toContain('/admin');
+});
+
+test('queued order messages go out once, photos for one person in one email', async () => {
+  test.skip(!PUBLISHABLE, 'no publishable key');
+  const someone = await person(`notify-${run}@brand.test`);
+  const brand = await insert<{ id: number }>('clients', { brand: `Studio ${run}` });
+  const order = await insert<{ id: number }>('orders', { code: `FC-T${run}`, client_id: brand.id, name: 'Overshirt', product: 'Shirts', stage: 6 });
+  const to = `client-${run}@brand.test`;
+  for (const event of ['stage_moved', 'photo_added', 'photo_added']) await insert('order_notifications', { order_id: order.id, event, audience: 'client', channel: 'email', recipient: to });
+
+  expect((await fetch(fn('notify'), { method: 'POST' })).status).toBe(401);
+  const res = await fetch(fn('notify'), { method: 'POST', headers: someone.headers });
+  expect(res.status, await res.clone().text()).toBe(200);
+  const sent = await mailsTo(to, 2);
+  expect(sent.map((m) => m.subject).sort()).toEqual([`FC-T${run} / 2 new photos of Overshirt`, `FC-T${run} / Overshirt is at 06 Production`]);
+  expect(await rows('order_notifications', `order_id=eq.${order.id}&select=status&order=id`)).toEqual([{ status: 'sent' }, { status: 'sent' }, { status: 'sent' }]);
+  // nothing is sent twice
+  await fetch(fn('notify'), { method: 'POST', headers: someone.headers });
+  expect(mails.filter((m) => m.to.includes(to))).toHaveLength(2);
+});
