@@ -3,8 +3,9 @@
 Status (21 Oct 2026): **phase 1 is live on Cloudflare** (the static site at parity with the prototype),
 **phase 2 is built on the staging Supabase project** (the forms send for real, test data only), and
 **phase 3's database and portal are built** on a branch (`claude/phase-3-portal`): the real sign-in
-and the client's own orders replace Track's demo. Real codes need the dashboard settings in §10 and,
-for anyone but Mazen, the domain and Resend. See §2. The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
+and the client's own orders replace Track's demo. Real codes need the dashboard settings in §10. The
+domain, **fullcircle-co.com**, is bought and attached to the site (20 Oct), and Resend has its key
+and the domain (Mazen, 20–21 Oct). See §2. The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
 
 ## 1. Decisions
@@ -18,7 +19,7 @@ for anyone but Mazen, the domain and Resend. See §2. The decisions below were c
 | Q5 | What Approve does | **The approval is logged; staff move the stage** | [ADR 0005](./adr/0005-approvals-are-logged-staff-move-stages.md) |
 | Q6 | Request code vs order code | **One code**: the code given on request stays with the order | [ADR 0004](./adr/0004-one-code-from-request-to-order.md) |
 | Q7 | Who uses the admin view | **About 4 people** (proposed roles in §4) | |
-| Q8 | Domain | **Not bought yet.** It now blocks phases 2–4, not only launch (see §8) | |
+| Q8 | Domain | **fullcircle-co.com**, bought 20 Oct 2026, nameservers on Cloudflare, attached to the site from `main` (`wrangler.jsonc`) | |
 | Q9 | TBC content | **Settled 15 Oct 2026:** what was unknown was cut from the site (Mazen wants less text), the rest filled in. No TBC tag remains | |
 | Q10 | Analytics | Recommendation: **Umami Cloud**, free plan, EU region (§6) | |
 | Q11 | Privacy note | §7, as built. **Reviewed by the lawyer and confirmed** (Mazen, 15 Oct 2026) | |
@@ -125,8 +126,10 @@ Small, deliberate differences from the prototype:
 - *Checked on staging:* requests by email and by WhatsApp (with an opt-in) landed with their
   consent and log rows; the publishable key was refused on every table.
 
-**Left for phase 2 to be done:** a Resend account and key (until then nothing is emailed; every
-email is logged as skipped), then the domain verified at Resend so receipts reach brands; a real
+**Left for phase 2 to be done:** ~~a Resend account and key~~ (set in Supabase, 20 Oct) and
+~~the domain verified at Resend~~ (Mazen, 21 Oct): to confirm with one test request once
+`EMAIL_FROM` is `Full Circle <hello@fullcircle-co.com>` (the last test, before the domain was
+verified, was refused by Resend); a real
 Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
 requests and messages a year old that never became orders (`/privacy`).
 
@@ -345,13 +348,13 @@ Full Circle's legal name and use its commercial register and tax card.
 |---|---|---|
 | 0 | ✅ Repo, Astro, tests, CI | Done |
 | 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
-| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. The inboxes wait on a Resend key** |
+| 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; one test request confirms the inboxes** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
 | 4 | Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone |
 | 5 | Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 
-**The domain blocks phases 2–4.** Without it, email can only reach the person who owns the email
+**The domain blocked phases 2–4** (bought 20 Oct 2026). Without it, email can only reach the person who owns the email
 account (so no client codes and no alerts to the other staff), Meta's business verification needs a
 website on it, and Turnstile, the Supabase URLs and the analytics setup all ask for it. A `.com` can
 be bought at Cloudflare at cost. A `.eg`/`.com.eg` comes from a local registrar, and its
@@ -373,10 +376,11 @@ nameservers are then pointed at Cloudflare.
 ## 10. What I need from you
 
 **Before phase 2:**
-1. Buy the domain.
+1. ~~Buy the domain.~~ fullcircle-co.com, 20 Oct.
 2. ~~Brief the lawyer (§7).~~ Done 15 Oct.
-3. ~~Create the Supabase account~~ (done: staging is up; live comes at launch). Create a Resend
-   account and add its API key to the staging project's function secrets (`RESEND_API_KEY`).
+3. ~~Create the Supabase account~~ (done: staging is up; live comes at launch). ~~Create a Resend
+   account and add its API key~~ (done 20 Oct; domain verified at Resend 21 Oct). Left: set
+   `EMAIL_FROM` to `Full Circle <hello@fullcircle-co.com>` if it is not set yet.
 4. ~~Decide on the Arabic privacy page at launch (§7).~~ English as built; Arabic with the Arabic site.
 5. ~~Approve the small form additions (§7).~~ Approved 15 Oct and built.
 6. Confirm the staff roles (§4), and send the names and emails of the 4 staff.

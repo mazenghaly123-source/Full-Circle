@@ -83,7 +83,8 @@ Keep the site's words short; details are not needed for everything. Removed and 
 unless Mazen asks: fabrics/weights per category, bulk lead times, the techniques list, the "not in
 scope" list, the sample-price FAQ, stage times other than sampling's. No TBC tag is left on the
 site. The team section on About is hidden (`SHOW_TEAM` in `about.astro`) until there are names and
-portraits. Still to come: the domain, and the real photos (atelier-1..5, about-floor, team-1..4).
+portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the real photos
+(atelier-1..5, about-floor, team-1..4).
 
 ## Site code
 - **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at
