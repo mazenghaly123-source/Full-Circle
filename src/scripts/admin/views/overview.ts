@@ -15,7 +15,8 @@ const MAX_BLOCKS = 5;
 const DAY = 86_400_000;
 
 export async function overviewView(v: View) {
-  const [first, requests, messages] = await Promise.all([api.board(), api.requests(), api.messages()]);
+  // the inbox's list for what needs a reply; every request of the last 60 days for the figure
+  const [first, requests, messages, counted] = await Promise.all([api.board(), api.requests(), api.messages(), api.requestsSince(new Date(Date.now() - 60 * DAY).toISOString())]);
   let orders = first;
 
   function draw() {
@@ -27,7 +28,7 @@ export async function overviewView(v: View) {
     const withThem = open.filter((o) => flow.get(o.id) === 'client');
     const longest = withThem.flatMap((o) => o.order_decisions.filter((d) => d.status === 'open')).sort((a, b) => a.opened_at.localeCompare(b.opened_at))[0];
     const late = open.filter(isLate), pieces = open.reduce((n, o) => n + (o.qty ?? 0), 0);
-    const now = Date.now(), recent = requests.filter((r) => now - Date.parse(r.created_at) < 30 * DAY), before = requests.filter((r) => { const t = now - Date.parse(r.created_at); return t >= 30 * DAY && t < 60 * DAY; });
+    const now = Date.now(), recent = counted.filter((r) => now - Date.parse(r.created_at) < 30 * DAY), before = counted.filter((r) => { const t = now - Date.parse(r.created_at); return t >= 30 * DAY && t < 60 * DAY; });
     const converted = recent.filter((r) => r.orders.length).length;
     const nYou = inbox.length + orderNeeds.length;
 

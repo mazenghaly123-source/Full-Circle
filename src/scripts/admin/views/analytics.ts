@@ -15,14 +15,14 @@ const pct = (o: number, n: number) => n ? `${Math.round((o / n) * 100)}%` : '—
 const ceilNice = (n: number) => { const s = [2, 4, 6, 8, 10]; let p = 1; for (;;) { for (const k of s) if (k * p >= n) return k * p; p *= 10; } };
 
 /** Where a request came from: its ad source, else the site that sent it, else unknown. */
-function sourceOf(r: api.Request) {
+function sourceOf(r: api.Counted) {
   if (r.source.utm_source) return r.source.utm_source.toLowerCase();
   try { if (r.source.referrer) return new URL(r.source.referrer).hostname.replace(/^www\./, ''); } catch { /* not a URL */ }
   return 'Direct or unknown';
 }
 
 /** A table of groups: how many requests, how many became orders, the rate. */
-function groups(list: api.Request[], key: (r: api.Request) => string, top = 6) {
+function groups(list: api.Counted[], key: (r: api.Counted) => string, top = 6) {
   const m = new Map<string, { n: number; o: number }>();
   for (const r of list) { const k = key(r), g = m.get(k) ?? { n: 0, o: 0 }; g.n++; if (r.orders.length) g.o++; m.set(k, g); }
   const rows = [...m].sort((a, b) => b[1].n - a[1].n);
@@ -37,16 +37,18 @@ const table = (rows: [string, { n: number; o: number }][], what: string, total: 
   : `<div class="empty">No requests in the last ${WINDOW_DAYS} days.</div>`;
 
 export async function analyticsView(v: View) {
-  const [requests, messages, orders] = await Promise.all([api.requests(), api.messages(), api.orders()]);
+  // the last six months, this one included; every request from the first of them is read
+  const thisMonth = month(new Date().toISOString());
+  const yms = Array.from({ length: MONTHS }, (_, i) => { const d = new Date(`${thisMonth}-15T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() - (MONTHS - 1 - i)); return d.toISOString().slice(0, 7); });
+  // a day early, so the first hours of the month in Cairo (UTC+2 or +3) are in
+  const from = new Date(Date.parse(`${yms[0]}-01T00:00:00Z`) - DAY).toISOString();
+  const [requests, messages, orders] = await Promise.all([api.requestsSince(from), api.messages(), api.orders()]);
   const now = Date.now(), within = (iso: string, from: number, to = 0) => { const t = now - Date.parse(iso); return t >= to * DAY && t < from * DAY; };
   const r30 = requests.filter((r) => within(r.created_at, 30)), r60 = requests.filter((r) => within(r.created_at, 60, 30));
   const r90 = requests.filter((r) => within(r.created_at, WINDOW_DAYS)), o90 = r90.filter((r) => r.orders.length).length;
   const opened30 = orders.filter((o) => within(o.created_at, 30)).length, m30 = messages.filter((m) => within(m.created_at, 30)).length;
 
-  // the last six months, this one included
-  const thisMonth = month(new Date().toISOString());
-  const months = Array.from({ length: MONTHS }, (_, i) => { const d = new Date(`${thisMonth}-15T12:00:00Z`); d.setUTCMonth(d.getUTCMonth() - (MONTHS - 1 - i)); return d.toISOString().slice(0, 7); })
-    .map((ym) => { const list = requests.filter((r) => month(r.created_at) === ym); return { ym, n: list.length, o: list.filter((r) => r.orders.length).length }; });
+  const months = yms.map((ym) => { const list = requests.filter((r) => month(r.created_at) === ym); return { ym, n: list.length, o: list.filter((r) => r.orders.length).length }; });
   const top = ceilNice(Math.max(4, ...months.map((m) => m.n)));
 
   const kpis = [
