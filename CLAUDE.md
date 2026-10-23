@@ -1,5 +1,7 @@
 # Full Circle
 
+Starting a new session? Read docs/HANDOFF.md first.
+
 See [AGENTS.md](./AGENTS.md) for this repository's agent instructions, including the
 `## Agent skills` configuration (issue tracker, triage labels, and domain docs).
 
