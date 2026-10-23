@@ -1,35 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
-import { getImage } from 'astro:assets';
-import { PHOTOS, PHOTO_FOCUS } from '../data/photos';
 import { STAGES, ring } from '../data/site';
+import { NOTICE } from '../../supabase/functions/_shared/forms';
 
 // order ring: stage labels just outside the ring
 const oLabels = STAGES.map((g, i) => {
   const [x, y] = ring(200, 200, 182, i / 8 + 1 / 16);
   return { x, y, t: g.s };
 });
-
-// The order view builds its stage photos in the browser, so it gets their URLs from here.
-const STAGE_SIZES = '(max-width: 860px) 31vw, 190px';
-const stagePhotos: Record<string, { avif: string; webp: string; src: string; focus?: string }> = {};
-for (const [slot, img] of Object.entries(PHOTOS)) {
-  if (!slot.startsWith('stage-')) continue;
-  // never wider than the original (as photoWidths does), and never an empty srcset
-  const max = Math.min(img.width, 480);
-  const widths = [...[240, 360].filter((w) => w < max), max];
-  const [avif, webp, jpg] = await Promise.all([
-    getImage({ src: img, widths, format: 'avif' }),
-    getImage({ src: img, widths, format: 'webp' }),
-    getImage({ src: img, width: max, format: 'jpg' }),
-  ]);
-  stagePhotos[slot] = { avif: avif.srcSet.attribute, webp: webp.srcSet.attribute, src: jpg.src, focus: PHOTO_FOCUS[slot] };
-}
 ---
 <Base page="track" title="Track order / Full Circle" description="Sign in with the email or WhatsApp number on your order to see every order, its stage, the next decision, photos and the full approval log.">
 <PageHero crumb="Track order" title="Track your order." lead="Sign in with the email or WhatsApp number on your order. You will see every order, its stage, the next decision, photos and the full approval log." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" titleId="tTitle" leadId="tLead" />
-<section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)" data-stage-photos={JSON.stringify(stagePhotos)} data-stage-sizes={STAGE_SIZES} id="tSection">
+<section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)" id="tSection">
   <!-- login -->
   <div id="tLogin">
     <div class="login">
@@ -47,13 +30,14 @@ for (const [slot, img] of Object.entries(PHOTOS)) {
         <button class="btn" id="tBack" style="padding:6px 0;justify-self:start;text-decoration:underline;text-underline-offset:4px">Use a different email or number</button>
       </div>
       <span class="mono errline" id="tErr" role="alert"></span>
-      <p class="demo-note" style="margin:0">Demo: type anything, then any 6 digits. Or <button class="btn" id="tDemo" style="padding:0;text-decoration:underline;text-underline-offset:4px;font-size:13px">open the demo account</button>.</p>
+      <div class="ts" id="tTs"></div>
     </div>
   </div>
   <!-- orders -->
   <div id="tOrders" hidden>
-    <div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:20px"><span class="mono dim">Signed in / Demo Studio</span><button class="btn btn-line" id="tOut">Sign out</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:20px"><span class="mono dim" id="tWho">Signed in</span><button class="btn btn-line" id="tOut">Sign out</button></div>
     <div class="orders" id="tList"></div>
+    <div class="wa-opt" id="tUpd" hidden><label class="check"><input type="checkbox" id="tUpdates"><span>{NOTICE.whatsappUpdates}</span></label></div>
   </div>
   <!-- order -->
   <div id="tOrder" hidden>

@@ -3,7 +3,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
-import { PAGES, isPhone, mockBackend, postedData, watchErrors } from './helpers';
+import { PAGES, isPhone, mockBackend, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
 
 // Software WebGL in headless Chromium needs seconds to draw the 3D hero mark and blocks the page
@@ -373,25 +373,71 @@ test('request a sample: picks and typing survive a trip to another page', async 
   await expect(page.locator('#fBrand')).toHaveValue('Acme Studio');
 });
 
-test('track: demo sign-in, order view and approval', async ({ page }) => {
+test('track: sign-in by code, order view and approval', async ({ page }) => {
+  const { calls } = await mockPortal(page);
   await page.goto('/track');
   await page.locator('#tSendCode').click();
   await expect(page.locator('#tErr')).toHaveText('Add the email or WhatsApp number on your order');
-  await page.locator('#tId').fill('demo@brand.test');
+  await page.locator('#tId').fill('Laila@Demo.test');
   await page.locator('#tSendCode').click();
   await expect(page.locator('#tLoginH')).toHaveText('Enter the code');
+  // the code goes to existing people only, and the page does not say whether the email is known
+  expect(calls.find((c) => c.fn === 'auth/otp')!.body).toMatchObject({ email: 'laila@demo.test', create_user: false });
+  await page.locator('#tCode').fill('12345');
+  await page.locator('#tVerify').click();
+  await expect(page.locator('#tErr')).toHaveText('Enter the 6 digits from the message');
+  await page.locator('#tCode').fill('000000');
+  await page.locator('#tVerify').click();
+  await expect(page.locator('#tErr')).toHaveText('That code is wrong or has expired. Check it, or send a new one');
   await page.locator('#tCode').fill('123456');
   await page.locator('#tVerify').click();
   await expect(page.locator('#tOrders')).toBeVisible();
+  await expect(page.locator('#tWho')).toHaveText('Signed in / Demo Studio');
   await expect(page.locator('#tList .ord')).toHaveCount(3);
+  await expect(page.locator('#tList .ord').first()).toContainText('Approve sample 03');
   await page.locator('#tList .ord').first().click();
   await expect(page.locator('#tTitle')).toHaveText('FC-2418.');
   await expect(page.locator('#oPhotos .ph')).toHaveCount(3);
+  await expect(page.locator('#oPhotos img.ok')).toHaveCount(3);
   await page.locator('#oApprove').click();
-  await expect(page.locator('#oNum')).toHaveText('06');
   await expect(page.locator('#oDecision')).toHaveClass(/done/);
+  expect(calls.find((c) => c.fn === 'approve_decision')!.body).toEqual({ p_decision: 11 });
+  await expect(page.locator('#oDecT')).toHaveText('Approved');
+  // approving does not move the stage: staff do (docs/adr/0005)
+  await expect(page.locator('#oNum')).toHaveText('05');
   await page.locator('.tabs2 [data-tab="log"]').click();
   await expect(page.locator('#oLog tr').first()).toContainText('Approve sample 03 / approved');
+  await expect(page.locator('#oLog tr').first()).toContainText('You');
+  await page.locator('#tAll').click();
+  await expect(page.locator('#tList .ord').first()).toContainText('Approved / waiting on us');
+});
+
+test('track: a session is kept, order updates on WhatsApp can be turned on, and sign-out ends it', async ({ page }) => {
+  const { calls } = await mockPortal(page);
+  await page.goto('/track');
+  await signInPortal(page);
+  await page.reload();
+  await expect(page.locator('#tList .ord')).toHaveCount(3);
+  await page.locator('#tUpdates').check();
+  await expect.poll(() => calls.find((c) => c.fn === 'set_updates_consent')?.body).toEqual({ p_channel: 'whatsapp', p_opted_in: true, p_wording: NOTICE.whatsappUpdates, p_version: NOTICE.version });
+  await page.locator('#tOut').click();
+  await expect(page.locator('#tLogin')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#tLogin')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.length)).toBe(0);
+});
+
+test('track: a WhatsApp number asks for its code on WhatsApp, and says so when that is not switched on', async ({ page }) => {
+  const { calls } = await mockPortal(page);
+  await page.route(/\/auth\/v1\/otp$/, (route) => route.fulfill({ status: 400, json: { code: 400, error_code: 'phone_provider_disabled', msg: 'Unsupported phone provider' } }));
+  await page.goto('/track');
+  await page.locator('#tId').fill('0101 143 5406');
+  await page.locator('#tSendCode').click();
+  await expect(page.locator('#tErr')).toHaveText('Codes on WhatsApp are not switched on yet. Use the email on your order');
+  await page.locator('#tId').fill('5406');
+  await page.locator('#tSendCode').click();
+  await expect(page.locator('#tErr')).toHaveText('Add the email or WhatsApp number on your order');
+  expect(calls.filter((c) => c.fn === 'auth/otp')).toHaveLength(0);
 });
 
 test('contact: copy, and the form checks before sending', async ({ page }) => {
@@ -503,17 +549,20 @@ test('request and track: errors and a pending photo survive a trip to another pa
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('#err')).toHaveText('Pick the brand stage and a product');
 
+  await mockPortal(page);
   await page.goto('/track');
-  await page.locator('#tDemo').click();
+  await signInPortal(page);
   await page.locator('#tList .ord').first().click();
   await page.locator('#oPhoto').click();
+  await expect(page.locator('#oPhoto')).toBeDisabled();
   await openNav(page, '/about', isPhone(info));
   await page.waitForURL('**/about');
-  await page.waitForTimeout(2600);
   await page.goBack();
   await page.waitForURL('**/track');
-  await expect(page.locator('#oPhotos .ph')).toHaveCount(4);
-  await expect(page.locator('#oPhoto')).toBeEnabled();
+  // still on the order, and the photo is still on its way (staff answer it from the admin)
+  await expect(page.locator('#tTitle')).toHaveText('FC-2418.');
+  await expect(page.locator('#oPhoto')).toBeDisabled();
+  await expect(page.locator('#oLog tr').first()).toContainText('Photo requested / Sampling');
 });
 
 test('links back to the page you are on: from an anchor, and on Home, go to the top', async ({ page }, info) => {
@@ -649,12 +698,18 @@ test.describe('accessibility', () => {
   });
 
   test('track: focus follows the view, and the tabs work with arrow keys', async ({ page }) => {
+    await mockPortal(page);
     await page.goto('/track');
     await page.locator('#tSendCode').click();
     await expect(page.locator('#tId')).toBeFocused();
     await expect(page.locator('#tId')).toHaveAttribute('aria-invalid', 'true');
-    await page.locator('#tDemo').click();
+    await page.locator('#tId').fill('laila@demo.test');
+    await page.locator('#tSendCode').click();
+    await expect(page.locator('#tCode')).toBeFocused();
+    await page.locator('#tCode').fill('123456');
+    await page.keyboard.press('Enter');
     await expect(page.locator('#tTitle')).toBeFocused();
+    await page.locator('#tList .ord').first().waitFor();
     await page.locator('#tList .ord').first().click();
     await expect(page.locator('#tTitle')).toBeFocused();
     await page.locator('#oApprove').click();
@@ -721,11 +776,16 @@ test.describe('approved changes', () => {
   });
 
   test('track: the decision label carries the red dot only while a decision is waiting', async ({ page }) => {
+    await mockPortal(page);
     await page.goto('/track');
-    await page.locator('#tDemo').click();
+    await signInPortal(page);
     await page.locator('#tList .ord').first().click();
     await expect(page.locator('#oDecT')).toHaveClass(/\bneed\b/);
     await page.locator('#oApprove').click();
+    await expect(page.locator('#oDecT')).toHaveText('Approved');
+    await expect(page.locator('#oDecT')).not.toHaveClass(/\bneed\b/);
+    await page.locator('#tAll').click();
+    await page.locator('#tList .ord').nth(1).click();
     await expect(page.locator('#oDecT')).toHaveText('Next decision');
     await expect(page.locator('#oDecT')).not.toHaveClass(/\bneed\b/);
   });

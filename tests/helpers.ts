@@ -132,7 +132,9 @@ export async function approvePrototype(page: Page) {
       byText('.make-foot span', 'Minimums per category').textContent = 'Minimums per category';
       byText('span.mono', '01 / Within one working day').textContent = '01 / We reply quickly';
       byText('b', 'Sunday – Thursday').textContent = 'Sunday – Thursday / 9:00 – 17:00';
-      document.getElementById('faqList')!.innerHTML = faq.map(([q, a], i) => `<details><summary><span class="mono dim">${String(i + 1).padStart(2, '0')}</span><h3>${q}</h3><span class="plus"></span></summary><p class="ans">${a}</p></details>`).join('');
+      // phase 3 (20 Oct 2026): the real portal replaces Track's demo, and its note goes
+      document.querySelector('#tLogin .demo-note')!.remove();
+      document.getElementById('faqList')!.innerHTML =faq.map(([q, a], i) => `<details><summary><span class="mono dim">${String(i + 1).padStart(2, '0')}</span><h3>${q}</h3><span class="plus"></span></summary><p class="ans">${a}</p></details>`).join('');
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ] as const);
 }
@@ -194,3 +196,107 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
 
 /** The JSON a mocked form function received. */
 export const postedData = (s: Sent): Record<string, unknown> => JSON.parse(s.body?.toString('utf8') ?? '');
+
+/** An order as the portal reads it from the database (src/scripts/core/portal.ts). */
+type PortalOrder = Record<string, any> & { id: number; code: string; stage: number; order_decisions: any[]; order_events: any[]; stage_photos: any[]; photo_requests: any[] };
+
+/** The prototype's three demo orders, as the database would hold them. */
+function portalOrders(): PortalOrder[] {
+  let ev = 100;
+  const log = (order: number, rows: [string, string, number?][]) => rows.map(([kind, title, stage]) =>
+    ({ id: ++ev, kind, side: kind === 'approved' || kind === 'changes_asked' ? 'client' : 'staff', actor_id: 'me', actor_label: 'Laila', stage: stage ?? null, to_stage: null, decision_id: null, title, note: null, created_at: `2026-10-${String(ev - 99).padStart(2, '0')}T10:00:00Z`, order }));
+  const decision = (id: number, stage: number, title: string, body: string) => ({ id, stage, title, body, status: 'open', opened_at: '2026-10-14T09:00:00Z', closed_at: null });
+  return [
+    { id: 1, code: 'FC-2418', name: 'Overshirt', product: 'Shirts', summary: 'Sample 03 / denim 12 oz / 300 pcs', qty: 300, stage: 5, status: 'active', created_at: '2026-10-03T09:00:00Z',
+      order_specs: [['Fabric', 'Denim 12 oz, rinse'], ['Sizes', 'S / M / L / XL'], ['Chest (M)', '56.0 cm'], ['Body length (M)', '74.0 cm']].map(([key, value], position) => ({ key, value, position })),
+      order_decisions: [decision(11, 5, 'Approve sample 03', 'Fit and fabric are revised from your notes on sample 02. Once you approve, this sample becomes the reference for bulk cutting.')],
+      stage_photos: [3, 4, 5].map((stage, k) => ({ id: 21 + k, stage, object_path: `1/stage-${stage}.jpg`, caption: null, created_at: `2026-10-1${k}T09:00:00Z` })),
+      order_events: log(1, [['approved', 'Brief'], ['approved', 'Tech pack'], ['approved', 'Fabric / denim 12 oz'], ['approved', 'Pattern'], ['changes_asked', 'Sample 02'], ['decision_opened', 'Approve sample 03', 5]]),
+      photo_requests: [] },
+    { id: 2, code: 'FC-2431', name: 'Heavy hoodie', product: 'Hoodies', summary: 'Fleece 400 gsm / 500 pcs', qty: 500, stage: 6, status: 'active', created_at: '2026-10-02T09:00:00Z',
+      order_specs: [{ key: 'Fabric', value: 'Fleece 400 gsm, loopback', position: 0 }], order_decisions: [], stage_photos: [],
+      order_events: log(2, [['approved', 'Brief'], ['approved', 'Sample 02']]), photo_requests: [] },
+    { id: 3, code: 'FC-2455', name: 'Boxy tee', product: 'Tees', summary: 'Jersey 240 gsm / 400 pcs', qty: 400, stage: 3, status: 'active', created_at: '2026-10-01T09:00:00Z',
+      order_specs: [{ key: 'Fabric', value: 'Jersey 240 gsm, 3 options', position: 0 }],
+      order_decisions: [decision(31, 3, 'Choose the fabric', 'Three jersey swatches were sent on Monday. Pick one so we can cut the first pattern.')], stage_photos: [],
+      order_events: log(3, [['approved', 'Brief'], ['decision_opened', 'Choose the fabric', 3]]), photo_requests: [] },
+  ];
+}
+
+const SUPABASE = 'https://kmsrzeqxgufrodefclty\\.supabase\\.co';
+const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+
+/**
+ * Stands in for Supabase on the portal: sign-in codes (123456 is right, anything else wrong), the
+ * client's three orders, signed photo links and the client's actions, which change the orders as
+ * the database functions would (approving closes the decision and logs it; the stage stays).
+ * Returns the calls made, as { fn, body }.
+ */
+export async function mockPortal(page: Page) {
+  const calls: { fn: string; body: any }[] = [];
+  const orders = portalOrders();
+  let updates = false, next = 500;
+  const now = () => new Date().toISOString();
+  const logRow = (o: PortalOrder, kind: string, extra: object) => o.order_events.push({ id: ++next, kind, side: 'client', actor_id: 'me', actor_label: 'Laila', stage: o.stage, to_stage: null, decision_id: null, title: null, note: null, created_at: now(), ...extra });
+  const rpcs: Record<string, (b: any) => { status: number; json?: object }> = {
+    my_updates_consent: () => ({ status: 200, json: updates ? [{ channel: 'whatsapp', opted_in: true }] : [] }),
+    set_updates_consent: (b) => { updates = b.p_opted_in; return { status: 200 }; },
+    approve_decision: (b) => {
+      const o = orders.find((x) => x.order_decisions.some((d) => d.id === b.p_decision))!, d = o.order_decisions.find((x) => x.id === b.p_decision);
+      if (d.status !== 'open') return { status: 400, json: { code: '55000', message: 'This decision is already closed' } };
+      Object.assign(d, { status: 'approved', closed_at: now() }); logRow(o, 'approved', { decision_id: d.id, title: d.title, stage: d.stage });
+      return { status: 200 };
+    },
+    request_changes: (b) => {
+      const o = orders.find((x) => x.order_decisions.some((d) => d.id === b.p_decision))!, d = o.order_decisions.find((x) => x.id === b.p_decision);
+      Object.assign(d, { status: 'changes_asked', closed_at: now() }); logRow(o, 'changes_asked', { decision_id: d.id, title: d.title, stage: d.stage });
+      return { status: 200 };
+    },
+    request_photo: (b) => {
+      const o = orders.find((x) => x.id === b.p_order)!;
+      if (o.photo_requests.some((r) => r.stage === o.stage && !r.answered_at)) return { status: 400, json: { code: '55000', message: 'A photo of this stage is already on its way' } };
+      o.photo_requests.push({ stage: o.stage, answered_at: null }); logRow(o, 'photo_asked', {});
+      return { status: 200 };
+    },
+  };
+  await page.route(new RegExp(`^${SUPABASE}/auth/v1/`), async (route) => {
+    const req = route.request(), fn = new URL(req.url()).pathname.split('/').pop()!, body = req.postDataJSON?.() ?? null;
+    calls.push({ fn: `auth/${fn}`, body });
+    if (fn === 'verify') {
+      return body.token === '123456'
+        ? route.fulfill({ json: { access_token: 'token', refresh_token: 'refresh', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: 'me' } } })
+        : route.fulfill({ status: 403, json: { code: 403, error_code: 'otp_expired', msg: 'Token has expired or is invalid' } });
+    }
+    return route.fulfill({ status: fn === 'logout' ? 204 : 200, json: {} });
+  });
+  await page.route(new RegExp(`^${SUPABASE}/rest/v1/`), async (route) => {
+    const req = route.request(), path = new URL(req.url()).pathname.replace('/rest/v1/', '');
+    if (path.startsWith('rpc/')) {
+      const fn = path.slice(4), body = req.postDataJSON?.() ?? {};
+      calls.push({ fn, body });
+      const a = rpcs[fn]?.(body) ?? { status: 404 };
+      return route.fulfill({ status: a.status, json: a.json ?? null });
+    }
+    calls.push({ fn: path, body: null });
+    if (path === 'clients') return route.fulfill({ json: [{ brand: 'Demo Studio' }] });
+    if (path === 'client_members') return route.fulfill({ json: [{ whatsapp: '+201011435406' }] });
+    if (path === 'orders') return route.fulfill({ json: JSON.parse(JSON.stringify(orders)) });
+    return route.fulfill({ status: 404, json: {} });
+  });
+  await page.route(new RegExp(`^${SUPABASE}/storage/v1/object/sign/`), async (route) => {
+    const req = route.request();
+    if (req.method() === 'GET') return route.fulfill({ contentType: 'image/png', body: PIXEL });
+    const { paths } = req.postDataJSON();
+    return route.fulfill({ json: paths.map((p: string) => ({ path: p, signedURL: `/object/sign/stage-photos/${p}?token=t`, error: null })) });
+  });
+  return { calls, orders };
+}
+
+/** Signs in to the mocked portal (mockPortal) with the right code. */
+export async function signInPortal(page: Page, id = 'laila@demo.test') {
+  await page.locator('#tId').fill(id);
+  await page.locator('#tSendCode').click();
+  await page.locator('#tCode').fill('123456');
+  await page.locator('#tVerify').click();
+  await page.locator('#tList .ord').first().waitFor();
+}

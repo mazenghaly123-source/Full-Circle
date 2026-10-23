@@ -18,5 +18,8 @@
   ],
   // set to false once fullcircle-co.com is confirmed live, so the workers.dev copy is not indexed
   "workers_dev": true,
-  "preview_urls": true
+  "preview_urls": true,
+  // `wrangler preview` (Cloudflare's preview builds) refuses to run without this block; it can stay
+  // empty, as the settings above apply to previews too
+  "previews": {}
 }

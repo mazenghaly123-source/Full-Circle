@@ -63,14 +63,19 @@ save to the database and email the team. Until launch there is one project, **fu
 2. Deploy both functions with their JWT check off (they check Turnstile instead), and set the four
    secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
 3. In Cloudflare, create a Turnstile widget for the domain (Invisible mode) and set the production
-   build's variables `PUBLIC_SUPABASE_URL` (the live project's URL) and `PUBLIC_TURNSTILE_SITE_KEY`
-   (the widget's site key). Previews keep sending to staging.
+   build's variables `PUBLIC_SUPABASE_URL` (the live project's URL), `PUBLIC_SUPABASE_KEY` (its
+   publishable key, for the portal's sign-in) and `PUBLIC_TURNSTILE_SITE_KEY` (the widget's site key).
+   Previews keep using staging.
+4. Set up the portal's sign-in on the live project as on staging (production plan §10): no sign-ups,
+   the code in the Magic Link email, a 10-minute expiry, Resend as the SMTP sender, and Turnstile
+   under Attack Protection.
 
 With the Supabase CLI (`npx supabase@2.121.0`, signed in): `link --project-ref <ref>`, then
 `db push` for the migrations and `functions deploy submit-request submit-contact --no-verify-jwt`.
 
 **On your computer** (needs Docker): `npx supabase@2.121.0 start` runs the whole backend locally and
-`npx supabase@2.121.0 test db` runs the database access tests. The end-to-end function tests need a
+`npx supabase@2.121.0 test db` runs the database access tests. Without Docker,
+`scripts/test-db-local.sh` runs the same tests on a plain PostgreSQL with pgTAP. The end-to-end function tests need a
 `supabase/functions/.env` that points the functions at the stand-ins the tests start; the CI
 *backend* job (`.github/workflows/ci.yml`) shows the four lines.
 
