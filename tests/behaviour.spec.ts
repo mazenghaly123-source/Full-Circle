@@ -811,6 +811,39 @@ test.describe('approved changes', () => {
     await page.goto('/what-we-make');
     await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', 'Raw and washed denim jeans laid on a workshop table');
   });
+
+  test('search engines and shares: the address on the domain, the share card, the business, the sitemap', async ({ page, request }) => {
+    await page.goto('/about');
+    const head = (sel: string, attr = 'content') => page.locator(`head ${sel}`).getAttribute(attr);
+    expect(await head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/about');
+    expect(await head('meta[property="og:url"]')).toBe('https://fullcircle-co.com/about');
+    expect(await head('meta[property="og:title"]')).toBe(await page.title());
+    expect(await head('meta[property="og:description"]')).toBe(await head('meta[name=description]'));
+    expect(await head('meta[property="og:image"]')).toBe('https://fullcircle-co.com/og.jpg');
+    expect((await request.get('/og.jpg')).headers()['content-type']).toBe('image/jpeg');
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    // the business, on Home
+    await page.goto('/');
+    const org = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(org).toMatchObject({ '@type': 'Organization', name: 'Full Circle', url: 'https://fullcircle-co.com/', telephone: '+20226987277', address: { addressLocality: 'Cairo', addressCountry: 'EG' } });
+    expect(await head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/');
+    // moving to another page without a reload swaps them too
+    await clickStill(page.locator('footer a[href="/about"]').first());
+    await page.waitForURL('**/about');
+    await expect.poll(() => head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/about');
+    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    // a missing page is not indexed
+    await page.goto('/no-such-page');
+    expect(await head('meta[name=robots]')).toBe('noindex');
+    await expect(page.locator('head link[rel=canonical]')).toHaveCount(0);
+    // every page in the menu is in the sitemap; the admin is kept out of search
+    const sitemap = await (await request.get('/sitemap.xml')).text();
+    for (const p of ['/', '/how-it-works', '/what-we-make', '/about', '/request-a-sample', '/track', '/contact', '/privacy']) expect(sitemap).toContain(`<loc>https://fullcircle-co.com${p}</loc>`);
+    expect(sitemap).not.toContain('admin');
+    const robots = await (await request.get('/robots.txt')).text();
+    expect(robots).toContain('Disallow: /admin');
+    expect(robots).toContain('Sitemap: https://fullcircle-co.com/sitemap.xml');
+  });
 });
 
 test.describe('the forms send to the backend', () => {

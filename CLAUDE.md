@@ -106,6 +106,9 @@ portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the
   registered by slot in `src/data/photos.ts`. The request form's questions, the form rules and the
   words shown with the forms live in `supabase/functions/_shared/forms.ts`, which the site and the
   Edge Functions both import (site.ts re-exports the questions).
+- `Base.astro` writes each page's canonical address, share tags and (Home only) the business as
+  structured data; the share card is `public/og.jpg`, rendered by `scripts/og-image.mjs`. `sitemap.xml`
+  and `robots.txt` are endpoints in `src/pages/`.
 - No test reaches the real backend: `mockBackend` (`tests/helpers.ts`) stands in for Turnstile and
   the form functions in the browser suites.
 - three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Its mesh

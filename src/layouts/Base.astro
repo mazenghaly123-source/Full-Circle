@@ -4,7 +4,7 @@ import { Font } from 'astro:assets';
 import Sprite from '../components/Sprite.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { WHATSAPP_URL, type PageKey } from '../data/site';
+import { EMAIL, INSTAGRAM_URL, PHONE, WHATSAPP, WHATSAPP_URL, type PageKey } from '../data/site';
 import '../styles/global.css';
 
 interface Props {
@@ -14,6 +14,18 @@ interface Props {
 }
 
 const { page, title, description } = Astro.props;
+// the page's address on the domain, as the site links to it (/about, not /about.html)
+const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/'), Astro.site).href;
+const image = new URL('/og.jpg', Astro.site).href;
+const tel = (n: string) => n.replace(/\s/g, '');
+// who Full Circle is, for search engines: on Home only, where the business is the page's subject
+const business = page === 'home' && {
+  '@context': 'https://schema.org', '@type': 'Organization', name: 'Full Circle', url: new URL('/', Astro.site).href,
+  logo: new URL('/favicon.svg', Astro.site).href, image, description, email: EMAIL, telephone: tel(PHONE),
+  address: { '@type': 'PostalAddress', streetAddress: 'Gisr El Suez', addressLocality: 'Cairo', addressCountry: 'EG' },
+  contactPoint: [{ '@type': 'ContactPoint', contactType: 'sales', telephone: tel(WHATSAPP), email: EMAIL }],
+  sameAs: [INSTAGRAM_URL],
+};
 ---
 <!doctype html>
 <html lang="en">
@@ -22,6 +34,18 @@ const { page, title, description } = Astro.props;
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content={description}>
+{page === 'notfound' ? <meta name="robots" content="noindex"> : <link rel="canonical" href={canonical}>}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Full Circle">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+{page !== 'notfound' && <meta property="og:url" content={canonical}>}
+<meta property="og:image" content={image}>
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Full Circle: Idea to product. Full circle. Development and manufacturing in Cairo, Egypt.">
+<meta name="twitter:card" content="summary_large_image">
+{business && <script type="application/ld+json" set:html={JSON.stringify(business)} />}
 <meta name="theme-color" content="#11110F">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style is:inline>[hidden]{display:none!important}body{margin:0}</style>
