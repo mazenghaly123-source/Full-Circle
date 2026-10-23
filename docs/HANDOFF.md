@@ -14,12 +14,13 @@ from a cloud session, it says so.
 | `claude/phase-3-portal` | Phase 3: clients, orders, the real portal on `/track` | PR #8 → `main`, open |
 | `claude/phase-4-admin` | Phase 3 + phase 4 admin (`/admin`), the `invite` and `notify` functions | PR #9 → `main`, open |
 | `claude/phase-5-seo` | Phase 4 admin + phase 5 search and sharing (canonical URLs, `og.jpg`, sitemap, robots, structured data, HSTS) | PR #10 → `claude/phase-4-admin`, open |
-| **`claude/phase-4-whatsapp`** | **Newest. Holds all of the above** + WhatsApp from the system number (`send-sms`, `whatsapp-webhook`) + this handoff | PR #11 → `claude/phase-5-seo`, open |
+| `claude/phase-4-whatsapp` | All of the above + WhatsApp from the system number (`send-sms`, `whatsapp-webhook`) | PR #11 → `claude/phase-5-seo`, open |
+| **`claude/tender-rubin-ahjc3t`** | **Newest. Holds all of the above** + the redesign of Home (23 Oct, see *In progress*) + this handoff | Pushed, no PR yet |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
 | `claude/phase-2-requests`, `claude/intelligent-fermi-ddqnas`, `claude/audit-code-cleanup`, `claude/bold-mccarthy-t9fppt`, `claude/trusting-albattani-5sxko8` | Already fully in `main` | Safe to delete |
 
 The branches are stacked: each one contains the one above it. `claude/phase-4-whatsapp` holds all of
-`main` (0 behind). **Merge order: #8 → #9 → #10 → #11.** After each merge, point
+`main` (0 behind), and the redesign branch sits on top of it. **Merge order: #8 → #9 → #10 → #11.** After each merge, point
 the next PR's base at `main`. Merging #11's branch alone gives the same result. Before merging, read
 the gotcha *Merging to main changes the live site*.
 
@@ -98,9 +99,25 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 Done on 23 Oct: the WhatsApp-era functions are on staging, the Cloudflare preview build is fixed,
 and `EMAIL_FROM` is set with the staff alert confirmed.
 
-1. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
+1. **The redesign** (Mazen, 23 Oct), to set the site apart from a competitor, factory21.co, whose
+   Home looks like ours. On `claude/tender-rubin-ahjc3t`:
+   - Done on Home: Microgramma D Extended (the logo's face, `src/assets/fonts/`) for the hero and
+     section headlines only; rounded corners on every box, button, field and option site-wide
+     (`--r-s/m/l` in the *approved changes* block); far fewer words; the facts, the two paths, the
+     8 stages, the sample check and the portal shown with line icons (`src/data/icons.ts`,
+     `Icon.astro`). The atelier section on Home is hidden (`SHOW_ATELIER`) until the real photos come.
+   - The parity, behaviour, CSS, admin and unit suites all pass. `approvePrototype` loads Microgramma
+     into the prototype and mirrors Home's new markup, so **a Home text change must be mirrored
+     there too**.
+   - Next: the same treatment for the inner pages, **as a mock for Mazen first**.
+   - Line figures (the Hairline skill, hairline.lucasmarkes.com): at most one per page, factory
+     subjects only, the 3D mark stays the hero, and on phones they work by touch (drag sideways,
+     the pose holds after the finger lifts). A test figure, a shirt that opens into its six pattern
+     pieces, is waiting for Mazen's verdict: https://claude.ai/artifact/3uMMhCdonw82iRABVTGVS3. Nothing
+     of it is in the repo yet.
+2. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
    been tried. It needs the Auth settings below, so that staff and a test client can get codes.
-2. **The email receipt to a brand** has not been tried: both 23 Oct tests gave a WhatsApp number.
+3. **The email receipt to a brand** has not been tried: both 23 Oct tests gave a WhatsApp number.
    One request with an email as the contact covers it.
 
 ## Waiting on Mazen
@@ -114,7 +131,9 @@ Decisions:
   4. A decision can be opened without photos.
   5. When a person is removed, the log keeps their name.
 - **Staff roles** (owner / staff, §4) and the **names and emails of the 4 staff**.
-- **When to merge phases 3–5 to `main`.** See the gotcha below.
+- **When to merge phases 3–5 to `main`.** See the gotcha below. The redesign branch sits on top of
+  them, so it goes in after them, or with them.
+- The **line figure test** (keep the shirt figure, change it, or drop figures).
 - Keep or drop the Cloudflare plugin commit on `claude/keen-gates-vu1na0`, and whether to disconnect
   Vercel.
 
@@ -181,7 +200,9 @@ Dashboard and account tasks:
 
 ## Next 3 steps
 
-1. **Supabase Auth settings and Vercel** (Mazen, in the dashboards; see *Waiting on Mazen*).
+1. **The redesign of the inner pages:** a mock for Mazen first, then the build, with the line figure
+   if he keeps it. Meanwhile, the Supabase Auth settings and Vercel (Mazen, in the dashboards; see
+   *Waiting on Mazen*).
 2. **Prove phases 2–4 on staging.** Once the Auth settings are done: send a test request with an
    email, convert it to an order in `/admin`, sign in to `/track` as the client, and take the order
    through all 8 stages from a phone.

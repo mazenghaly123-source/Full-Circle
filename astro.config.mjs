@@ -44,5 +44,7 @@ export default defineConfig({
     { provider: fontProviders.local(), name: 'Saira Condensed', cssVariable: '--font-saira-condensed', fallbacks: ['Arial Narrow', 'sans-serif'], options: fontsource('@fontsource/saira-condensed', [600, 700], SUBSETS) },
     { provider: fontProviders.local(), name: 'Geist', cssVariable: '--font-geist', fallbacks: ['system-ui', 'sans-serif'], options: fontsource('@fontsource/geist', [400, 500, 600], SUBSETS) },
     { provider: fontProviders.local(), name: 'IBM Plex Mono', cssVariable: '--font-plex-mono', fallbacks: ['ui-monospace', 'monospace'], options: fontsource('@fontsource/ibm-plex-mono', [400, 500], SUBSETS) },
+    // the logo's own face, for headlines (Mazen, 23 Oct 2026); the web licence is Mazen's to buy
+    { provider: fontProviders.local(), name: 'Microgramma D Extended', cssVariable: '--font-microgramma', fallbacks: ['Arial Black', 'sans-serif'], options: { variants: [{ src: ['./src/assets/fonts/microgramma-d-extended-bold.woff2'], weight: 700, style: 'normal' }] } },
   ],
 });

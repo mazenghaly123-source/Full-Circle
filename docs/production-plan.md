@@ -44,6 +44,10 @@ attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2,
   requests went out through Resend.
 - *Not tried yet:* the email receipt to a brand (both tests gave a WhatsApp number), and the phase 4
   test (an order through all 8 stages from a phone), which waits on the Auth settings in §10.
+- *Redesign, on `claude/tender-rubin-ahjc3t` (23 Oct):* to set the site apart from factory21.co,
+  Home has Microgramma headlines, far fewer words, and line icons for its facts, paths, stages and
+  checks; every box, button and field site-wide has rounded corners. The inner pages come next, as a
+  mock for Mazen first. A test line figure (Hairline) waits for his verdict.
 
 **Phase 1 is done** (on `main`, live):
 

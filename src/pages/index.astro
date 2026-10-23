@@ -3,6 +3,8 @@ import Base from '../layouts/Base.astro';
 import Photo from '../components/Photo.astro';
 import BgImg from '../components/BgImg.astro';
 import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+import { STAGE_ICONS } from '../data/icons';
 import { FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring } from '../data/site';
 
 // hero ring: stage labels just outside the ring, between the ticks
@@ -17,6 +19,8 @@ const howTicks = STAGES.map((_, i) => {
   const [x1, y1] = ring(200, 200, 160, i / 8), [x2, y2] = ring(200, 200, 180, i / 8);
   return { x1, y1, x2, y2 };
 });
+// the atelier waits for real photos of the floor (Mazen, 23 Oct 2026): placeholders read as a to-do
+const SHOW_ATELIER = false;
 const ATELIER = [
   { slot: 'atelier-1', tone: 'radial-gradient(70% 60% at 30% 30%,#6b5644,#2a2622 72%)', cap: 'Worktable / Cairo' },
   { slot: 'atelier-2', tone: 'radial-gradient(70% 60% at 50% 40%,#8a7f6c,#3a352e 72%)', cap: 'Sketch' },
@@ -31,9 +35,8 @@ const ATELIER = [
   <div class="scrim" aria-hidden="true"></div>
   <div class="wrap">
     <div>
-      <div class="mono dim" style="margin-bottom:22px">Development + manufacturing / Cairo, Egypt</div>
-      <h1 class="camp">Idea to product. Full circle.</h1>
-      <p class="lead">Design, patterns, fabric, samples and bulk production under one roof, for clothing brands that are starting or scaling. What you approve in sampling is what ships.</p>
+      <h1 class="camp wide"><span class="l1">Idea to product.</span> <span class="l2">Full circle.</span></h1>
+      <p class="lead">From idea to bulk, under one roof in Cairo. What you approve in sampling is what ships.</p>
       <div class="cta"><a href={ROUTES.start} class="btn btn-red">Request a sample</a><a href={ROUTES.how} class="btn btn-line">How it works</a></div>
       <p class="mono dim note">Free first call / we reply quickly</p>
     </div>
@@ -64,45 +67,43 @@ const ATELIER = [
   </div>
   <div class="wrap">
     <div class="facts">
-      <div><b>From <span data-count="60">60</span> pcs</b><span class="mono dim">Minimum per colour</span></div>
-      <div><b>7–25 days</b><span class="mono dim">To a first sample</span></div>
-      <div><b>Denim first</b><span class="mono dim">Imported fabrics + trims</span></div>
-      <div><b>Live tracking</b><span class="mono dim">Code, stage, next decision</span></div>
+      <div class="fi"><Icon name="pieces" /><b>From <span data-count="60">60</span> pcs</b></div>
+      <div class="fi"><Icon name="clock" /><b>7–25 day samples</b></div>
+      <div class="fi"><Icon name="denim" /><b>Denim + imports</b></div>
+      <div class="fi"><Icon name="ring" /><b>Live tracking</b></div>
     </div>
   </div>
 </section>
 
 <section class="wrap sec" id="who">
-  <div class="sh"><h2 class="camp">Where is your brand?</h2><p>Two ways in. Pick the one that sounds like you and we start from there.</p></div>
+  <div class="sh"><h2 class="camp wide">Where is your brand?</h2></div>
   <div class="who snap" id="whoRow">
     <article class="who-card"><BgImg img="path-starting" sizes="(max-width: 760px) 84vw, (max-width: 820px) 100vw, 50vw" />
       <div class="glow" style="background:radial-gradient(40% 40% at 20% 20%,#C96832,transparent 70%)"></div>
-      <div class="mono dim">A / Starting a brand</div>
-      <div style="display:grid;gap:18px;align-content:start"><h3 class="camp">Starting.</h3><p>You have an idea, maybe a sketch, and no factory yet. We turn it into a product you can sell.</p>
-        <ul><li>Research and design support</li><li>Tech pack from your sketch</li><li>Fabric sourcing and first samples</li></ul></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-red" href={`${ROUTES.start}?path=Starting`}>Start a new brand</a><span class="mono dim" style="align-self:center">Enter at stage 01</span></div>
+      <div class="who-t"><h3 class="camp">Starting.</h3><p>An idea, no factory yet.</p></div>
+      <div class="icrow"><span><Icon name="design" />Design</span><span><Icon name="techpack" />Tech pack</span><span><Icon name="sample" />First samples</span></div>
+      <div><a class="btn btn-red" href={`${ROUTES.start}?path=Starting`}>Start a new brand</a></div>
     </article>
     <article class="who-card"><BgImg img="path-scaling" sizes="(max-width: 760px) 84vw, (max-width: 820px) 100vw, 50vw" />
       <div class="glow" style="background:radial-gradient(40% 40% at 80% 20%,#243E8F,transparent 70%)"></div>
-      <div class="mono dim">B / Scaling a brand</div>
-      <div style="display:grid;gap:18px;align-content:start"><h3 class="camp">Scaling.</h3><p>You already sell, and your last run did not match the sample. We lock the product and repeat it.</p>
-        <ul><li>Pattern review from your garment</li><li>Bulk-ready samples</li><li>QC on every run, repeat orders</li></ul></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-red" href={`${ROUTES.start}?path=Scaling`}>Move production to us</a><span class="mono dim" style="align-self:center">Enter at stage 04</span></div>
+      <div class="who-t"><h3 class="camp">Scaling.</h3><p>Selling already. Bulk must match.</p></div>
+      <div class="icrow"><span><Icon name="pattern" />Pattern review</span><span><Icon name="bulk" />Bulk samples</span><span><Icon name="qc" />QC every run</span></div>
+      <div><a class="btn btn-red" href={`${ROUTES.start}?path=Scaling`}>Move production to us</a></div>
     </article>
   </div>
   <div class="dots" data-for="whoRow"></div>
 </section>
 
 <section class="wrap" id="h-make" style="padding-bottom:clamp(88px,10vw,150px)">
-  <div class="sh"><h2 class="camp">What we make</h2><p>Denim is our speciality. We import fabrics and trims you will not find in the local market, and start from 60 pieces per colour.</p></div>
+  <div class="sh"><h2 class="camp wide">What we make</h2><p>Denim first. Imported fabrics and trims.</p></div>
   <div class="make snap" id="makeGrid">{MAKE.map((m, i) => (
-    <a class="cat" href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[pad(i + 1), 'Photo']} sizes="(max-width: 620px) 56vw, (max-width: 1000px) 33vw, 17vw" /><h3 class="camp">{m.n}</h3><span class="mono">{m.sub}</span></a>
+    <a class={i === 0 ? 'cat lead-cat' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[i === 0 ? 'Our specialty' : pad(i + 1), 'Photo']} sizes={i === 0 ? '(max-width: 620px) 56vw, (max-width: 1000px) 33vw, 34vw' : '(max-width: 620px) 56vw, (max-width: 1000px) 33vw, 17vw'} /><h3 class="camp">{m.n}</h3><span class="mono">{m.sub}</span></a>
   ))}</div><div class="dots" data-for="makeGrid"></div>
-  <div class="make-foot"><span class="mono dim">Minimums per category</span><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
+  <div class="make-foot"><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
 </section>
 
 <section class="wrap sec" id="h-how" style="border-top:1px solid var(--faint)">
-  <div class="sh"><h2 class="camp">How it works</h2><p>Eight stages. Each one ends with something you can see and a decision you make. The next stage starts only when that decision is clear.</p></div>
+  <div class="sh"><h2 class="camp wide">How it works</h2><p>Eight stages. You approve each one.</p></div>
   <div class="howscroll" id="howScroll"><div class="howpin" id="howPin">
   <div class="how">
     <div class="howring" aria-hidden="true">
@@ -117,7 +118,7 @@ const ATELIER = [
       </svg>
     </div>
     <div><ol class="steps" id="steps">{STAGES.map((g, i) => (
-      <li class="step"><button aria-expanded="false"><span class="n">{pad(i + 1)}</span><span class="t">{g.n}</span><span class="a">{g.ok}</span></button><div class="body"><div><p>{g.line}</p><dl><dt>You receive</dt><dd style="margin:0">{g.get}</dd><dt>You approve</dt><dd style="margin:0">{g.ok}</dd></dl></div></div></li>
+      <li class="step"><button aria-expanded="false"><span class="n">{pad(i + 1)}</span><span class="t">{g.n}</span><span class="a"><Icon name={STAGE_ICONS[i]} /></span></button><div class="body"><div><p class="ok1"><Icon name="qc" /><span>{g.ok}</span></p></div></div></li>
     ))}</ol><div class="howfoot"><span class="mono dim hownext" id="howNext"></span><a href={ROUTES.how} class="linkline">The full process</a></div></div>
   </div>
   </div></div>
@@ -127,9 +128,9 @@ const ATELIER = [
   <div class="light"></div>
   <div class="wrap sec">
     <div>
-      <div class="mono dim" style="margin-bottom:18px">The promise</div>
-      <h2 class="camp">What you approve is what ships.</h2>
-      <p>The sample you sign becomes the reference. Every bulk piece is measured against it: chest, length, sleeve, stitch, colour. If it does not match, it does not leave.</p>
+      <h2 class="camp wide">What you approve is what ships.</h2>
+      <p>Every bulk piece is checked against your signed sample.</p>
+      <ul class="checks" aria-label="Checked against the sample">{(['chest', 'length', 'sleeve', 'stitch', 'colour'] as const).map((k) => <li><Icon name={k} />{k}</li>)}</ul>
     </div>
     <div class="vs">
       <Photo img="promise-sample" describe tone="radial-gradient(70% 60% at 40% 40%,#3b4f7a,#1d2638 72%)" caption={['Sample 03', 'Signed']} sizes="(max-width: 760px) 135px, 240px" />
@@ -141,12 +142,12 @@ const ATELIER = [
 
 <section class="bone" id="h-track">
   <div class="wrap sec">
-    <div class="sh"><h2 class="camp">Nothing ships unseen.</h2></div>
+    <div class="sh"><h2 class="camp wide">Nothing ships unseen.</h2></div>
     <div class="track">
       <div>
-        <p>Every order gets a code and a page. You see the stage it is in, what you have approved, and the next decision we need from you.</p>
-        <ul><li>Approve samples and fabric from your phone</li><li>Request a photo of any stage</li><li>A record of every decision, kept with the order</li></ul>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:28px"><a href={ROUTES.track} class="btn btn-line">Track your order</a><span class="mono" style="align-self:center;opacity:0.6">Live demo on the right</span></div>
+        <p>Every order gets a code and a page.</p>
+        <ul class="iclist"><li><Icon name="phone" />Approve from your phone</li><li><Icon name="camera" />Ask for a photo of any stage</li><li><Icon name="log" />Every decision on record</li></ul>
+        <div style="margin-top:28px"><a href={ROUTES.track} class="btn btn-line">Track your order</a></div>
       </div>
       <div class="portal">
         <div class="prow"><span class="mono" style="font-size:13px">FC-2418 / Overshirt</span><span class="chipst mono" id="pChip"><i></i><span id="pChipT">Awaiting approval</span></span></div>
@@ -170,6 +171,7 @@ const ATELIER = [
   </div>
 </section>
 
+{SHOW_ATELIER && (
 <section class="wrap sec" id="proof">
   <div class="sh"><h2 class="camp">The atelier</h2><p>Real photos from the floor go here. Client work and logos are added after the first pilot run.</p></div>
   <div class="proof snap" id="proofRow" tabindex="0" role="region" aria-label="Atelier photos">
@@ -178,11 +180,12 @@ const ATELIER = [
   <div class="dots" data-for="proofRow"></div>
   <div class="logos" role="img" aria-label="Client logos, coming after pilot run"><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div></div>
 </section>
+)}
 
-<CtaBand title="Request a sample." text="Four quick picks, under a minute. We reply with a first call, a price range and the next decision."><a href={ROUTES.start} class="btn btn-red" style="padding:16px 22px">Start the request</a></CtaBand>
+<CtaBand title="Request a sample." text="Four picks, under a minute. No account needed."><a href={ROUTES.start} class="btn btn-red" style="padding:16px 22px">Start the request</a></CtaBand>
 
 <section class="wrap sec" id="faq">
-  <div class="sh"><h2 class="camp">Questions</h2></div>
+  <div class="sh"><h2 class="camp wide">Questions</h2></div>
   <div class="faq" id="faqList">{FAQ.map(([q, a], i) => <details><summary><span class="mono dim">{pad(i + 1)}</span><h3>{q}</h3><span class="plus"></span></summary><p class="ans">{a}</p></details>)}</div>
 </section>
 

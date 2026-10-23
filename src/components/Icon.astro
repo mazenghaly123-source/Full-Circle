@@ -1,0 +1,8 @@
+---
+// One line icon from src/data/icons.ts, decorative (the text beside it names it).
+import { iconSvg, type IconName } from '../data/icons';
+
+interface Props { name: IconName }
+const { name } = Astro.props;
+---
+<Fragment set:html={iconSvg(name)} />
