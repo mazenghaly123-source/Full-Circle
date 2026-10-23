@@ -83,7 +83,8 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   same treatment next, shown to Mazen first.
 - Interactive line figures (the Hairline skill, 23 Oct 2026): a few, at most one per page, never
   on the hero (the 3D mark stays the hero). On phones they answer a finger (sideways drag, tap),
-  not only a self-running loop.
+  not only a self-running loop. Parked: the first test (a shirt opening into its pattern pieces)
+  did not convince Mazen; wait until he picks figures up again.
 
 ## Confirmed content
 - MOQ: tees 60/colour, hoodies 60, tops 60–100, sweatpants 60, shorts 60, shirts 80–100,

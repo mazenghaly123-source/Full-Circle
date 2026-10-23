@@ -10,21 +10,17 @@ from a cloud session, it says so.
 
 | Branch | Holds | State |
 |---|---|---|
-| `main` | Phases 1 and 2, the shorter words with no TBC (PR #6), the domain wiring (PR #7) | Live |
-| `claude/phase-3-portal` | Phase 3: clients, orders, the real portal on `/track` | PR #8 → `main`, open |
-| `claude/phase-4-admin` | Phase 3 + phase 4 admin (`/admin`), the `invite` and `notify` functions | PR #9 → `main`, open |
-| `claude/phase-5-seo` | Phase 4 admin + phase 5 search and sharing (canonical URLs, `og.jpg`, sitemap, robots, structured data, HSTS) | PR #10 → `claude/phase-4-admin`, open |
-| `claude/phase-4-whatsapp` | All of the above + WhatsApp from the system number (`send-sms`, `whatsapp-webhook`) | PR #11 → `claude/phase-5-seo`, open |
-| **`claude/tender-rubin-ahjc3t`** | **Newest. Holds all of the above** + the redesign of Home (23 Oct, see *In progress*) + this handoff | Pushed, no PR yet |
+| `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, and the redesign of Home (see *In progress*) | Live |
+| `claude/tender-rubin-ahjc3t` | The redesign of Home + this handoff, on top of all the phases | Merged to `main` (23 Oct) |
+| `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
 | `claude/phase-2-requests`, `claude/intelligent-fermi-ddqnas`, `claude/audit-code-cleanup`, `claude/bold-mccarthy-t9fppt`, `claude/trusting-albattani-5sxko8` | Already fully in `main` | Safe to delete |
 
-The branches are stacked: each one contains the one above it. `claude/phase-4-whatsapp` holds all of
-`main` (0 behind), and the redesign branch sits on top of it. **Merge order: #8 → #9 → #10 → #11.** After each merge, point
-the next PR's base at `main`. Merging #11's branch alone gives the same result. Before merging, read
-the gotcha *Merging to main changes the live site*.
+Mazen asked on 23 Oct for everything to go to `main` so he can try the new site. The stacked PRs
+were merged in order, #8 → #9 → #10 → #11 (each next PR's base moved to `main` first), then the
+redesign branch. New work starts from `main`.
 
-CI on every open PR is green (23 Oct): the GitHub `site` and `backend` jobs and Cloudflare's
+CI was green on every PR when it was merged (23 Oct): the GitHub `site` and `backend` jobs and Cloudflare's
 **Workers Builds: full-circle**. That check had failed on every PR since #6: Wrangler 4.146's
 `wrangler preview` refuses to run without a `previews` block in `wrangler.jsonc`, so the block was
 added (empty) on `claude/phase-3-portal` and merged up the stack. Build logs are only in the
@@ -32,13 +28,16 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 
 ## Live vs not
 
-- **Live, from `main`:** the 7 pages and the 404 at parity with the prototype, `/privacy`, and the
-  request and contact forms, which send to **staging** Supabase (test data). Track is still the
-  prototype's **demo** portal. Cloudflare deploys `main` to **fullcircle-co.com** (+ `www`) and
+- **Live, from `main` (everything since 23 Oct):**
+  - The 7 pages and the 404 at parity with the prototype, with Home redesigned, and `/privacy`.
+  - The request and contact forms, which send to **staging** Supabase (test data).
+  - The real portal on Track and `/admin`. Both sign in against **staging**, and codes only arrive
+    once the Auth settings in *Waiting on Mazen* are done.
+  - Search and sharing. WhatsApp from the system number is in the code but off until Meta's secrets
+    are set.
+- Cloudflare deploys `main` to **fullcircle-co.com** (+ `www`) and
   **full-circle.mazenghaly123.workers.dev**. A cloud session cannot reach those hosts, so whether the
   domain answers was not checked here.
-- **Only on branches:** the real portal (phase 3), `/admin` (phase 4), WhatsApp (phase 4), and
-  search and sharing (phase 5).
 
 ## Supabase staging
 
@@ -100,7 +99,7 @@ Done on 23 Oct: the WhatsApp-era functions are on staging, the Cloudflare previe
 and `EMAIL_FROM` is set with the staff alert confirmed.
 
 1. **The redesign** (Mazen, 23 Oct), to set the site apart from a competitor, factory21.co, whose
-   Home looks like ours. On `claude/tender-rubin-ahjc3t`:
+   Home looks like ours. On `main` since 23 Oct:
    - Done on Home: Microgramma D Extended (the logo's face, `src/assets/fonts/`) for the hero and
      section headlines only; rounded corners on every box, button, field and option site-wide
      (`--r-s/m/l` in the *approved changes* block); far fewer words; the facts, the two paths, the
@@ -112,9 +111,10 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
    - Next: the same treatment for the inner pages, **as a mock for Mazen first**.
    - Line figures (the Hairline skill, hairline.lucasmarkes.com): at most one per page, factory
      subjects only, the 3D mark stays the hero, and on phones they work by touch (drag sideways,
-     the pose holds after the finger lifts). A test figure, a shirt that opens into its six pattern
-     pieces, is waiting for Mazen's verdict: https://claude.ai/artifact/3uMMhCdonw82iRABVTGVS3. Nothing
-     of it is in the repo yet.
+     the pose holds after the finger lifts). **Parked:** the first test, a shirt that opens into its
+     six pattern pieces (https://claude.ai/artifact/3uMMhCdonw82iRABVTGVS3), did not convince Mazen
+     (23 Oct), and figures wait until he picks them up again. Nothing of it is in the repo; the
+     published page holds its whole code.
 2. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
    been tried. It needs the Auth settings below, so that staff and a test client can get codes.
 3. **The email receipt to a brand** has not been tried: both 23 Oct tests gave a WhatsApp number.
@@ -131,9 +131,6 @@ Decisions:
   4. A decision can be opened without photos.
   5. When a person is removed, the log keeps their name.
 - **Staff roles** (owner / staff, §4) and the **names and emails of the 4 staff**.
-- **When to merge phases 3–5 to `main`.** See the gotcha below. The redesign branch sits on top of
-  them, so it goes in after them, or with them.
-- The **line figure test** (keep the shirt figure, change it, or drop figures).
 - Keep or drop the Cloudflare plugin commit on `claude/keen-gates-vu1na0`, and whether to disconnect
   Vercel.
 
@@ -158,12 +155,11 @@ Dashboard and account tasks:
 
 ## Gotchas
 
-- **Merging to `main` changes the live site.**
-  - Track's demo is replaced by a real sign-in against **staging**, and `/admin` goes up. Codes only
-    work once the Auth settings above are done.
-  - Live forms already write to staging, so the live project should exist before real clients use
-    the site.
-  - Ask Mazen before merging.
+- **The live site runs on staging.**
+  - Since 23 Oct, Track's real sign-in and `/admin` are live against **staging**. Codes only work
+    once the Auth settings above are done. The sign-in never creates an account (`create_user: false`).
+  - Live forms write to staging too, so the live project should exist before real clients use the
+    site.
 - **Don't set `TURNSTILE_SECRET_KEY` on staging** while builds still use the test site key
   (`src/data/backend.ts`). Every form would then be refused. Change both together.
 - **Supabase MCP and destructive SQL:**
@@ -200,12 +196,10 @@ Dashboard and account tasks:
 
 ## Next 3 steps
 
-1. **The redesign of the inner pages:** a mock for Mazen first, then the build, with the line figure
-   if he keeps it. Meanwhile, the Supabase Auth settings and Vercel (Mazen, in the dashboards; see
-   *Waiting on Mazen*).
+1. **The redesign of the inner pages:** a mock for Mazen first, then the build. Meanwhile, the
+   Supabase Auth settings and Vercel (Mazen, in the dashboards; see *Waiting on Mazen*).
 2. **Prove phases 2–4 on staging.** Once the Auth settings are done: send a test request with an
    email, convert it to an order in `/admin`, sign in to `/track` as the client, and take the order
    through all 8 stages from a phone.
-3. **Merge #8 → #11 to `main`** once Mazen agrees. Then do the phase 5 launch items: the live
-   Supabase project, Turnstile, the production build variables, `workers_dev: false`, Umami, and
-   Lighthouse on the domain.
+3. **The phase 5 launch items:** the live Supabase project, Turnstile, the production build
+   variables, `workers_dev: false`, Umami, and Lighthouse on the domain.
