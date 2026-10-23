@@ -18,15 +18,16 @@ from a cloud session, it says so.
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
 | `claude/phase-2-requests`, `claude/intelligent-fermi-ddqnas`, `claude/audit-code-cleanup`, `claude/bold-mccarthy-t9fppt`, `claude/trusting-albattani-5sxko8` | Already fully in `main` | Safe to delete |
 
-The branches are stacked: each one contains the one above it. `claude/phase-4-whatsapp` is 15
-commits ahead of `main` and 0 behind. **Merge order: #8 → #9 → #10 → #11.** After each merge, point
+The branches are stacked: each one contains the one above it. `claude/phase-4-whatsapp` holds all of
+`main` (0 behind). **Merge order: #8 → #9 → #10 → #11.** After each merge, point
 the next PR's base at `main`. Merging #11's branch alone gives the same result. Before merging, read
 the gotcha *Merging to main changes the live site*.
 
-CI on every open PR: the GitHub `site` and `backend` jobs pass. Cloudflare's **Workers Builds:
-full-circle** check fails a few seconds after it starts, and it has done so on every PR since #6.
-Its log is only in the Cloudflare dashboard (Workers & Pages → `full-circle` → Builds), so nobody
-has read it yet.
+CI on every open PR is green (23 Oct): the GitHub `site` and `backend` jobs and Cloudflare's
+**Workers Builds: full-circle**. That check had failed on every PR since #6: Wrangler 4.146's
+`wrangler preview` refuses to run without a `previews` block in `wrangler.jsonc`, so the block was
+added (empty) on `claude/phase-3-portal` and merged up the stack. Build logs are only in the
+Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 
 ## Live vs not
 
@@ -47,25 +48,23 @@ has read it yet.
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
   `20261021022945` sample_gate_latest, `20261021064023` whatsapp.
-- **Edge Functions deployed** (all with the JWT check off):
-  - `submit-request` and `submit-contact`, v4 (15 Oct): phase 2 code.
-  - `invite` and `notify`, v2 (21 Oct): phase 4 admin code from **before** the WhatsApp commit.
-    The deployed `notify` still logs WhatsApp as "starts in phase 4".
-  - **Not deployed:** `send-sms` and `whatsapp-webhook`, and the WhatsApp versions of `invite`,
-    `notify` and `submit-request` (commit `66ca03d`).
-- **Secrets.** The MCP cannot list secret names, so these were inferred:
-  - Set: `RESEND_API_KEY`. The 20 Oct test email reached Resend and was refused as a test-sender
-    send.
+- **Edge Functions deployed** (all with the JWT check off), all from `claude/phase-4-whatsapp`
+  (23 Oct) except `submit-contact`, whose code has not changed since phase 2:
+  - `submit-request` v6, `invite` v4, `notify` v4, `send-sms` v1, `whatsapp-webhook` v1.
+  - `submit-contact` v4 (15 Oct).
+  - Checked: test request FC-2509 (23 Oct, after the deploy) was saved and logged with the WhatsApp
+    version's wording.
+- **Secrets** (seen in the dashboard, 23 Oct):
+  - Set: `RESEND_API_KEY` (20 Oct) and `EMAIL_FROM` = `Full Circle <hello@fullcircle-co.com>`
+    (23 Oct). The staff alerts for FC-2508 and FC-2509 went out through Resend (`sent`). The receipt
+    to a brand that gives an email has not been tried yet.
   - Supplied by Supabase automatically: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
     `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_SECRET_KEYS`.
-  - Not confirmed: `EMAIL_FROM`. It was not working on 20 Oct, and there has been no test since the
-    Resend domain was verified on 21 Oct.
-  - Not set, as far as we know: `TURNSTILE_SECRET_KEY` (staging falls back to Cloudflare's
-    always-pass test key), `STAFF_EMAILS` and `SITE_URL` (the defaults are used), `WHATSAPP_TOKEN`,
-    `WHATSAPP_PHONE_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` and `SEND_SMS_HOOK_SECRET`.
-  - Check the real list in the dashboard (Edge Functions → Secrets).
-- Data on staging: 1 staff, 1 client, 3 orders, 4 requests, 1 Auth user, and the bucket
-  `stage-photos`.
+  - Not set: `TURNSTILE_SECRET_KEY` (staging falls back to Cloudflare's always-pass test key),
+    `STAFF_EMAILS` and `SITE_URL` (the defaults are used), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
+    `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` and `SEND_SMS_HOOK_SECRET`.
+- Data on staging: 1 staff, 1 client, 3 orders, 6 requests (FC-2508 and FC-2509 are 23 Oct tests),
+  1 Auth user, and the bucket `stage-photos`.
 - Auth settings (sign-ups off, OTP expiry, `{{ .Token }}` template, SMTP, captcha, phone hook) are
   **not confirmed** as done. See *Waiting on Mazen*.
 
@@ -73,8 +72,10 @@ has read it yet.
 
 - Hosting is Workers with static assets ([ADR 0002](./adr/0002-cloudflare-workers-static-assets.md)).
   `wrangler.jsonc` holds the whole configuration. Cloudflare's Git integration builds every push:
-  `main` deploys live, and other branches get preview URLs (those preview builds currently fail, see
-  above).
+  `main` deploys live with `npx wrangler deploy`, and other branches get preview URLs through
+  `npx wrangler preview` (which needs the `previews` block in `wrangler.jsonc`).
+- The domain is live: the deploy from `main` attached `fullcircle-co.com` and `www` (dashboard,
+  23 Oct).
 - **Set by hand in the dashboard:**
   - The GitHub connection.
   - Build command `npm run build`, deploy command `npx wrangler deploy`, and preview builds on.
@@ -83,7 +84,7 @@ has read it yet.
     `eve.ns.cloudflare.com`.
   - The custom domains themselves come from `wrangler.jsonc` (`routes`); no DNS was added by hand.
 - **Not done yet:**
-  - `"workers_dev": false` once the domain is confirmed live.
+  - `"workers_dev": false` (the domain is live, so this can go in with the launch items).
   - Turning off Cloudflare Web Analytics on the zone.
   - The Turnstile widget.
   - Production build variables (`PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_KEY`,
@@ -92,20 +93,15 @@ has read it yet.
   (`mazen-s-projects2/full-circle`), although hosting is Cloudflare only (PR #6). Disconnect it
   unless it is wanted.
 
-## In progress when we stopped (21 Oct)
+## In progress
 
-1. **WhatsApp is built but not deployed to staging.** Its migration is applied; its functions are
-   not. Next step: deploy `send-sms`, `whatsapp-webhook`, `invite`, `notify` and `submit-request`
-   from `claude/phase-4-whatsapp` to staging with the JWT check off. Without Meta's secrets they log
-   WhatsApp as skipped, which is safe.
-2. **The Cloudflare preview build fails on every PR.** Next step: Mazen opens one failed build's
-   log in the dashboard and pastes it into the session. Then fix it (likely a build setting or the
-   preview command for non-production branches).
-3. **Email is not confirmed end to end.** Next step: once `EMAIL_FROM` is set, send one test
-   request on a preview or the live site. Then check that the staff alert and the receipt arrive,
-   and that `notifications` shows `sent`.
-4. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
+Done on 23 Oct: the WhatsApp-era functions are on staging, the Cloudflare preview build is fixed,
+and `EMAIL_FROM` is set with the staff alert confirmed.
+
+1. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
    been tried. It needs the Auth settings below, so that staff and a test client can get codes.
+2. **The email receipt to a brand** has not been tried: both 23 Oct tests gave a WhatsApp number.
+   One request with an email as the contact covers it.
 
 ## Waiting on Mazen
 
@@ -128,7 +124,6 @@ Dashboard and account tasks:
   - Set the email OTP expiry to 600 s.
   - Put `{{ .Token }}` in the Magic Link template.
   - Set SMTP to Resend (sender `hello@fullcircle-co.com`).
-- **`EMAIL_FROM`** = `Full Circle <hello@fullcircle-co.com>` (Edge Functions → Secrets).
 - **Turnstile:**
   - Create a widget for fullcircle-co.com (Invisible).
   - At launch, put its site key in the build and its secret in the functions and Auth's Attack
@@ -186,11 +181,10 @@ Dashboard and account tasks:
 
 ## Next 3 steps
 
-1. **Get the PRs green and merge-ready.** Read the failed Cloudflare build log (from Mazen) and fix
-   the preview build. Deploy the WhatsApp-era functions to staging (*In progress* 1).
-2. **Prove phases 2–4 on staging.** Once Mazen has done the Auth settings and `EMAIL_FROM`: send a
-   test request (email arrives), convert it to an order in `/admin`, sign in to `/track` as the
-   client, and take the order through all 8 stages from a phone.
+1. **Supabase Auth settings and Vercel** (Mazen, in the dashboards; see *Waiting on Mazen*).
+2. **Prove phases 2–4 on staging.** Once the Auth settings are done: send a test request with an
+   email, convert it to an order in `/admin`, sign in to `/track` as the client, and take the order
+   through all 8 stages from a phone.
 3. **Merge #8 → #11 to `main`** once Mazen agrees. Then do the phase 5 launch items: the live
    Supabase project, Turnstile, the production build variables, `workers_dev: false`, Umami, and
    Lighthouse on the domain.

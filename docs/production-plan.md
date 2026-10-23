@@ -35,20 +35,15 @@ attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2,
   fullcircle-co.com and full-circle.mazenghaly123.workers.dev. Track on the live site is still the
   prototype's demo.
 - *Built, not merged:* phase 3 (portal, PR #8), phase 4 (admin, PR #9; WhatsApp, PR #11) and phase
-  5's search and sharing (PR #10). The PRs are stacked; merge #8 → #9 → #10 → #11. On every PR, CI's
-  `site` and `backend` jobs pass, but Cloudflare's preview build fails a few seconds in. It has done
-  so on every PR since #6, and its log is only in the Cloudflare dashboard.
-- *On staging:* all 8 migrations are applied, the WhatsApp one included. The deployed functions are
-  `submit-request` and `submit-contact` (phase 2 code), and `invite` and `notify` (phase 4 admin
-  code from before WhatsApp).
-- *Half-done when work stopped (21 Oct):*
-  - WhatsApp's functions are not deployed to staging: `send-sms`, `whatsapp-webhook`, and the
-    WhatsApp versions of `invite`, `notify` and `submit-request`.
-  - Email is not confirmed end to end: `EMAIL_FROM` is unconfirmed, and the last test (20 Oct) was
-    refused by Resend's test sender.
-  - The failing preview build has not been diagnosed.
-  - The phase 4 test (an order through all 8 stages from a phone) has not been tried; it waits on
-    the Auth settings in §10.
+  5's search and sharing (PR #10). The PRs are stacked; merge #8 → #9 → #10 → #11. CI is green on every
+  PR (23 Oct): the `site` and `backend` jobs and Cloudflare's preview build, which had failed since
+  #6 until `wrangler.jsonc` got the `previews` block Wrangler 4.146 asks for.
+- *On staging:* all 8 migrations are applied, the WhatsApp one included. Every function is on
+  staging in its current version (23 Oct): `submit-request`, `submit-contact`, `invite`, `notify`,
+  `send-sms` and `whatsapp-webhook`. `EMAIL_FROM` is set, and the staff alerts for two test
+  requests went out through Resend.
+- *Not tried yet:* the email receipt to a brand (both tests gave a WhatsApp number), and the phase 4
+  test (an order through all 8 stages from a phone), which waits on the Auth settings in §10.
 
 **Phase 1 is done** (on `main`, live):
 
@@ -150,9 +145,8 @@ Small, deliberate differences from the prototype:
   consent and log rows; the publishable key was refused on every table.
 
 **Left for phase 2 to be done:** ~~a Resend account and key~~ (set in Supabase, 20 Oct) and
-~~the domain verified at Resend~~ (Mazen, 21 Oct): to confirm with one test request once
-`EMAIL_FROM` is `Full Circle <hello@fullcircle-co.com>` (the last test, before the domain was
-verified, was refused by Resend); a real
+~~the domain verified at Resend~~ (Mazen, 21 Oct): ~~`EMAIL_FROM`~~ (set 23 Oct; the staff
+alert is confirmed, the receipt to a brand's email is still to try); a real
 Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
 requests and messages a year old that never became orders (`/privacy`).
 
@@ -216,11 +210,11 @@ requests and messages a year old that never became orders (`/privacy`).
 
   The canvas's Settings screen (stage targets, currencies) and the money and team-load panels are
   not built: no data behind them yet.
-- *Functions* (deployed to staging, in their pre-WhatsApp version): `invite` adds a person to a client or (owners only) to the team
+- *Functions* (deployed to staging): `invite` adds a person to a client or (owners only) to the team
   and emails them; `notify` sends the queued order messages, one email for several photos at once,
   and never the same message twice (migration `20261021003118`).
 - *WhatsApp* (branch `claude/phase-4-whatsapp`, [whatsapp.md](./whatsapp.md)): built and tested
-  against a stand-in for Meta. Its migration is on staging; its functions are not deployed yet; nothing goes out until Meta is set up, and until then each message is
+  against a stand-in for Meta. Its migration and its functions are on staging (23 Oct); nothing goes out until Meta is set up, and until then each message is
   logged as skipped. Portal sign-in by number (Auth's Send SMS hook calls `send-sms`, which sends the
   code as an authentication template); the request receipt, the portal invitation and the order
   updates as templates, to the numbers that opted in, besides the email; replies to the number in
@@ -472,7 +466,7 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
    Cloudflare only.
 
 **Supabase dashboard** (staging first; these cannot be changed from a cloud session):
-5. *Edge Functions → Secrets:* set `EMAIL_FROM` to `Full Circle <hello@fullcircle-co.com>`.
+5. ~~*Edge Functions → Secrets:* set `EMAIL_FROM` to `Full Circle <hello@fullcircle-co.com>`.~~ Done 23 Oct.
 6. *Authentication → Sign In / Providers:* turn off "Allow new users to sign up" (the portal is
    invite-only), and set the email OTP expiry to 600 seconds.
 7. *Authentication → Emails → Magic Link* template: put the code in it, for example "Your Full
@@ -482,8 +476,8 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
    own sender reaches only the organisation's members, a few emails an hour.
 
 **Cloudflare dashboard:**
-9. Open one failed *Workers Builds: full-circle* log (Workers & Pages → `full-circle` → Builds) and
-   paste it into the session, so the preview build can be fixed.
+9. ~~Open one failed *Workers Builds: full-circle* log and paste it into the session.~~ Done and
+   fixed 23 Oct.
 10. Create a Turnstile widget for fullcircle-co.com (Invisible). Its keys go in at launch, the site
     key and the secret together (setting only the secret turns every form away). Then turn on the
     check under Supabase's Attack Protection.
