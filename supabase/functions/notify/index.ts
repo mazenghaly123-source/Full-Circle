@@ -4,10 +4,13 @@
 // (claimed, so two calls never send the same message), so what a failed call left goes out with
 // the next one. Several photos for one person on one order go in one email.
 //
-// POST, signed in (as a client's person or staff). WhatsApp rows are marked skipped until Meta is
-// set up.
+// The client's people who opted in hear on WhatsApp too (a template per event, docs/whatsapp.md);
+// those rows are marked skipped until Meta is set up.
+//
+// POST, signed in (as a client's person or staff).
 import { orderEmail, type OrderEvent, type OrderMail } from '../_shared/emails.ts';
-import { caller, crash, db, preflight, refuse, reply, sendEmail, siteUrl, WHATSAPP_LATER } from '../_shared/server.ts';
+import { caller, crash, db, preflight, refuse, reply, sendEmail, siteUrl } from '../_shared/server.ts';
+import { orderMessage, sendWhatsApp } from '../_shared/whatsapp.ts';
 
 type Queued = { id: number; order_id: number; event: OrderEvent; audience: 'staff' | 'client'; channel: 'email' | 'whatsapp'; recipient: string };
 type Order = {
@@ -38,9 +41,11 @@ Deno.serve(async (req) => {
     let sent = 0;
     for (const rows of groups.values()) {
       const q = rows[0], o = orders.find((x) => x.id === q.order_id);
-      const out = q.channel !== 'email' ? WHATSAPP_LATER
-        : !o ? { status: 'skipped' as const, detail: 'The order no longer exists' }
-        : await sendEmail({ to: [q.recipient], ...orderEmail(q.event, mailOf(o, q.event), siteUrl(), rows.length) });
+      const wa = o && q.channel === 'whatsapp' ? orderMessage(q.event, mailOf(o, q.event), rows.length) : null;
+      const out = !o ? { status: 'skipped' as const, detail: 'The order no longer exists' }
+        : q.channel === 'email' ? await sendEmail({ to: [q.recipient], ...orderEmail(q.event, mailOf(o, q.event), siteUrl(), rows.length) })
+        : wa ? await sendWhatsApp(q.recipient, wa)
+        : { status: 'skipped' as const, detail: 'Staff hear of this by email' };
       await client.update('order_notifications', { id: `in.(${rows.map((r) => r.id).join(',')})` },
         { status: out.status, provider_id: out.providerId ?? null, detail: out.detail ?? null });
       if (out.status === 'sent') sent++;

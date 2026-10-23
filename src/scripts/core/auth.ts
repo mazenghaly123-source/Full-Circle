@@ -14,6 +14,7 @@ export const AUTH_ERRORS = {
   wrong: 'That code is wrong or has expired. Check it, or send a new one',
   tooMany: 'Too many tries. Wait a few minutes, then send a new code',
   whatsapp: 'Codes on WhatsApp are not switched on yet. Use the email on your order',
+  whatsappFailed: 'Could not send a code on WhatsApp. Check the number, or use the email on your order',
   failed: 'Could not reach Full Circle. Check your connection and try again',
   robot: ERRORS.robot,
   signedOut: 'You were signed out. Sign in again',
@@ -62,6 +63,8 @@ export function authClient(store: string) {
       if (res.status === 429 || code.startsWith('over_')) return { error: AUTH_ERRORS.tooMany };
       if (code === 'captcha_failed') return { error: AUTH_ERRORS.robot };
       if ('phone' in who && /phone_provider|sms_send_failed/.test(code)) return { error: AUTH_ERRORS.whatsapp };
+      // the send-sms function could not get it to WhatsApp (supabase/functions/send-sms)
+      if ('phone' in who && /whatsapp_send_failed/.test(r.msg ?? r.message ?? '')) return { error: AUTH_ERRORS.whatsappFailed };
       if (/otp_disabled|signup_disabled|user_not_found/.test(code) || /signups not allowed/i.test(r.msg ?? r.message ?? '')) return null;
       return { error: AUTH_ERRORS.failed };
     } catch {

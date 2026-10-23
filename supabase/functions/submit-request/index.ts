@@ -1,10 +1,12 @@
 // Receives the sample request form: checks it, saves the request, records the WhatsApp opt-in, and
-// emails staff (and the brand, when it gave an email). Answers with the code.
+// emails staff. The brand gets a receipt with its code: by email when it gave one, on WhatsApp when it
+// gave a number and asked for updates there. Answers with the code.
 //
 // POST application/json: RequestData in _shared/forms.ts.
 import { ERRORS, NOTICE, belowMinimum, checkRequest } from '../_shared/forms.ts';
 import { clientReceiptEmail, staffRequestEmail } from '../_shared/emails.ts';
-import { WHATSAPP_LATER, crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
+import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
+import { sendWhatsApp, template } from '../_shared/whatsapp.ts';
 
 /** Requests from one contact in an hour before it is asked to use WhatsApp instead. */
 const PER_HOUR = 5;
@@ -60,7 +62,7 @@ Deno.serve(async (req) => {
 type Saved = { id: number; code: string; created_at: string };
 type Checked = Extract<ReturnType<typeof checkRequest>, { ok: true }>['value'];
 
-/** Emails staff and the brand, and logs each message. */
+/** Tells staff and the brand, and logs each message. */
 async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked) {
   const staff = staffEmails();
   const alert = staffRequestEmail({
@@ -76,6 +78,10 @@ async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked) {
     const toBrand = await sendEmail({ to: [r.reach.email], ...receipt });
     await logNotification(client, { event: 'request_received', audience: 'client', channel: 'email', recipients: [r.reach.email], sent: toBrand, request_id: saved.id });
   } else {
-    await logNotification(client, { event: 'request_received', audience: 'client', channel: 'whatsapp', recipients: [r.reach.whatsapp ?? r.contact], sent: WHATSAPP_LATER, request_id: saved.id });
+    // a business may only write first on WhatsApp to someone who agreed to it (docs/whatsapp.md)
+    const sent = !r.reach.whatsapp ? { status: 'skipped' as const, detail: 'The number has no country code; staff reply by hand' }
+      : r.whatsappUpdates !== true ? { status: 'skipped' as const, detail: 'No WhatsApp updates asked for; staff reply by hand' }
+      : await sendWhatsApp(r.reach.whatsapp, template('request_received', [saved.code]));
+    await logNotification(client, { event: 'request_received', audience: 'client', channel: 'whatsapp', recipients: [r.reach.whatsapp ?? r.contact], sent, request_id: saved.id });
   }
 }

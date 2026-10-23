@@ -1,5 +1,7 @@
 # Full Circle
 
+Starting a new session? Read docs/HANDOFF.md first.
+
 See [AGENTS.md](./AGENTS.md) for this repository's agent instructions, including the
 `## Agent skills` configuration (issue tracker, triage labels, and domain docs).
 
@@ -136,6 +138,10 @@ portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the
   session of its own) and act through the same database functions. Adding people goes through the
   `invite` function, and every action asks `notify` to send what it queued (email now, WhatsApp
   after Meta). Its tests are `tests/admin.spec.ts`, on `mockAdmin`.
+- WhatsApp goes from a system number through Meta's Cloud API (`_shared/whatsapp.ts`, templates
+  only, to numbers that opted in; [docs/whatsapp.md](./docs/whatsapp.md)): portal codes through Auth's
+  Send SMS hook (`send-sms`), replies and receipts through `whatsapp-webhook`. Off, and logged as
+  skipped, until Meta's secrets are set.
 - The functions have no dependencies (a few REST calls in `_shared/server.ts`); type-check them
   with `deno check`. `tests/unit/backend.spec.ts` runs them end to end on a local stack
   (`supabase start`); the CI *backend* job does all three.

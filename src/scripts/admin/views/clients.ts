@@ -64,7 +64,7 @@ ${pick.orders.length ? `<table class="tbl"><tbody>${pick.orders.map((o) => `<tr>
     try {
       const out = await api.invite({ kind: 'client', client_id: pick.id, name: f.name, email: email.email, whatsapp: f.whatsapp || undefined });
       list = await api.clients(); draw();
-      toast(out.email === 'sent' ? `${f.name} was emailed the portal link` : `${f.name} can sign in; the email was not sent (${out.email})`);
+      toast((out.email === 'sent' ? `${f.name} was emailed the portal link` : `${f.name} can sign in; the email was not sent (${out.email})`) + api.phoneNote(out));
     } catch (ex) {
       btn.disabled = false;
       if (ex instanceof api.SignedOut) return failed(ex);

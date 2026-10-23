@@ -65,7 +65,7 @@ ${field('WhatsApp (optional)', 'whatsapp', r?.whatsapp ?? '', { ph: '+20 10 …'
       if (invite && email?.channel === 'email') {
         try {
           const out = await api.invite({ kind: 'client', client_id: clientId, name: f.person, email: email.email, whatsapp: f.whatsapp || undefined });
-          note = out.email === 'sent' ? `Order opened; ${f.person} was emailed the portal link` : `Order opened; ${f.person} can sign in (the email was not sent: ${out.email})`;
+          note = (out.email === 'sent' ? `Order opened; ${f.person} was emailed the portal link` : `Order opened; ${f.person} can sign in (the email was not sent: ${out.email})`) + api.phoneNote(out);
         } catch (ie) {
           if (ie instanceof api.SignedOut) throw ie;
           note = `Order opened; adding ${f.person} failed: ${(ie as Error).message}`;

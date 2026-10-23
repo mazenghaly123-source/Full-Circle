@@ -59,28 +59,32 @@ messages about orders). Until launch there is one project, **full-circle-staging
 | `STAFF_EMAILS` | Who gets the alerts, comma-separated | fullcircleworks.co@gmail.com |
 | `EMAIL_FROM` | The sender, e.g. `Full Circle <hello@your-domain>` | Resend's test sender, which can only write to the Resend account's own address |
 | `TURNSTILE_SECRET_KEY` | The robot check (Cloudflare Turnstile) | Staging uses Cloudflare's test key, **which lets everything through**; any other project turns every form away |
+| `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `SEND_SMS_HOOK_SECRET` | WhatsApp from the system number, once Meta is set up ([whatsapp.md](./whatsapp.md)) | Every WhatsApp message is logged as skipped, and portal sign-in by number is refused |
 | `SITE_URL` | Where the links in the order emails and invitations point. On staging, once the live site uses the live project, set it to a preview that builds against staging, or invited test clients land on the live site | https://fullcircle-co.com |
 
 **At launch** (the live project):
 1. Create the live project in Frankfurt (Pro plan) and apply `supabase/migrations/` to it.
-2. Deploy the four functions with their JWT check off (the form functions check Turnstile instead;
-   `invite` and `notify` check the signed-in caller themselves), and set the secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
+2. Deploy the six functions with their JWT check off (the form functions check Turnstile instead;
+   `invite` and `notify` check the signed-in caller themselves; `send-sms` and `whatsapp-webhook`
+   check Auth's and Meta's signatures), and set the secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
 3. In Cloudflare, create a Turnstile widget for the domain (Invisible mode) and set the production
    build's variables `PUBLIC_SUPABASE_URL` (the live project's URL), `PUBLIC_SUPABASE_KEY` (its
    publishable key, for the portal's sign-in) and `PUBLIC_TURNSTILE_SITE_KEY` (the widget's site key).
    Previews keep using staging.
 4. Set up the portal's sign-in on the live project as on staging (production plan §10): no sign-ups,
    the code in the Magic Link email, a 10-minute expiry, Resend as the SMTP sender, and Turnstile
-   under Attack Protection.
+   under Attack Protection. For WhatsApp codes, the phone provider and the Send SMS hook
+   ([whatsapp.md](./whatsapp.md)).
 
 With the Supabase CLI (`npx supabase@2.121.0`, signed in): `link --project-ref <ref>`, then
-`db push` for the migrations and `functions deploy submit-request submit-contact invite notify --no-verify-jwt`.
+`db push` for the migrations and `functions deploy submit-request submit-contact invite notify send-sms whatsapp-webhook --no-verify-jwt`.
 
 **On your computer** (needs Docker): `npx supabase@2.121.0 start` runs the whole backend locally and
 `npx supabase@2.121.0 test db` runs the database access tests. Without Docker,
 `scripts/test-db-local.sh` runs the same tests on a plain PostgreSQL with pgTAP. The end-to-end function tests need a
-`supabase/functions/.env` that points the functions at the stand-ins the tests start; the CI
-*backend* job (`.github/workflows/ci.yml`) shows the four lines.
+`supabase/functions/.env` that points the functions at the stand-ins the tests start, and
+`SEND_SMS_HOOK_SECRET` set before `supabase start` (Auth's hook needs it); the CI *backend* job
+(`.github/workflows/ci.yml`) shows both.
 
 ## Locally
 

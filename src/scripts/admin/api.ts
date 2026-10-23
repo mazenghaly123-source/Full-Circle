@@ -21,13 +21,15 @@ export type Request = {
 export type Message = {
   id: number; name: string; contact: string; contact_channel: 'email' | 'whatsapp'; email: string | null; whatsapp: string | null;
   text: string; status: 'new' | 'replied' | 'closed'; created_at: string;
+  /** contact: from the contact page; whatsapp: a reply to the WhatsApp number */
+  via: 'contact' | 'whatsapp';
 };
 export type Member = { id: number; name: string; email: string; whatsapp: string | null; created_at: string };
 export type Client = { id: number; brand: string; notes: string | null; created_at: string; client_members: Member[]; orders: { id: number; code: string; name: string; stage: number; status: string }[] };
 export type Decision = { id: number; stage: number; title: string; body: string | null; photo_ids: number[]; status: 'open' | 'approved' | 'changes_asked' | 'withdrawn'; note: string | null; opened_label: string; opened_at: string; closed_label: string | null; closed_at: string | null };
 export type Photo = { id: number; stage: number; object_path: string; caption: string | null; created_at: string };
 export type PhotoRequest = { id: number; stage: number; note: string | null; asked_label: string; created_at: string; answered_at: string | null };
-export type Note = { id: number; event: string; audience: 'staff' | 'client'; channel: 'email' | 'whatsapp'; recipient: string; status: 'queued' | 'sent' | 'failed' | 'skipped'; detail: string | null; created_at: string };
+export type Note = { id: number; event: string; audience: 'staff' | 'client'; channel: 'email' | 'whatsapp'; recipient: string; status: 'queued' | 'sent' | 'failed' | 'skipped'; detail: string | null; created_at: string; delivered_at: string | null; read_at: string | null };
 export type Status = 'active' | 'paused' | 'delivered' | 'cancelled';
 /** An order as the lists show it. */
 export type OrderRow = {
@@ -93,7 +95,7 @@ export const orders = () => get<OrderRow[]>('orders?select=id,code,name,product,
 export async function order(id: number): Promise<Order | null> {
   const rows = await get<Order[]>(`orders?id=eq.${id}&select=*,clients(id,brand,client_members(id,name,email,whatsapp,created_at)),order_specs(id,key,value,position),`
     + 'order_decisions(*),stage_photos(id,stage,object_path,caption,created_at),photo_requests(id,stage,note,asked_label,created_at,answered_at),'
-    + 'order_events(id,kind,side,actor_id,actor_label,stage,to_stage,decision_id,title,note,created_at),order_notifications(id,event,audience,channel,recipient,status,detail,created_at)');
+    + 'order_events(id,kind,side,actor_id,actor_label,stage,to_stage,decision_id,title,note,created_at),order_notifications(id,event,audience,channel,recipient,status,detail,created_at,delivered_at,read_at)');
   return rows[0] ?? null;
 }
 /** Every order with its decisions, photo requests and whole log: what Overview, Production and Approvals read. */
@@ -135,8 +137,12 @@ export async function invite(body: { kind: 'client'; client_id: number; name: st
   const res = await session.call('/functions/v1/invite', { method: 'POST', body: JSON.stringify(body) }).catch((e) => { throw e instanceof SignedOut ? e : new Refused(FAILED); });
   const out = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Refused(typeof out.error === 'string' ? out.error : FAILED), { field: out.field as string | undefined });
-  return out as { ok: true; email: 'sent' | 'failed' | 'skipped' };
+  // whatsapp and phone come with a number: the message there, and whether they can sign in with it
+  return out as { ok: true; email: Sent; whatsapp?: Sent; phone?: boolean };
 }
+type Sent = 'sent' | 'failed' | 'skipped';
+/** What staff are told when a number cannot be used to sign in (another account has it). */
+export const phoneNote = (out: { phone?: boolean }) => out.phone === false ? ' Their number is on another account, so they sign in by email.' : '';
 
 /** Asks the notify function to send what an action queued; the page does not wait for it. */
 export function sendQueued() {

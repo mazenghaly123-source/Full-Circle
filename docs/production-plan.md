@@ -1,11 +1,11 @@
 # Production build plan
 
-Status (21 Oct 2026): **phase 1 is live on Cloudflare** (the static site at parity with the prototype),
-**phase 2 is built on the staging Supabase project** (the forms send for real, test data only), and
-**phase 3's database and portal are built** on a branch (`claude/phase-3-portal`): the real sign-in
-and the client's own orders replace Track's demo. Real codes need the dashboard settings in §10. The
-domain, **fullcircle-co.com**, is bought and attached to the site (20 Oct), and Resend has its key
-and the domain (Mazen, 20–21 Oct). See §2. The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
+Status (23 Oct 2026): **phases 1 and 2 are live on Cloudflare** from `main` (the static site at
+parity with the prototype; the forms send to the staging Supabase project, test data only).
+**Phases 3, 4 and 5's search and sharing are built but not merged**: four stacked PRs, #8 → #11, with
+`claude/phase-4-whatsapp` holding all of them. The domain, **fullcircle-co.com**, is bought and
+attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2, and
+[HANDOFF.md](./HANDOFF.md) for branches, staging and what was half-done. The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
 
 ## 1. Decisions
@@ -27,7 +27,25 @@ and the domain (Mazen, 20–21 Oct). See §2. The decisions below were confirmed
 
 ## 2. Where things stand
 
-**Phase 1 is done** (branch `claude/youthful-maxwell-aiw9ob`):
+**As of 23 Oct 2026** (details in [HANDOFF.md](./HANDOFF.md)):
+
+- *On `main` and live:* phase 1 (the 7 pages and the 404 at parity), phase 2 (the request and contact
+  forms through `submit-request` and `submit-contact` to staging, `/privacy`, Continue on WhatsApp),
+  the shorter words with no TBC (PR #6) and the domain wiring (PR #7). Cloudflare deploys `main` to
+  fullcircle-co.com and full-circle.mazenghaly123.workers.dev. Track on the live site is still the
+  prototype's demo.
+- *Built, not merged:* phase 3 (portal, PR #8), phase 4 (admin, PR #9; WhatsApp, PR #11) and phase
+  5's search and sharing (PR #10). The PRs are stacked; merge #8 → #9 → #10 → #11. CI is green on every
+  PR (23 Oct): the `site` and `backend` jobs and Cloudflare's preview build, which had failed since
+  #6 until `wrangler.jsonc` got the `previews` block Wrangler 4.146 asks for.
+- *On staging:* all 8 migrations are applied, the WhatsApp one included. Every function is on
+  staging in its current version (23 Oct): `submit-request`, `submit-contact`, `invite`, `notify`,
+  `send-sms` and `whatsapp-webhook`. `EMAIL_FROM` is set, and the staff alerts for two test
+  requests went out through Resend.
+- *Not tried yet:* the email receipt to a brand (both tests gave a WhatsApp number), and the phase 4
+  test (an order through all 8 stages from a phone), which waits on the Auth settings in §10.
+
+**Phase 1 is done** (on `main`, live):
 
 - The 7 pages on real URLs: `/`, `/how-it-works`, `/what-we-make`, `/about`, `/request-a-sample`,
   `/track`, `/contact`, plus a 404 in the same design. Old prototype links (`/#how`) are redirected.
@@ -103,7 +121,7 @@ Small, deliberate differences from the prototype:
 **Prototype bugs:** both are fixed. On Track, the line under the order code now follows the order
 (phase 3); the request form no longer stays visible under "Received." (phase 2).
 
-**Phase 2 is built** (15 Oct 2026, branch `claude/phase-2-requests`), on the Supabase project
+**Phase 2 is built and on `main`** (15 Oct 2026, PR #5), on the Supabase project
 **full-circle-staging** (Frankfurt, free plan), with test data only:
 
 - *Database:* requests, contact messages, consent records, the log of every message sent, and
@@ -127,13 +145,12 @@ Small, deliberate differences from the prototype:
   consent and log rows; the publishable key was refused on every table.
 
 **Left for phase 2 to be done:** ~~a Resend account and key~~ (set in Supabase, 20 Oct) and
-~~the domain verified at Resend~~ (Mazen, 21 Oct): to confirm with one test request once
-`EMAIL_FROM` is `Full Circle <hello@fullcircle-co.com>` (the last test, before the domain was
-verified, was refused by Resend); a real
+~~the domain verified at Resend~~ (Mazen, 21 Oct): ~~`EMAIL_FROM`~~ (set 23 Oct; the staff
+alert is confirmed, the receipt to a brand's email is still to try); a real
 Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
 requests and messages a year old that never became orders (`/privacy`).
 
-**Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, not yet merged or deployed):
+**Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, PR #8, not merged; its migrations are on staging):
 
 - *Database* (migration `20261020221044`, applied to staging): clients and their people, orders,
   specs, decisions, stage photos (a private bucket, opened through signed links), photo requests, the
@@ -164,7 +181,7 @@ requests and messages a year old that never became orders (`/privacy`).
 4. A decision may be opened without photos (a tech pack sign-off has none).
 5. When a person is removed, the log keeps their name as it was; their account goes.
 
-**Phase 4 is under way** (21 Oct 2026, branch `claude/phase-4-admin`, built on phase 3):
+**Phase 4 is built** (21 Oct 2026, branches `claude/phase-4-admin`, PR #9, and `claude/phase-4-whatsapp`, PR #11; not merged):
 
 - *Admin* (`/admin`, noindex): the Studio OS design from the canvas, one page that works on a phone
   (a tab bar at the bottom) and a computer (a side bar). Staff sign in with an email code, as clients
@@ -195,16 +212,25 @@ requests and messages a year old that never became orders (`/privacy`).
   not built: no data behind them yet.
 - *Functions* (deployed to staging): `invite` adds a person to a client or (owners only) to the team
   and emails them; `notify` sends the queued order messages, one email for several photos at once,
-  and never the same message twice (migration `20261021003118`). WhatsApp messages are logged as
-  skipped until Meta is set up.
-- *Tests:* 11 more database checks (`admin.test.sql`), the two functions end to end
-  (`tests/unit/backend.spec.ts`), and the admin's screens in the browser on the three sizes
+  and never the same message twice (migration `20261021003118`).
+- *WhatsApp* (branch `claude/phase-4-whatsapp`, [whatsapp.md](./whatsapp.md)): built and tested
+  against a stand-in for Meta. Its migration and its functions are on staging (23 Oct); nothing goes out until Meta is set up, and until then each message is
+  logged as skipped. Portal sign-in by number (Auth's Send SMS hook calls `send-sms`, which sends the
+  code as an authentication template); the request receipt, the portal invitation and the order
+  updates as templates, to the numbers that opted in, besides the email; replies to the number in
+  the admin's inbox (marked WhatsApp), answered once a day with the main line to write to, and STOP
+  turning the updates off (`whatsapp-webhook`); delivered and read receipts on the order's "Messages
+  sent" (migration `20261021064023`).
+- *Tests:* 11 more database checks (`admin.test.sql`) and 13 for WhatsApp (`whatsapp.test.sql`), the
+  functions end to end (`tests/unit/backend.spec.ts`), the signature checks and Meta's payloads
+  (`tests/unit/whatsapp.spec.ts`), and the admin's screens in the browser on the three sizes
   (`tests/admin.spec.ts`).
 
-**Left for phase 4:** WhatsApp (sign-in codes, the messages and the reply webhook) once Meta is set
-up (§10 items 7–9); a test order taken through all 8 stages from a phone on staging.
+**Left for phase 4:** Meta's set-up (§10 items 7–9: the portfolio, the SIM, the templates in
+[whatsapp.md](./whatsapp.md)) and the secrets that switch WhatsApp on; a test order taken through all
+8 stages from a phone on staging.
 
-**Phase 5 has begun** (21 Oct 2026, branch `claude/phase-5-seo`, on phase 4), with what needs no
+**Phase 5 has begun** (21 Oct 2026, branch `claude/phase-5-seo`, PR #10, on phase 4; not merged), with what needs no
 account or decision:
 - Every page names its address on the domain (`fullcircle-co.com/about`, not `.html`) and carries
   the tags a shared link is shown with: title, description and one share card (`public/og.jpg`,
@@ -401,7 +427,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 1 | ✅ **Static site at parity** | Done: live on Cloudflare at full-circle.mazenghaly123.workers.dev and checked by Mazen (15 Oct 2026) |
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; the staff inboxes are still to be confirmed with a test request** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
-| 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin and email messages built; WhatsApp waits on Meta** |
+| 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin, email and WhatsApp built; WhatsApp switches on once Meta is set up** |
 | 5 | 🔶 Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain. **Search and sharing built (canonical addresses, the share card, the business on Home, sitemap, robots, HSTS); Umami and Lighthouse wait for the site on its domain** |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 
@@ -426,29 +452,46 @@ nameservers are then pointed at Cloudflare.
 
 ## 10. What I need from you
 
-**Before phase 2:**
-1. ~~Buy the domain.~~ fullcircle-co.com, 20 Oct.
-2. ~~Brief the lawyer (§7).~~ Done 15 Oct.
-3. ~~Create the Supabase account~~ (done: staging is up; live comes at launch). ~~Create a Resend
-   account and add its API key~~ (done 20 Oct; domain verified at Resend 21 Oct). Left: set
-   `EMAIL_FROM` to `Full Circle <hello@fullcircle-co.com>` if it is not set yet.
-4. ~~Decide on the Arabic privacy page at launch (§7).~~ English as built; Arabic with the Arabic site.
-5. ~~Approve the small form additions (§7).~~ Approved 15 Oct and built.
-6. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
+As of 23 Oct 2026. Done: ~~the domain~~ (20 Oct), ~~the lawyer's review~~ (15 Oct), ~~Supabase
+staging~~, ~~the Resend key~~ (20 Oct), ~~the domain verified at Resend~~ (21 Oct), ~~the Arabic
+privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~~ (15 Oct).
 
-**Before phase 3 can be tried** (Supabase dashboard → Authentication, staging first; I cannot change
-these from here):
-1. *Sign In / Providers:* turn off "Allow new users to sign up" (the portal is invite-only), and set the
-   email OTP expiry to 600 seconds (10 minutes).
-2. *Emails → Magic Link* template: put the code in it, for example "Your Full Circle code is
-   {{ .Token }}. It works for 10 minutes." Without `{{ .Token }}` the email carries a link, not a code.
-3. Until Resend is set up as the project's SMTP sender (after the domain), Supabase's own sender only
-   reaches the members of the Supabase organisation, a few emails an hour: enough for Mazen to try it.
-4. *Attack Protection:* once the real Turnstile widget exists, turn on its check here with the
-   widget's secret.
+**Decisions:**
+1. Confirm the 5 items "decided in the build" (§2): new codes and `-B`, the database-held sample
+   gate, no Undo, decisions without photos, names kept in the log.
+2. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
+3. Say when phases 3–5 may be merged to `main`. Merging puts the real sign-in on Track and `/admin`
+   on the live site, both still on staging (see [HANDOFF.md](./HANDOFF.md)).
+4. Keep or drop Vercel. Its GitHub app still builds a preview of every PR, although hosting is
+   Cloudflare only.
 
-**Before phase 3–4:**
-7. Set up Meta: a Meta Business portfolio and a WhatsApp app. You may already have a portfolio
-   behind the Instagram account. Business verification uses Full Circle's documents.
-8. Get a new SIM for the system WhatsApp number.
-9. Approve the template wording for each WhatsApp message in §5.
+**Supabase dashboard** (staging first; these cannot be changed from a cloud session):
+5. ~~*Edge Functions → Secrets:* set `EMAIL_FROM` to `Full Circle <hello@fullcircle-co.com>`.~~ Done 23 Oct.
+6. *Authentication → Sign In / Providers:* turn off "Allow new users to sign up" (the portal is
+   invite-only), and set the email OTP expiry to 600 seconds.
+7. *Authentication → Emails → Magic Link* template: put the code in it, for example "Your Full
+   Circle code is {{ .Token }}. It works for 10 minutes." Without `{{ .Token }}` the email carries a
+   link, not a code.
+8. *Authentication → SMTP:* Resend as the sender (`hello@fullcircle-co.com`). Until then, Supabase's
+   own sender reaches only the organisation's members, a few emails an hour.
+
+**Cloudflare dashboard:**
+9. ~~Open one failed *Workers Builds: full-circle* log and paste it into the session.~~ Done and
+   fixed 23 Oct.
+10. Create a Turnstile widget for fullcircle-co.com (Invisible). Its keys go in at launch, the site
+    key and the secret together (setting only the secret turns every form away). Then turn on the
+    check under Supabase's Attack Protection.
+
+**Meta (WhatsApp):**
+11. A Meta Business portfolio and a WhatsApp app. You may already have a portfolio behind the
+    Instagram account. Business verification uses Full Circle's documents.
+12. A new SIM for the system WhatsApp number.
+13. Submit the 6 templates in [whatsapp.md](./whatsapp.md). Once they are approved, set the 5
+    WhatsApp secrets and the Send SMS hook (steps in whatsapp.md).
+
+**Content:**
+14. The real photos: atelier-1..5, about-floor and team-1..4. The team section stays hidden until
+    there are names and portraits.
+
+**At launch:** the live Supabase project (Pro, Frankfurt), Umami Cloud (EU), and the PDPC filings
+(§7).

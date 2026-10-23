@@ -435,22 +435,30 @@ test('track: a session is kept, order updates on WhatsApp can be turned on, and 
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
 });
 
-test('track: a WhatsApp number asks for its code on WhatsApp, and says so when that is not switched on', async ({ page }) => {
+test('track: a WhatsApp number asks for its code on WhatsApp, and says so when that is not switched on or does not go', async ({ page }) => {
   await mockPortal(page);
   // this route comes after mockPortal's, so it answers every code request: it keeps what was asked
   const asked: Record<string, unknown>[] = [];
-  await page.route(/\/auth\/v1\/otp$/, (route) => { asked.push(route.request().postDataJSON()); return route.fulfill({ status: 400, json: { code: 400, error_code: 'phone_provider_disabled', msg: 'Unsupported phone provider' } }); });
+  await page.route(/\/auth\/v1\/otp$/, (route) => {
+    asked.push(route.request().postDataJSON());
+    return route.fulfill(asked.length === 1
+      ? { status: 400, json: { code: 400, error_code: 'phone_provider_disabled', msg: 'Unsupported phone provider' } }
+      : { status: 422, json: { code: 422, msg: 'whatsapp_send_failed: WhatsApp did not take the message' } });
+  });
   await page.goto('/track');
   await page.locator('#tId').fill('0101 143 5406');
   await page.locator('#tSendCode').click();
   await expect(page.locator('#tErr')).toHaveText('Codes on WhatsApp are not switched on yet. Use the email on your order');
   expect(asked).toHaveLength(1);
   expect(asked[0]).toMatchObject({ phone: '+201011435406', channel: 'whatsapp', create_user: false });
+  // switched on, but WhatsApp would not take it (the send-sms function's answer, through Auth)
+  await page.locator('#tSendCode').click();
+  await expect(page.locator('#tErr')).toHaveText('Could not send a code on WhatsApp. Check the number, or use the email on your order');
   // too short to be a number: nothing is asked
   await page.locator('#tId').fill('5406');
   await page.locator('#tSendCode').click();
   await expect(page.locator('#tErr')).toHaveText('Add the email or WhatsApp number on your order');
-  expect(asked).toHaveLength(1);
+  expect(asked).toHaveLength(2);
 });
 
 test('contact: copy, and the form checks before sending', async ({ page }) => {

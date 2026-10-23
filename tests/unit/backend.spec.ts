@@ -1,14 +1,20 @@
-// The form functions on a local Supabase: what lands in the database, and the emails.
-// Runs when SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_PUBLISHABLE_KEY point at a local stack
-// (`supabase start`; the CI backend job sets them). Turnstile and Resend are stood in for by a small
-// server on port 54399, which supabase/functions/.env points the functions at:
+// The form functions on a local Supabase: what lands in the database, the emails and the WhatsApp
+// messages. Runs when SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_PUBLISHABLE_KEY point at a local
+// stack (`supabase start`; the CI backend job sets them). Turnstile, Resend and Meta are stood in for
+// by a small server on port 54399, which supabase/functions/.env points the functions at:
 //   TURNSTILE_VERIFY_URL=http://host.docker.internal:54399/siteverify
 //   RESEND_API_URL=http://host.docker.internal:54399/emails
 //   RESEND_API_KEY=test
 //   STAFF_EMAILS=staff@fullcircle.test
+//   WHATSAPP_API_URL=http://host.docker.internal:54399/whatsapp
+//   WHATSAPP_TOKEN=test, WHATSAPP_PHONE_ID=100200300
+//   WHATSAPP_APP_SECRET=test-app-secret, WHATSAPP_VERIFY_TOKEN=test-verify-token
+//   SEND_SMS_HOOK_SECRET=the same as Auth's (supabase/config.toml), and in this process's environment
+import { createHmac } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import { expect, test } from '@playwright/test';
 import { ERRORS, NOTICE } from '../../supabase/functions/_shared/forms';
+import { TEMPLATES } from '../../supabase/functions/_shared/whatsapp';
 
 const URL_ = process.env.SUPABASE_URL ?? '', SECRET = process.env.SUPABASE_SECRET_KEY ?? '', PUBLISHABLE = process.env.SUPABASE_PUBLISHABLE_KEY ?? '';
 test.skip(!URL_ || !SECRET, 'no local Supabase (set SUPABASE_URL, SUPABASE_SECRET_KEY and SUPABASE_PUBLISHABLE_KEY)');
@@ -17,6 +23,8 @@ test.describe.configure({ mode: 'serial' });
 const TOKEN = 'XXXX.DUMMY.TOKEN.XXXX';
 type Mail = { to: string[]; subject: string; text: string; html: string; reply_to?: string };
 const mails: Mail[] = [];
+type Wa = { to: string; type: string; template?: { name: string; components: { type: string; parameters: { text: string }[] }[] }; text?: { body: string } };
+const sent: Wa[] = [];
 let mock: Server;
 
 test.beforeAll(async () => {
@@ -26,6 +34,9 @@ test.beforeAll(async () => {
     res.setHeader('content-type', 'application/json');
     if (req.url === '/siteverify') res.end(JSON.stringify({ success: body.includes(TOKEN) }));
     else if (req.url === '/emails') { mails.push(JSON.parse(body)); res.end(JSON.stringify({ id: `mail-${mails.length}` })); }
+    else if (req.url === '/whatsapp/100200300/messages' && req.headers.authorization === 'Bearer test') {
+      sent.push(JSON.parse(body)); res.end(JSON.stringify({ messages: [{ id: `wamid.test-${run}-${sent.length}` }] }));
+    }
     else { res.statusCode = 404; res.end('{}'); }
   });
   await new Promise<void>((ok) => mock.listen(54399, '0.0.0.0', ok));
@@ -39,6 +50,16 @@ async function rows<T = Record<string, unknown>>(table: string, query: string): 
   expect(res.ok, await res.clone().text()).toBe(true);
   return res.json();
 }
+
+/** Waits for the WhatsApp messages to a number (+20…). */
+async function whatsappTo(number: string, n: number) {
+  const to = number.slice(1);
+  await expect.poll(() => sent.filter((m) => m.to === to).length, { timeout: 15_000 }).toBeGreaterThanOrEqual(n);
+  return sent.filter((m) => m.to === to);
+}
+const params = (m: Wa) => m.template?.components.find((c) => c.type === 'body')?.parameters.map((p) => p.text);
+/** A number nobody else in this run has. */
+const freshNumber = (() => { let i = 0; return () => `+2010${String(Date.now() + i++).slice(-8)}`; })();
 
 /** Waits for the emails sent after a reply (the functions send them once they have answered). */
 async function mailsTo(address: string, n: number) {
@@ -69,11 +90,24 @@ test('a request with a WhatsApp number lands, and staff are emailed', async () =
   const [alert] = (await mailsTo('staff@fullcircle.test', 1)).filter((m) => m.subject.startsWith(code));
   expect(alert.subject).toBe(`${code} / New sample request: Acme (Denim, Scaling)`);
   expect(alert.text).toContain('Order updates on WhatsApp: Yes, opted in');
+  // the brand asked for updates on WhatsApp, so its receipt goes there
+  const [receipt] = await whatsappTo(r.whatsapp as string, 1);
+  expect(receipt.template?.name).toBe(TEMPLATES.request_received.name);
+  expect(params(receipt)).toEqual([code]);
   await expect.poll(async () => (await rows('notifications', `request_id=eq.${r.id}&select=audience,channel,status,detail&order=id`)).length).toBe(2);
   expect(await rows('notifications', `request_id=eq.${r.id}&select=audience,channel,status,detail&order=id`)).toEqual([
     { audience: 'staff', channel: 'email', status: 'sent', detail: null },
-    { audience: 'client', channel: 'whatsapp', status: 'skipped', detail: 'WhatsApp messages start in phase 4' },
+    { audience: 'client', channel: 'whatsapp', status: 'sent', detail: null },
   ]);
+});
+
+test('a number that did not ask for WhatsApp updates gets no message: staff reply by hand', async () => {
+  const contact = `010 ${String(Date.now()).slice(-8)}`;
+  const { code } = await (await post('submit-request', requestForm({ contact, whatsappUpdates: false }))).json();
+  const [r] = await rows<{ id: number; whatsapp: string }>('requests', `code=eq.${code}&select=id,whatsapp`);
+  await expect.poll(async () => (await rows('notifications', `request_id=eq.${r.id}&audience=eq.client`)).length).toBe(1);
+  expect(await rows('notifications', `request_id=eq.${r.id}&audience=eq.client&select=status,detail`)).toEqual([{ status: 'skipped', detail: 'No WhatsApp updates asked for; staff reply by hand' }]);
+  expect(sent.filter((m) => m.to === r.whatsapp.slice(1))).toEqual([]);
 });
 
 test('a brand that gave an email gets a receipt, and staff can reply to it', async () => {
@@ -230,4 +264,139 @@ test('queued order messages go out once, photos for one person in one email', as
   // nothing is sent twice
   await fetch(fn('notify'), { method: 'POST', headers: someone.headers });
   expect(mails.filter((m) => m.to.includes(to))).toHaveLength(2);
+});
+
+// WhatsApp from the system number (phase 4) ---------------------------------------------------------
+
+const HOOK_SECRET = process.env.SEND_SMS_HOOK_SECRET ?? '';
+
+test('a person added with a number that opted in hears on WhatsApp, and signs in with a code there', async () => {
+  test.skip(!PUBLISHABLE, 'no publishable key');
+  const owner = await person(`owner3-${run}@fullcircle.test`);
+  await insert('staff', { user_id: owner.id, name: 'Mazen', role: 'owner' });
+  const brand = await insert<{ id: number }>('clients', { brand: `Denim ${run}` });
+  const number = freshNumber();
+  await insert('contact_consents', { channel: 'whatsapp', address: number, purpose: 'order_updates', opted_in: true, wording: NOTICE.whatsappUpdates, wording_version: NOTICE.version, source: 'request FC-1' });
+  const res = await fetch(fn('invite'), { method: 'POST', headers: owner.headers, body: JSON.stringify({ kind: 'client', client_id: brand.id, name: 'Omar', email: `omar-${run}@brand.test`, whatsapp: number }) });
+  expect(res.status, await res.clone().text()).toBe(200);
+  expect(await res.json()).toMatchObject({ email: 'sent', whatsapp: 'sent', phone: true });
+  const [invite] = await whatsappTo(number, 1);
+  expect(invite.template?.name).toBe(TEMPLATES.portal_invite.name);
+  expect(params(invite)).toEqual(['Omar', 'Mazen', `Denim ${run}`]);
+
+  // the portal's sign-in with the number: Auth hands the code to send-sms, which sends it on WhatsApp
+  const auth = (path: string, body: object) => fetch(`${URL_}/auth/v1/${path}`, { method: 'POST', headers: { apikey: PUBLISHABLE, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const asked = await auth('otp', { phone: number, create_user: false, channel: 'whatsapp' });
+  expect(asked.status, await asked.clone().text()).toBe(200);
+  const [, code] = await whatsappTo(number, 2);
+  expect(code.template?.name).toBe(TEMPLATES.code.name);
+  const otp = params(code)![0];
+  expect(otp).toMatch(/^\d{6}$/);
+  expect(code.template?.components.find((c) => c.type === 'button')?.parameters[0].text).toBe(otp);
+  const verified = await auth('verify', { phone: number, token: otp, type: 'sms' });
+  expect(verified.status, await verified.clone().text()).toBe(200);
+  expect((await verified.json()).access_token).toBeTruthy();
+});
+
+test('Auth\'s hook takes only calls Auth signed', async () => {
+  test.skip(!HOOK_SECRET, 'no SEND_SMS_HOOK_SECRET');
+  const body = JSON.stringify({ user: { phone: '201011435406' }, sms: { otp: '123456' } });
+  const sign = (id: string, ts: string, secret: string) => `v1,${createHmac('sha256', Buffer.from(secret.replace(/^v1,whsec_/, ''), 'base64')).update(`${id}.${ts}.${body}`).digest('base64')}`;
+  const call = (headers: Record<string, string>) => fetch(fn('send-sms'), { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body });
+  const ts = String(Math.floor(Date.now() / 1000));
+  expect((await call({})).status).toBe(401);
+  expect((await call({ 'webhook-id': 'msg_1', 'webhook-timestamp': ts, 'webhook-signature': sign('msg_1', ts, 'v1,whsec_' + Buffer.from('another secret').toString('base64')) })).status).toBe(401);
+  const old = String(Number(ts) - 600);
+  expect((await call({ 'webhook-id': 'msg_1', 'webhook-timestamp': old, 'webhook-signature': sign('msg_1', old, HOOK_SECRET) })).status).toBe(401);
+  const ok = await call({ 'webhook-id': 'msg_2', 'webhook-timestamp': ts, 'webhook-signature': sign('msg_2', ts, HOOK_SECRET) });
+  expect(ok.status).toBe(200);
+  expect(await ok.json()).toEqual({});
+});
+
+test('queued order messages go on WhatsApp too, as the event\'s template', async () => {
+  test.skip(!PUBLISHABLE, 'no publishable key');
+  const someone = await person(`notify2-${run}@brand.test`);
+  const brand = await insert<{ id: number }>('clients', { brand: `Knit ${run}` });
+  const order = await insert<{ id: number }>('orders', { code: `FC-W${run}`, client_id: brand.id, name: 'Hoodie', product: 'Hoodies', stage: 6 });
+  const number = freshNumber();
+  for (const event of ['stage_moved', 'photo_added', 'photo_added', 'decision_approved']) await insert('order_notifications', { order_id: order.id, event, audience: event === 'decision_approved' ? 'staff' : 'client', channel: 'whatsapp', recipient: number });
+  expect((await fetch(fn('notify'), { method: 'POST', headers: someone.headers })).status).toBe(200);
+  const got = await whatsappTo(number, 2);
+  expect(got.map((m) => [m.template?.name, params(m)]).sort()).toEqual([
+    [TEMPLATES.photo_added.name, ['There are 2 new photos', 'Hoodie', `FC-W${run}`]],
+    [TEMPLATES.stage_moved.name, ['Hoodie', `FC-W${run}`, '06 Production']],
+  ]);
+  const logged = await rows<{ event: string; status: string; provider_id: string | null; detail: string | null }>('order_notifications', `order_id=eq.${order.id}&select=event,status,provider_id,detail&order=id`);
+  expect(logged.map((l) => l.status)).toEqual(['sent', 'sent', 'sent', 'skipped']);
+  expect(logged[0].provider_id).toMatch(/^wamid\./);
+  expect(logged[3].detail).toBe('Staff hear of this by email');
+});
+
+/** A call from Meta to the webhook, signed with the app secret. */
+const fromMeta = (payload: object, secret = 'test-app-secret') => {
+  const body = JSON.stringify(payload);
+  return fetch(fn('whatsapp-webhook'), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Hub-Signature-256': `sha256=${createHmac('sha256', secret).update(body).digest('hex')}` }, body });
+};
+const change = (value: object) => ({ object: 'whatsapp_business_account', entry: [{ id: '1', changes: [{ field: 'messages', value: { messaging_product: 'whatsapp', metadata: { phone_number_id: '100200300' }, ...value } }] }] });
+const reply = (from: string, id: string, body: string, name = 'Omar K') =>
+  change({ contacts: [{ wa_id: from.slice(1), profile: { name } }], messages: [{ from: from.slice(1), id, timestamp: String(Math.floor(Date.now() / 1000)), type: 'text', text: { body } }] });
+
+test('Meta checks the webhook with its token, and only signed calls are read', async () => {
+  const check = (token: string) => fetch(`${fn('whatsapp-webhook')}?hub.mode=subscribe&hub.verify_token=${token}&hub.challenge=4242`);
+  const ok = await check('test-verify-token');
+  expect(ok.status).toBe(200);
+  expect(await ok.text()).toBe('4242');
+  expect((await check('wrong')).status).toBe(403);
+  expect((await fromMeta(reply(freshNumber(), `wamid.x-${run}`, 'Hi'), 'another secret')).status).toBe(401);
+});
+
+test('a reply to the number lands in the inbox once, is answered once a day, and staff are told', async () => {
+  const number = freshNumber();
+  const first = reply(number, `wamid.in-${run}-1`, 'Is my sample ready?');
+  expect((await fromMeta(first)).status).toBe(200);
+  expect((await fromMeta(first)).status).toBe(200); // Meta sends it again: it lands once
+  const saved = await rows<{ id: number; name: string; whatsapp: string; text: string; via: string; status: string }>('messages', `whatsapp=eq.${encodeURIComponent(number)}&select=id,name,whatsapp,text,via,status`);
+  expect(saved).toEqual([{ id: saved[0].id, name: 'Omar K', whatsapp: number, text: 'Is my sample ready?', via: 'whatsapp', status: 'new' }]);
+  const [answer] = await whatsappTo(number, 1);
+  expect(answer.type).toBe('text');
+  expect(answer.text?.body).toContain('+20 101 143 5406');
+  const alert = (await mailsTo('staff@fullcircle.test', 1)).filter((m) => m.subject === 'WhatsApp reply from Omar K');
+  expect(alert).toHaveLength(1);
+  expect(alert[0].text).toContain('Is my sample ready?');
+
+  // a second reply the same day: saved, not answered again, and staff are not emailed again within the hour
+  expect((await fromMeta(reply(number, `wamid.in-${run}-2`, 'Also the hoodie'))).status).toBe(200);
+  await expect.poll(async () => (await rows('messages', `whatsapp=eq.${encodeURIComponent(number)}&select=id`)).length).toBe(2);
+  await new Promise((r) => setTimeout(r, 1500));
+  expect(sent.filter((m) => m.to === number.slice(1))).toHaveLength(1);
+  expect(mails.filter((m) => m.subject === 'WhatsApp reply from Omar K')).toHaveLength(1);
+});
+
+test('STOP turns the updates off and says so', async () => {
+  const number = freshNumber();
+  await insert('contact_consents', { channel: 'whatsapp', address: number, purpose: 'order_updates', opted_in: true, wording: NOTICE.whatsappUpdates, wording_version: NOTICE.version, source: 'request FC-1' });
+  expect((await fromMeta(reply(number, `wamid.stop-${run}`, 'STOP'))).status).toBe(200);
+  const [latest] = await rows<{ opted_in: boolean; source: string }>('contact_consents', `address=eq.${encodeURIComponent(number)}&select=opted_in,source&order=id.desc&limit=1`);
+  expect(latest).toEqual({ opted_in: false, source: 'whatsapp reply' });
+  const [said] = await whatsappTo(number, 1);
+  expect(said.text?.body).toMatch(/not send you order updates on WhatsApp/);
+});
+
+test('what Meta says happened to a message is kept with it', async () => {
+  const brand = await insert<{ id: number }>('clients', { brand: `Status ${run}` });
+  const order = await insert<{ id: number }>('orders', { code: `FC-S${run}`, client_id: brand.id, name: 'Tee', product: 'Tees', stage: 2 });
+  const row = (id: string) => insert<{ id: number }>('order_notifications', { order_id: order.id, event: 'stage_moved', audience: 'client', channel: 'whatsapp', recipient: '+201011435406', status: 'sent', provider_id: id });
+  const [read, lost] = [await row(`wamid.read-${run}`), await row(`wamid.lost-${run}`)];
+  const at = Math.floor(Date.now() / 1000);
+  const statuses = change({ statuses: [
+    { id: `wamid.read-${run}`, status: 'delivered', timestamp: String(at - 5), recipient_id: '201011435406' },
+    { id: `wamid.read-${run}`, status: 'read', timestamp: String(at), recipient_id: '201011435406' },
+    { id: `wamid.lost-${run}`, status: 'failed', timestamp: String(at), recipient_id: '201011435406', errors: [{ code: 131026, title: 'Message undeliverable' }] },
+  ] });
+  expect((await fromMeta(statuses)).status).toBe(200);
+  const [r] = await rows<{ status: string; delivered_at: string; read_at: string }>('order_notifications', `id=eq.${read.id}&select=status,delivered_at,read_at`);
+  expect(r.status).toBe('sent');
+  expect(Date.parse(r.delivered_at)).toBe((at - 5) * 1000);
+  expect(Date.parse(r.read_at)).toBe(at * 1000);
+  expect(await rows('order_notifications', `id=eq.${lost.id}&select=status,detail`)).toEqual([{ status: 'failed', detail: '131026 Message undeliverable' }]);
 });
