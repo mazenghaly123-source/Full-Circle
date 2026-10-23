@@ -219,8 +219,10 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = false
+# Email sign-in stays on, so the people staff invite can sign in with a code (the CLI turns this into
+# GOTRUE_EXTERNAL_EMAIL_ENABLED: false would turn email sign-in off for everyone). New accounts stay
+# invite-only through enable_signup = false under [auth].
+enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -420,4 +422,12 @@ enabled = true
 verify_jwt = false
 
 [functions.submit-contact]
+verify_jwt = false
+
+# The admin's functions check who is calling themselves (the staff table, or any signed-in person for
+# notify), so the gateway's JWT check is off as for the forms.
+[functions.invite]
+verify_jwt = false
+
+[functions.notify]
 verify_jwt = false

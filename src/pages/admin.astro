@@ -1,0 +1,51 @@
+---
+// /admin: the staff's app (phase 4). The screens are drawn by src/scripts/admin/app.ts. On a phone the
+// first four sit in the tab bar and the rest under More.
+import Admin from '../layouts/Admin.astro';
+import { ICON } from '../scripts/admin/ui';
+
+const NAV = [
+  { k: 'overview', n: '01', label: 'Overview', icon: ICON.overview, tab: true },
+  { k: 'inbox', n: '02', label: 'Inbox', icon: ICON.inbox, tab: true },
+  { k: 'orders', n: '03', label: 'Orders', icon: ICON.orders, tab: true },
+  { k: 'production', n: '04', label: 'Production', icon: ICON.production, tab: true },
+  { k: 'approvals', n: '05', label: 'Approvals', icon: ICON.approvals },
+  { k: 'clients', n: '06', label: 'Clients', icon: ICON.clients },
+  { k: 'analytics', n: '07', label: 'Analytics', icon: ICON.analytics },
+  { k: 'team', n: '08', label: 'Team', icon: ICON.team },
+];
+---
+<Admin>
+<div id="signin" class="signin" hidden></div>
+<div class="page" id="app" hidden>
+  <aside class="side">
+    <a href="#/overview" aria-label="Full Circle Studio OS" style="display:flex;flex-direction:column;gap:8px;padding:0 10px">
+      <svg class="logo" viewBox="0 0 889.35 147.50" aria-hidden="true"><use href="#fc-h"/></svg><span class="kick">Studio OS</span>
+    </a>
+    <nav aria-label="Studio OS" style="display:flex;flex-direction:column;gap:2px">
+      {NAV.map((i) => <a class="ix" href={`#/${i.k}`} data-nav={i.k} data-label={i.label}><span class="n">{i.n}</span>{i.label}<span class="c" data-count={i.k}></span></a>)}
+    </nav>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px;border-radius:16px;border:1px solid rgba(255,246,232,.08);background:#141311">
+      <span style="display:flex;flex-direction:column;min-width:0;flex:1"><span id="who-name" style="font-size:13.5px;font-weight:500"></span><span id="who-role" class="t3" style="font-size:12px"></span></span>
+      <button type="button" class="qa" id="sign-out">Sign out</button>
+    </div>
+  </aside>
+  <div class="col">
+    <header class="top">
+      <label class="pill search"><Fragment set:html={ICON.search} /><input type="search" id="q" placeholder="Search codes, brands, people" aria-label="Search codes, brands and people"></label>
+      <span style="flex:1"></span>
+      <span class="tag hide-s" id="stage-tag" hidden>Staging · test data</span>
+      <button type="button" class="pill bone" id="new-order"><Fragment set:html={ICON.plus} />New order</button>
+    </header>
+    <main class="main" id="main" tabindex="-1"></main>
+  </div>
+</div>
+<nav class="tabbar" id="tabbar" hidden aria-label="Studio OS">
+  {NAV.filter((i) => i.tab).map((i) => <a href={`#/${i.k}`} data-nav={i.k} data-label={i.label}><Fragment set:html={i.icon} />{i.label}<span class="c" data-count={i.k}></span></a>)}
+  <button type="button" id="more-tab" data-label="More" aria-haspopup="dialog"><Fragment set:html={ICON.more} />More<span class="c" data-count="more"></span></button>
+</nav>
+<template id="more-items">{NAV.filter((i) => !i.tab).map((i) => <a href={`#/${i.k}`} data-nav={i.k} data-label={i.label}><Fragment set:html={i.icon} />{i.label}<span class="c" data-count={i.k}></span></a>)}</template>
+<div id="dlg"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>import '../scripts/admin/app';</script>
+</Admin>

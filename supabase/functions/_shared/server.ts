@@ -1,6 +1,7 @@
-// What the two form functions share: the database calls they make, replies with CORS, the Turnstile
-// check, sending email through Resend and logging every message sent. Runs in Deno (Supabase Edge
-// Functions) with no dependencies: the handful of calls below go straight to Supabase's REST API.
+// What the Edge Functions share: the database calls they make, who is calling, replies with CORS,
+// the Turnstile check, sending email through Resend and logging every message sent. Runs in Deno
+// (Supabase Edge Functions) with no dependencies: the handful of calls below go straight to
+// Supabase's REST APIs.
 
 import type { Contact } from './forms.ts';
 
@@ -36,8 +37,46 @@ export function db() {
     async delete(table: string, filters: Record<string, string>) {
       await call(`/rest/v1/${table}?${query(filters)}`, { method: 'DELETE' });
     },
+    /** Reads rows: `select` is PostgREST's column list (embeds allowed), `filters` its filters. */
+    async select<T = unknown>(table: string, select: string, filters: Record<string, string> = {}): Promise<T[]> {
+      const res = await call(`/rest/v1/${table}?${query({ select, ...filters })}`);
+      return res.json();
+    },
+    /** Changes the rows matching the filters. */
+    async update(table: string, filters: Record<string, string>, values: object) {
+      await call(`/rest/v1/${table}?${query(filters)}`, { method: 'PATCH', headers: { ...json, Prefer: 'return=minimal' }, body: JSON.stringify(values) });
+    },
+    /** Calls a database function. */
+    async rpc<T = unknown>(fn: string, args: object = {}): Promise<T> {
+      const res = await call(`/rest/v1/rpc/${fn}`, { method: 'POST', headers: json, body: JSON.stringify(args) });
+      return res.json();
+    },
+    /** Creates a sign-in account for an email (Auth's admin API), confirmed, with no password. */
+    async createUser(email: string): Promise<string> {
+      const res = await call('/auth/v1/admin/users', { method: 'POST', headers: json, body: JSON.stringify({ email, email_confirm: true }) });
+      return (await res.json()).id;
+    },
   };
 }
+
+/**
+ * The signed-in person behind a request (from its Authorization header), or null when Auth turns
+ * the token down. Throws when Auth cannot be reached or is busy: the token may still be good, and a
+ * 401 would sign the person out. The functions that act for staff check this against the staff
+ * table themselves.
+ */
+export async function caller(req: Request): Promise<string | null> {
+  const bearer = req.headers.get('authorization');
+  const key = req.headers.get('apikey') ?? env('SUPABASE_ANON_KEY');
+  if (!bearer?.startsWith('Bearer ') || !key) return null;
+  const res = await fetch(`${env('SUPABASE_URL')}/auth/v1/user`, { headers: { apikey: key, Authorization: bearer } }).catch(() => null);
+  if (!res || res.status === 429 || res.status >= 500) throw new Error(`auth unavailable (${res?.status ?? 'offline'})`);
+  if (!res.ok) return null;
+  return (await res.json().catch(() => ({}))).id ?? null;
+}
+
+/** Where the site lives, for the links in emails. */
+export const siteUrl = () => (env('SITE_URL') ?? 'https://fullcircle-co.com').replace(/\/$/, '');
 
 // The forms post from the site's pages, its previews and local builds. No cookies or credentials
 // are involved, so any origin may call; the Turnstile check is what keeps robots out.

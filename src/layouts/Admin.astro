@@ -1,0 +1,25 @@
+---
+// The admin's page (/admin): Studio OS v0.4, the staff's app. Not part of the public site: no
+// header, footer, page transitions or analytics, and never indexed.
+import { Font } from 'astro:assets';
+import Sprite from '../components/Sprite.astro';
+import '../styles/admin.css';
+---
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Studio OS / Full Circle</title>
+<meta name="theme-color" content="#100F0D">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<Font cssVariable="--font-saira-condensed" />
+<Font cssVariable="--font-geist" preload={[{ weight: '400' }]} />
+<Font cssVariable="--font-plex-mono" />
+</head>
+<body class="H">
+<Sprite />
+<slot />
+</body>
+</html>

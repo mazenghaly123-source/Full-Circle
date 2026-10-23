@@ -1,5 +1,6 @@
-// The emails the forms send: an alert to staff for each request and message, and a receipt to a
-// brand that gave an email. Plain functions of their inputs, so the tests can read them too.
+// The emails the functions send: an alert to staff for each request and message, a receipt to a
+// brand that gave an email, the messages about orders (notify) and the invitations to sign in
+// (invite). Plain functions of their inputs, so the tests can read them too.
 import { REQUEST_QUESTIONS, type Contact, type Source } from './forms.ts';
 
 const SITE = { whatsapp: '+20 101 143 5406', whatsappUrl: 'https://wa.me/201011435406', email: 'fullcircleworks.co@gmail.com' };
@@ -85,4 +86,74 @@ export function staffMessageEmail(m: MessageMail) {
   if (from) rows.push(['Came from', from]);
   rows.push(['Received', cairoTime(m.at)]);
   return { subject: `New message from ${m.name}`, ...render(`Message from ${m.name}`, 'Sent from the contact page.', rows) };
+}
+
+/** The eight stages, as the site names them (src/data/site.ts). */
+export const STAGE_NAMES = ['Research', 'Design support', 'Sourcing', 'Development', 'Sampling', 'Production', 'QC', 'Delivery'] as const;
+const stageName = (n: number) => `${String(n).padStart(2, '0')} ${STAGE_NAMES[Math.min(Math.max(n, 1), 8) - 1]}`;
+
+/** An order as the notify function reads it, with what the messages about it need. */
+export type OrderMail = {
+  id: number; code: string; name: string; stage: number; brand: string;
+  /** the latest decision, and the latest client note or photo request, if any */
+  decision?: string; note?: string; photoStage?: number;
+};
+export type OrderEvent = 'decision_opened' | 'stage_moved' | 'photo_added' | 'decision_approved' | 'changes_asked' | 'photo_asked';
+
+/**
+ * The email for one event on an order. The client's people get the first three, with a link to the
+ * portal; staff get the last three, with a link to the order in the admin. `count` groups several
+ * photos added at once into one email.
+ */
+export function orderEmail(event: OrderEvent, o: OrderMail, site: string, count = 1) {
+  const portal = `${site}/track`, admin = `${site}/admin#/order/${o.id}`;
+  const order: Row = ['Order', `${o.code} / ${o.name}`];
+  const signIn = 'Sign in with this email address; we send you a 6-digit code.';
+  switch (event) {
+    case 'decision_opened': return {
+      subject: `${o.code} / Your decision: ${o.decision ?? 'waiting for you'}`,
+      ...render('A decision is waiting for you.', `${o.brand}, we need your answer on ${o.name} before it moves on.`,
+        [order, ['Decision', o.decision ?? '—'], ['Open it', portal, portal]], [signIn, 'Full Circle, Cairo']),
+    };
+    case 'stage_moved': return {
+      subject: `${o.code} / ${o.name} is at ${stageName(o.stage)}`,
+      ...render(`Now at ${stageName(o.stage)}.`, `${o.brand}, your order moved to its next stage.`,
+        [order, ['Stage', stageName(o.stage)], ['Follow it', portal, portal]], [signIn, 'Full Circle, Cairo']),
+    };
+    case 'photo_added': return {
+      subject: `${o.code} / ${count > 1 ? `${count} new photos` : 'A new photo'} of ${o.name}`,
+      ...render(count > 1 ? `${count} new photos.` : 'A new photo.', `${o.brand}, there ${count > 1 ? 'are new photos' : 'is a new photo'} of ${o.name} on your order page.`,
+        [order, ['See them', portal, portal]], [signIn, 'Full Circle, Cairo']),
+    };
+    case 'decision_approved': return {
+      subject: `${o.code} / ${o.brand} approved: ${o.decision ?? 'a decision'}`,
+      ...render(`${o.brand} approved.`, 'The order waits for you to move it on (approving does not move the stage).',
+        [order, ['Approved', o.decision ?? '—'], ['Stage', stageName(o.stage)], ['Open the order', admin, admin]]),
+    };
+    case 'changes_asked': return {
+      subject: `${o.code} / ${o.brand} asked for changes: ${o.decision ?? 'a decision'}`,
+      ...render(`${o.brand} asked for changes.`, 'Make the changes, then open the revised version as a new decision.',
+        [order, ['Decision', o.decision ?? '—'], ...(o.note ? [['Their note', o.note] as Row] : []), ['Open the order', admin, admin]]),
+    };
+    case 'photo_asked': return {
+      subject: `${o.code} / ${o.brand} asked for a photo of ${stageName(o.photoStage ?? o.stage)}`,
+      ...render(`${o.brand} asked for a photo.`, 'Add one to the order; adding a photo of that stage answers the request.',
+        [order, ['Stage', stageName(o.photoStage ?? o.stage)], ...(o.note ? [['Their note', o.note] as Row] : []), ['Open the order', admin, admin]]),
+    };
+  }
+}
+
+/** The email someone gets when staff add them: a client's person (to the portal) or staff (to the admin). */
+export function inviteEmail(i: { kind: 'client' | 'staff'; name: string; brand?: string; url: string; by: string }) {
+  return i.kind === 'client'
+    ? {
+      subject: `Follow your orders with Full Circle`,
+      ...render(`Hello ${i.name}.`, `${i.by} at Full Circle added you to ${i.brand}. You can now follow its orders: each stage, the decisions waiting for you, photos and the approval log.`,
+        [['Sign in at', i.url, i.url], ['With', 'this email address; we send you a 6-digit code each time']], ['Full Circle, Cairo']),
+    }
+    : {
+      subject: 'You are on the Full Circle team',
+      ...render(`Hello ${i.name}.`, `${i.by} added you to Full Circle's admin.`,
+        [['Sign in at', i.url, i.url], ['With', 'this email address; we send you a 6-digit code each time']]),
+    };
 }

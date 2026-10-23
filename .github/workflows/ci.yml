@@ -75,7 +75,7 @@ jobs:
       - name: Database access tests
         run: npx --yes "$SUPABASE_CLI" test db
       - name: Type-check the Edge Functions
-        run: docker run --rm -v "$PWD:/app" -w /app denoland/deno:2.5.6 deno check supabase/functions/submit-request/index.ts supabase/functions/submit-contact/index.ts
+        run: docker run --rm -v "$PWD:/app" -w /app denoland/deno:2.5.6 sh -c "deno check supabase/functions/*/index.ts"
       - name: Form functions end to end
         run: |
           eval "$(npx --yes "$SUPABASE_CLI" status -o env)"

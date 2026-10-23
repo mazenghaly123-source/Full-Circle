@@ -27,7 +27,7 @@ const { page, title, description } = Astro.props;
 <style is:inline>[hidden]{display:none!important}body{margin:0}</style>
 {/* preload only the hero's heading and body text; the rest load as the page styles them (the local
     font provider records no subsets, so each preloaded weight brings its latin-ext file too) */}
-<Font cssVariable="--font-saira-condensed" preload />
+<Font cssVariable="--font-saira-condensed" preload={[{ weight: '700' }]} />
 <Font cssVariable="--font-geist" preload={[{ weight: '400' }]} />
 <Font cssVariable="--font-plex-mono" />
 <script is:inline>

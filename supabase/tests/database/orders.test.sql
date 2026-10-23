@@ -3,7 +3,7 @@
 -- log; staff work through functions too; the approval log is never edited or deleted.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(106);
+select plan(110);
 
 truncate public.requests, public.messages, public.contact_consents, public.notifications, public.clients cascade;
 create temp table k (name text primary key, id bigint);
@@ -187,6 +187,20 @@ select lives_ok($$select public.move_stage((select id from k where name = 'oA'),
 select lives_ok($$select public.move_stage((select id from k where name = 'oA'), 5::smallint, 'Back for a re-check')$$, 'an order can move back');
 select is((select count(*)::int from public.order_notifications where event = 'stage_moved' and recipient = 'ana@a.test'), 3, 'the client is told of every move');
 select throws_ok($$update public.order_notifications set status = 'sent'$$, '42501', null, 'staff do not edit the message queue');
+-- back at 05, the gate reads the latest sample, not an approval of an earlier one
+select lives_ok($$select public.open_decision((select id from k where name = 'oA'), 'Approve sample 05')$$, 'staff send a revised sample after the approved one');
+insert into k select 'd4', id from public.order_decisions where title = 'Approve sample 05';
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000c", "role": "authenticated"}';
+select lives_ok($$select public.request_changes((select id from k where name = 'd4'), 'Collar sits too high')$$, 'the client turns the revision down');
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000b", "role": "authenticated"}';
+select throws_ok($$select public.move_stage((select id from k where name = 'oA'), 6::smallint)$$, '55000', null, 'bulk waits for the latest sample, though an earlier one was approved');
+select is((select stage from public.orders where id = (select id from k where name = 'oA')), 5::smallint, 'and the order stays at 05');
 reset role;
 
 -- photo requests --------------------------------------------------------------------------------
@@ -205,7 +219,7 @@ reset role;
 
 -- the log ---------------------------------------------------------------------------------------
 select is((select string_agg(kind, ',' order by id) from public.order_events where order_id = (select id from k where name = 'oA')),
-  'order_opened,photo_added,decision_opened,approved,stage_moved,decision_opened,changes_asked,decision_opened,approved,stage_moved,stage_moved,photo_asked,photo_added',
+  'order_opened,photo_added,decision_opened,approved,stage_moved,decision_opened,changes_asked,decision_opened,approved,stage_moved,stage_moved,decision_opened,changes_asked,photo_asked,photo_added',
   'the log tells the order''s story in order');
 select throws_ok($$update public.order_events set note = 'rewritten'$$, '55000', null, 'a log entry is never edited, even by the service role');
 select throws_ok($$delete from public.order_events where kind = 'approved'$$, '55000', null, 'or deleted');
@@ -231,9 +245,9 @@ set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000b", 
 select lives_ok($$delete from public.client_members where name = 'Dan'$$, 'staff cannot remove a person...');
 select is((select count(*)::int from public.client_members where name = 'Dan'), 1, '...only an owner can');
 reset role;
-select is((select count(*)::int from public.order_events where actor_label = 'Ana'), 4, 'Ana has acted four times');
+select is((select count(*)::int from public.order_events where actor_label = 'Ana'), 5, 'Ana has acted five times');
 delete from auth.users where id = '00000000-0000-0000-0000-00000000000c';
-select is((select count(*)::int from public.order_events where actor_label = 'Ana' and actor_id is null), 4, 'once removed, the log still names her');
+select is((select count(*)::int from public.order_events where actor_label = 'Ana' and actor_id is null), 5, 'once removed, the log still names her');
 select is((select count(*)::int from public.client_members where name = 'Ana'), 0, 'and she can no longer sign in to the client');
 
 -- retention: an order goes, its log goes with it
