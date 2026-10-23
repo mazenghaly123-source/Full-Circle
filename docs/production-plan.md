@@ -1,9 +1,8 @@
 # Production build plan
 
-Status (23 Oct 2026): **phases 1 and 2 are live on Cloudflare** from `main` (the static site at
-parity with the prototype; the forms send to the staging Supabase project, test data only).
-**Phases 3, 4 and 5's search and sharing are built but not merged**: four stacked PRs, #8 → #11, with
-`claude/phase-4-whatsapp` holding all of them. The domain, **fullcircle-co.com**, is bought and
+Status (23 Oct 2026): **phases 1–4 and phase 5's search and sharing are live on Cloudflare** from
+`main` (merged 23 Oct, with the redesign of Home); the forms, the portal and `/admin` run on the
+staging Supabase project, test data only. The domain, **fullcircle-co.com**, is bought and
 attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2, and
 [HANDOFF.md](./HANDOFF.md) for branches, staging and what was half-done. The decisions below were confirmed by Mazen; the ones that are hard to reverse are recorded in
 [`docs/adr/`](./adr/). Source of truth for design and content: `prototype/index.html`.
@@ -32,18 +31,22 @@ attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2,
 - *On `main` and live:* phase 1 (the 7 pages and the 404 at parity), phase 2 (the request and contact
   forms through `submit-request` and `submit-contact` to staging, `/privacy`, Continue on WhatsApp),
   the shorter words with no TBC (PR #6) and the domain wiring (PR #7). Cloudflare deploys `main` to
-  fullcircle-co.com and full-circle.mazenghaly123.workers.dev. Track on the live site is still the
-  prototype's demo.
-- *Built, not merged:* phase 3 (portal, PR #8), phase 4 (admin, PR #9; WhatsApp, PR #11) and phase
-  5's search and sharing (PR #10). The PRs are stacked; merge #8 → #9 → #10 → #11. CI is green on every
-  PR (23 Oct): the `site` and `backend` jobs and Cloudflare's preview build, which had failed since
-  #6 until `wrangler.jsonc` got the `previews` block Wrangler 4.146 asks for.
+  fullcircle-co.com and full-circle.mazenghaly123.workers.dev.
+- *Merged to `main` on 23 Oct (Mazen):* phase 3 (portal, PR #8), phase 4 (admin, PR #9; WhatsApp,
+  PR #11) and phase 5's search and sharing (PR #10), then the redesign. Track on the live site is the
+  real sign-in, against staging. CI was green on every PR: the `site` and `backend` jobs and
+  Cloudflare's preview build, which had failed since #6 until `wrangler.jsonc` got the `previews`
+  block Wrangler 4.146 asks for.
 - *On staging:* all 8 migrations are applied, the WhatsApp one included. Every function is on
   staging in its current version (23 Oct): `submit-request`, `submit-contact`, `invite`, `notify`,
   `send-sms` and `whatsapp-webhook`. `EMAIL_FROM` is set, and the staff alerts for two test
   requests went out through Resend.
 - *Not tried yet:* the email receipt to a brand (both tests gave a WhatsApp number), and the phase 4
   test (an order through all 8 stages from a phone), which waits on the Auth settings in §10.
+- *Redesign, on `main` (23 Oct):* to set the site apart from factory21.co, Home has Microgramma
+  headlines, far fewer words, and line icons for its facts, paths, stages and checks; every box,
+  button and field site-wide has rounded corners. The inner pages come next, as a mock for Mazen
+  first. Line figures (Hairline) are parked: the first test did not convince him.
 
 **Phase 1 is done** (on `main`, live):
 
@@ -150,7 +153,7 @@ alert is confirmed, the receipt to a brand's email is still to try); a real
 Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
 requests and messages a year old that never became orders (`/privacy`).
 
-**Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, PR #8, not merged; its migrations are on staging):
+**Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, PR #8, merged 23 Oct; its migrations are on staging):
 
 - *Database* (migration `20261020221044`, applied to staging): clients and their people, orders,
   specs, decisions, stage photos (a private bucket, opened through signed links), photo requests, the
@@ -181,7 +184,7 @@ requests and messages a year old that never became orders (`/privacy`).
 4. A decision may be opened without photos (a tech pack sign-off has none).
 5. When a person is removed, the log keeps their name as it was; their account goes.
 
-**Phase 4 is built** (21 Oct 2026, branches `claude/phase-4-admin`, PR #9, and `claude/phase-4-whatsapp`, PR #11; not merged):
+**Phase 4 is built** (21 Oct 2026, branches `claude/phase-4-admin`, PR #9, and `claude/phase-4-whatsapp`, PR #11; merged 23 Oct):
 
 - *Admin* (`/admin`, noindex): the Studio OS design from the canvas, one page that works on a phone
   (a tab bar at the bottom) and a computer (a side bar). Staff sign in with an email code, as clients
@@ -230,7 +233,7 @@ requests and messages a year old that never became orders (`/privacy`).
 [whatsapp.md](./whatsapp.md)) and the secrets that switch WhatsApp on; a test order taken through all
 8 stages from a phone on staging.
 
-**Phase 5 has begun** (21 Oct 2026, branch `claude/phase-5-seo`, PR #10, on phase 4; not merged), with what needs no
+**Phase 5 has begun** (21 Oct 2026, branch `claude/phase-5-seo`, PR #10, on phase 4; merged 23 Oct), with what needs no
 account or decision:
 - Every page names its address on the domain (`fullcircle-co.com/about`, not `.html`) and carries
   the tags a shared link is shown with: title, description and one share card (`public/og.jpg`,
@@ -460,8 +463,8 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
 1. Confirm the 5 items "decided in the build" (§2): new codes and `-B`, the database-held sample
    gate, no Undo, decisions without photos, names kept in the log.
 2. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
-3. Say when phases 3–5 may be merged to `main`. Merging puts the real sign-in on Track and `/admin`
-   on the live site, both still on staging (see [HANDOFF.md](./HANDOFF.md)).
+3. ~~Say when phases 3–5 may be merged to `main`.~~ Merged 23 Oct: the real sign-in on Track and
+   `/admin` are live, both on staging (see [HANDOFF.md](./HANDOFF.md)).
 4. Keep or drop Vercel. Its GitHub app still builds a preview of every PR, although hosting is
    Cloudflare only.
 

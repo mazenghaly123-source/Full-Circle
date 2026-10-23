@@ -31,8 +31,16 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   Signal Red #C5322B (the only accent: primary CTA, live dot, approvals). Red button fills use
   #BC2F29 so their text passes contrast; red is never small text (use Bone with a red dot).
   Atmospheric light only (never UI): Indigo #243E8F, Burnt Orange #C96832, Faded Red #A63F3F.
-- Type: Saira Condensed (stand-in for Eurostile Bold Condensed) for display, Geist (for
-  Suisse Intl) for body, IBM Plex Mono (for Suisse Mono) for labels.
+- Type: Microgramma D Extended Bold, the logo's own face, for headlines only (23 Oct 2026: the Home
+  hero, section headings, the closing call-to-action band; self-hosted from `src/assets/fonts/`).
+  Saira Condensed (stand-in for Eurostile Bold Condensed) for card titles, figures and other
+  display text, Geist (for Suisse Intl) for body, IBM Plex Mono (for Suisse Mono) for labels.
+  Mazen is buying Microgramma's web licence: don't raise it again.
+- Rounded corners everywhere, never a mix with square boxes (23 Oct 2026): 6px chips and tags,
+  10px buttons, options and fields (fields are boxed), 16px cards, photos and panels
+  (`--r-s`, `--r-m`, `--r-l`).
+- Line icons (`src/data/icons.ts`, drawn in-house): 24px, 1.5px stroke, round caps and joins, one
+  Signal Red accent each. They stand in for text.
 - Dark only. Grain + slow drifting light blobs. Ring/circle motif = the 8 stages.
 
 ## Decisions already made
@@ -66,6 +74,17 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   red text, a scrim over the hero, a gradient behind photo captions, the hero ring stops after one
   circle, labels above form fields, 44px option buttons and tabs on phones, search titles and
   descriptions, described product photos.
+- Redesign (Mazen, 23 Oct 2026), to set Full Circle apart from Factory 21 (factory21.co, the
+  closest competitor: same promise, light and orange, condensed type, technical labels, loud
+  tone): the headline face, the corners and the icons above; Home cut to half its words, icons in
+  place of text, fewer mono labels, denim first, the five checks behind "What you approve is what
+  ships" (chest, length, sleeve, stitch, colour); the atelier on Home hidden (`SHOW_ATELIER` in
+  `index.astro`) until there are real photos. No pop-ups, tickers or slang. Inner pages get the
+  same treatment next, shown to Mazen first.
+- Interactive line figures (the Hairline skill, 23 Oct 2026): a few, at most one per page, never
+  on the hero (the 3D mark stays the hero). On phones they answer a finger (sideways drag, tap),
+  not only a self-running loop. Parked: the first test (a shirt opening into its pattern pieces)
+  did not convince Mazen; wait until he picks figures up again.
 
 ## Confirmed content
 - MOQ: tees 60/colour, hoodies 60, tops 60–100, sweatpants 60, shorts 60, shirts 80–100,
@@ -116,7 +135,9 @@ portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the
 - three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Its mesh
   is extruded in a Web Worker (`hero-mesh.worker.ts`, importing three's `src/` modules so the worker
   stays small); the parity suite checks the mark against the prototype's at full size. Fonts
-  come from the `@fontsource` packages through Astro's local font provider, so builds need no network.
+  come from the `@fontsource` packages (and Microgramma from `src/assets/fonts/`) through Astro's
+  local font provider, so builds need no network; `approvePrototype` hands the prototype Microgramma
+  inline, and mirrors the redesigned Home's markup, so Home is still held to parity.
 
 ## Backend
 - Supabase project `full-circle-staging` (Frankfurt, free plan, **test data only**). The live

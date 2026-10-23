@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { NOTICE } from '../supabase/functions/_shared/forms';
-import { FAQ } from '../src/data/site';
+import { FAQ, STAGES } from '../src/data/site';
+import { ICONS, STAGE_ICONS, iconSvg, type IconName } from '../src/data/icons';
 
 export const PROTOTYPE = pathToFileURL(resolve('prototype/index.html')).href;
 
@@ -84,17 +85,30 @@ const FIELD_LABELS: [string, string][] = [
 const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
 
 /**
+ * The redesign (23 Oct 2026): the headline face, which the prototype gets inline (the build serves it
+ * through Astro's fonts), the icons as the build draws them, and each stage's approval.
+ */
+const REDESIGN = {
+  font: `data:font/woff2;base64,${readFileSync(resolve('src/assets/fonts/microgramma-d-extended-bold.woff2')).toString('base64')}`,
+  icon: Object.fromEntries((Object.keys(ICONS) as IconName[]).map((k) => [k, iconSvg(k)])) as Record<IconName, string>,
+  stageIcons: STAGE_ICONS,
+  stageOk: STAGES.map((g) => g.ok),
+};
+
+/**
  * Call before the prototype is opened. The CSS goes in as soon as the document is parsed, before the
  * prototype's scripts run, as the build has it from the start: the phone size of the 3D mark would
  * otherwise resize its canvas after the mark is drawn, and the prototype does not redraw on a resize,
  * so the mark would vanish. The markup goes in once the page has loaded.
  */
 export async function approvePrototype(page: Page) {
-  await page.addInitScript(([css, labels, lines, faq]) => {
+  await page.addInitScript(([css, labels, lines, faq, re]) => {
     document.addEventListener('readystatechange', () => {
       if (document.readyState !== 'interactive') return;
       // last in the document, as the block is last in global.css (the prototype's own styles sit in <body>)
-      const style = document.createElement('style'); style.textContent = css; document.body.append(style);
+      const style = document.createElement('style');
+      style.textContent = `@font-face{font-family:'Microgramma D Extended';src:url(${re.font}) format('woff2');font-weight:700;font-style:normal;font-display:block}` + css;
+      document.body.append(style);
     });
     addEventListener('load', () => {
       // B2: error lines and the red labels become Bone with a red dot
@@ -129,14 +143,61 @@ export async function approvePrototype(page: Page) {
       byText('.limits > div', 'Not in scope').remove();
       document.querySelector('.team')!.closest('section')!.remove();
       byText('p.note', 'Free first call').textContent = 'Free first call / we reply quickly';
-      byText('.make-foot span', 'Minimums per category').textContent = 'Minimums per category';
+      byText('.make-foot span', 'Minimums per category').remove();
       byText('span.mono', '01 / Within one working day').textContent = '01 / We reply quickly';
       byText('b', 'Sunday – Thursday').textContent = 'Sunday – Thursday / 9:00 – 17:00';
       // phase 3 (20 Oct 2026): the real portal replaces Track's demo, and its note goes
       document.querySelector('#tLogin .demo-note')!.remove();
+      // the redesign (23 Oct 2026), on Home: headlines in the logo's face, half the words, icons in their
+      // place. Elements the prototype's scripts already hold (reveal, count-up, the steps' clicks) are
+      // edited in place, never replaced.
+      const home = document.querySelector('[data-page="home"]')!;
+      const $h = <T extends Element = HTMLElement>(sel: string) => home.querySelector<T>(sel)!;
+      $h('.hero .wrap > div > div.mono.dim').remove();
+      const h1 = $h('.hero h1'); h1.classList.add('wide'); h1.innerHTML = '<span class="l1">Idea to product.</span> <span class="l2">Full circle.</span>';
+      $h('.hero .lead').textContent = 'From idea to bulk, under one roof in Cairo. What you approve in sampling is what ships.';
+      const facts: [string, string | null][] = [['pieces', null], ['clock', '7–25 day samples'], ['denim', 'Denim + imports'], ['ring', null]];
+      home.querySelectorAll('.facts > div').forEach((d, i) => {
+        d.classList.add('fi'); d.querySelector('span.mono')!.remove();
+        if (facts[i][1]) d.querySelector('b')!.textContent = facts[i][1];
+        d.insertAdjacentHTML('afterbegin', re.icon[facts[i][0] as keyof typeof re.icon]);
+      });
+      const wide = (sel: string) => $h(sel).classList.add('wide');
+      wide('#who .sh h2'); $h('#who .sh p').remove();
+      const who: [string, string, string[], string[]][] = [
+        ['Starting.', 'An idea, no factory yet.', ['design', 'techpack', 'sample'], ['Design', 'Tech pack', 'First samples']],
+        ['Scaling.', 'Selling already. Bulk must match.', ['pattern', 'bulk', 'qc'], ['Pattern review', 'Bulk samples', 'QC every run']],
+      ];
+      home.querySelectorAll('.who-card').forEach((card, i) => {
+        const [h3, line, icons, labels] = who[i];
+        card.querySelector(':scope > .mono.dim')!.remove();
+        const t = card.querySelector('h3')!.parentElement!;
+        t.removeAttribute('style'); t.className = 'who-t';
+        t.innerHTML = `<h3 class="camp">${h3}</h3><p>${line}</p>`;
+        t.insertAdjacentHTML('afterend', `<div class="icrow">${icons.map((k, n) => `<span>${re.icon[k as keyof typeof re.icon]}${labels[n]}</span>`).join('')}</div>`);
+        const cta = card.querySelector('.btn')!.parentElement!;
+        cta.removeAttribute('style'); cta.querySelector('span.mono')!.remove();
+      });
+      wide('#h-make .sh h2'); $h('#h-make .sh p').textContent = 'Denim first. Imported fabrics and trims.';
+      const lead = $h('#makeGrid .cat'); lead.classList.add('lead-cat'); lead.querySelector('.cap span')!.textContent = 'Our specialty';
+      wide('#h-how .sh h2'); $h('#h-how .sh p').textContent = 'Eight stages. You approve each one.';
+      home.querySelectorAll('#steps .step').forEach((li, i) => {
+        li.querySelector('.a')!.innerHTML = re.icon[re.stageIcons[i]];
+        li.querySelector('.body > div')!.innerHTML = `<p class="ok1">${re.icon.qc}<span>${re.stageOk[i]}</span></p>`;
+      });
+      $h('.promise .mono.dim').remove(); wide('.promise h2');
+      const promise = $h('.promise .wrap > div > p'); promise.textContent = 'Every bulk piece is checked against your signed sample.';
+      promise.insertAdjacentHTML('afterend', `<ul class="checks" aria-label="Checked against the sample">${(['chest', 'length', 'sleeve', 'stitch', 'colour'] as const).map((k) => `<li>${re.icon[k]}${k}</li>`).join('')}</ul>`);
+      wide('#h-track .sh h2'); $h('.track > div > p').textContent = 'Every order gets a code and a page.';
+      const ul = $h('.track > div > ul'); ul.className = 'iclist';
+      ul.innerHTML = ([['phone', 'Approve from your phone'], ['camera', 'Ask for a photo of any stage'], ['log', 'Every decision on record']] as const).map(([k, t]) => `<li>${re.icon[k]}${t}</li>`).join('');
+      const trackCta = $h('.track > div > div'); trackCta.setAttribute('style', 'margin-top:28px'); trackCta.querySelector('span.mono')!.remove();
+      $h('#proof').remove();
+      $h('.ctaband p').textContent = 'Four picks, under a minute. No account needed.';
+      wide('#faq .sh h2');
       document.getElementById('faqList')!.innerHTML =faq.map(([q, a], i) => `<details><summary><span class="mono dim">${String(i + 1).padStart(2, '0')}</span><h3>${q}</h3><span class="plus"></span></summary><p class="ans">${a}</p></details>`).join('');
     });
-  }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ] as const);
+  }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }
 
 /** Waits for fonts, photos, the 3D mark, intros and count-ups, then stops the hero ring at a fixed stage. */
