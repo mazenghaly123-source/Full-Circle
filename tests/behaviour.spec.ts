@@ -159,6 +159,13 @@ test('home: What we make, the photo you point at grows and the others step back 
   await expect.poll(() => w(0), { timeout: 5000 }).toBeLessThan(rest);
   await page.mouse.move(5, 5);
   await expect.poll(() => w(2), { timeout: 5000 }).toBeLessThan(rest * 1.1);
+  // a card with keyboard focus is the one open once the mouse leaves the row
+  await cards.nth(1).focus();
+  await cards.nth(4).hover();
+  await expect(cards.nth(4)).toHaveClass(/\bon\b/);
+  await page.mouse.move(5, 5);
+  await expect(cards.nth(1)).toHaveClass(/\bon\b/);
+  await expect(cards.nth(4)).not.toHaveClass(/\bon\b/);
 });
 
 test('home: the How it works ring fills with scroll and closes as the mark', async ({ page }) => {
