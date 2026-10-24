@@ -351,7 +351,7 @@ test('home and what we make: buttons start the request with the right pick', asy
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Scaling' })).toHaveAttribute('aria-pressed', 'true');
   await page.goto('/what-we-make');
-  await page.locator('#cat-denim a', { hasText: 'Request a sample for this' }).click();
+  await page.locator('#cat-denim a', { hasText: 'Request a sample' }).click();
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('.q[data-k="product"] .opt', { hasText: 'Denim' })).toHaveAttribute('aria-pressed', 'true');
 });

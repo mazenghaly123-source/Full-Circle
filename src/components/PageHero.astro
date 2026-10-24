@@ -7,14 +7,16 @@ interface Props {
   /** The light's own gradient (each page has its own). */
   light: string;
   titleId?: string;
+  /** The title in the logo's face (the redesign, 24 Oct 2026). */
+  wide?: boolean;
   leadId?: string;
 }
 
-const { crumb, title, lead, light, titleId, leadId } = Astro.props;
+const { crumb, title, lead, light, titleId, leadId, wide = false } = Astro.props;
 ---
 <section class="phero grain"><slot name="bg" /><div class="light" style={`background:${light}`}></div>
   <div class="wrap"><div class="crumb mono"><a href="/">Home</a><span>/</span><span>{crumb}</span></div>
-    <h1 class="camp" id={titleId}>{title}</h1>
+    <h1 class:list={['camp', { wide }]} id={titleId}>{title}</h1>
     <p class="lead" id={leadId}>{lead}</p>
     <slot />
   </div>

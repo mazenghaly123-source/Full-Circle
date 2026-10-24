@@ -93,7 +93,7 @@ const REDESIGN = {
   icon: Object.fromEntries((Object.keys(ICONS) as IconName[]).map((k) => [k, iconSvg(k)])) as Record<IconName, string>,
   stageIcons: STAGE_ICONS,
   stageOk: STAGES.map((g) => g.ok),
-  make: MAKE.map((m) => ({ sub: m.sub, samp: sampleLine(m.samp) })),
+  make: MAKE.map((m) => ({ n: m.n, items: m.items, sub: m.sub, samp: sampleLine(m.samp) })),
 };
 
 /**
@@ -214,6 +214,27 @@ export async function approvePrototype(page: Page) {
       $h('.ctaband p').textContent = 'Four picks, under a minute. No account needed.';
       wide('#faq .sh h2');
       document.getElementById('faqList')!.innerHTML =faq.map(([q, a], i) => `<details><summary><span class="mono dim">${String(i + 1).padStart(2, '0')}</span><h3>${q}</h3><span class="plus"></span></summary><p class="ans">${a}</p></details>`).join('');
+      // What we make (24 Oct 2026): the title in the logo's face, one line under it, equal category cards with icon
+      // facts, what sets us apart as three icon cards, and no limits block
+      const make = document.querySelector('[data-page="make"]')!;
+      const $m = <T extends Element = HTMLElement>(sel: string) => make.querySelector<T>(sel)!;
+      const two = (i: number) => String(i + 1).padStart(2, '0');
+      $m('.phero h1').classList.add('wide');
+      $m('.phero .lead').textContent = 'Six categories, made in Cairo. Denim first.';
+      $m('#catNav').querySelectorAll('.opt').forEach((b, i) => b.insertAdjacentHTML('afterbegin', `<b>${two(i)}</b>`));
+      const panels = $m('#catPanels'); panels.classList.add('mcats');
+      [...panels.querySelectorAll('.catpanel')].forEach((art, i) => {
+        const ph = art.querySelector('.ph')!, m = re.make[i];
+        ph.querySelector('.cap span')!.textContent = i === 0 ? 'Our specialty' : two(i);
+        art.className = 'mcat'; art.replaceChildren(ph);
+        ph.insertAdjacentHTML('afterend', `<div class="body"><h2 class="camp">${m.n}</h2><div class="mfacts"><span>${re.icon.pieces}${m.sub}</span><span>${re.icon.clock}${m.samp}</span></div><p class="items">${m.items}</p><div class="mfoot"><a class="btn btn-red">Request a sample</a></div></div>`);
+      });
+      const why = [...make.querySelectorAll('.sh')].find((e) => e.textContent!.trim().startsWith('What sets us apart'))!;
+      why.parentElement!.removeAttribute('style'); why.parentElement!.classList.add('why');
+      why.querySelector('h2')!.classList.add('wide'); why.querySelector('p')!.remove();
+      why.nextElementSibling!.outerHTML = `<div class="three">${([['denim', 'Denim speciality', 'Pattern to wash, from 150 pcs / colour.'], ['source', 'Imported fabrics', 'Denims and fabrics not sold in Cairo.'], ['trims', 'Imported trims', 'Buttons, rivets, zips and labels from abroad.']] as const).map(([k, b, t]) => `<div>${re.icon[k]}<b>${b}</b><span>${t}</span></div>`).join('')}</div>`;
+      $m('.limits').closest('section')!.remove();
+      $m('.ctaband p').textContent = 'Tell us. If it is not for us, we say so.';
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }

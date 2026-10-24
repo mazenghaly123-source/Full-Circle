@@ -86,7 +86,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   place of text, fewer mono labels, denim first, the five checks behind "What you approve is what
   ships" (chest, length, sleeve, stitch, colour); the atelier on Home hidden (`SHOW_ATELIER` in
   `index.astro`) until there are real photos. No pop-ups, tickers or slang. Inner pages get the
-  same treatment next, shown to Mazen first.
+  same treatment, one page at a time, each as a mock for Mazen first (24 Oct 2026). Done: What we make
+  (equal category cards with icon facts, three icon cards, no limits block). Next: About, Contact, Request
+  a sample, Track; How it works last, as it needs more changes.
 - Interactive line figures (the Hairline skill, 23 Oct 2026): a few, at most one per page, never
   on the hero (the 3D mark stays the hero). On phones they answer a finger (sideways drag, tap),
   not only a self-running loop. Parked: the first test (a shirt opening into its pattern pieces)

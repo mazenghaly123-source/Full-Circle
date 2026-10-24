@@ -8,6 +8,7 @@ export const ICONS = {
   // facts
   pieces: '<rect x="4" y="13.5" width="16" height="6" rx="2"/><rect x="5.5" y="8.5" width="13" height="5" rx="2"/><rect x="7" y="4.5" width="10" height="4" rx="1.5"/><circle class="rd" cx="19.5" cy="5" r="1.7"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/><circle class="rd" cx="12" cy="12" r="1.4"/>',
+  trims: '<circle cx="12" cy="12" r="8.5"/><circle cx="10" cy="10" r="1"/><circle cx="14" cy="10" r="1"/><circle cx="10" cy="14" r="1"/><circle cx="14" cy="14" r="1"/><circle class="rd" cx="18.2" cy="5.8" r="1.4"/>',
   denim: '<path d="M7 3.5h10l1.2 17h-4.4L12 10.5l-1.8 10H5.8z"/><path d="M7.1 6.8h9.8"/><circle class="rd" cx="9.3" cy="9" r="1.1"/>',
   ring: '<circle cx="12" cy="12" r="7.5"/><circle class="rd" cx="12" cy="4.5" r="2.2"/>',
   // the eight stages, in order (STAGE_ICONS)
