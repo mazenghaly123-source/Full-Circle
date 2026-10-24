@@ -310,7 +310,7 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
 - **Approve** (ADR 0005) closes the decision and writes the event; **it does not move the stage**.
   The portal then shows "Approved, waiting on Full Circle" until staff move the order on. (The
   prototype's demo moves the stage itself; the demo stays as it is until the real portal replaces it.)
-- **Staff roles** (proposed, please confirm): **owner** can do everything, including adding and
+- **Staff roles** (open access, Mazen 24 Oct: no fixed list; the owner adds whoever he chooses): **owner** can do everything, including adding and
   removing staff and exporting or deleting someone's data when asked; **staff** answer requests,
   create orders, open decisions, upload photos and move stages. Staff sign in by email code.
 - **Housekeeping:** a nightly job deletes requests and messages older than the retention period.
@@ -462,7 +462,8 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
 **Decisions:**
 1. Confirm the 5 items "decided in the build" (§2): new codes and `-B`, the database-held sample
    gate, no Undo, decisions without photos, names kept in the log.
-2. Confirm the staff roles (§4), and send the names and emails of the 4 staff.
+2. ~~Confirm the staff roles (§4), and send the names and emails of the 4 staff.~~ Mazen (24 Oct): no fixed
+   list. He is the owner and gives admin access to whoever he chooses from the Team screen.
 3. ~~Say when phases 3–5 may be merged to `main`.~~ Merged 23 Oct: the real sign-in on Track and
    `/admin` are live, both on staging (see [HANDOFF.md](./HANDOFF.md)).
 4. Keep or drop Vercel. Its GitHub app still builds a preview of every PR, although hosting is
@@ -470,13 +471,14 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
 
 **Supabase dashboard** (staging first; these cannot be changed from a cloud session):
 5. ~~*Edge Functions → Secrets:* set `EMAIL_FROM` to `Full Circle <hello@fullcircle-co.com>`.~~ Done 23 Oct.
-6. *Authentication → Sign In / Providers:* turn off "Allow new users to sign up" (the portal is
+6. ~~*Authentication → Sign In / Providers:* turn off "Allow new users to sign up" (the portal is
    invite-only), and set the email OTP expiry to 600 seconds.
-7. *Authentication → Emails → Magic Link* template: put the code in it, for example "Your Full
+7. ~~*Authentication → Emails → Magic Link* template: put the code in it, for example "Your Full
    Circle code is {{ .Token }}. It works for 10 minutes." Without `{{ .Token }}` the email carries a
    link, not a code.
-8. *Authentication → SMTP:* Resend as the sender (`hello@fullcircle-co.com`). Until then, Supabase's
-   own sender reaches only the organisation's members, a few emails an hour.
+8. ~~*Authentication → SMTP:* Resend as the sender (`hello@fullcircle-co.com`). Until then, Supabase's
+   own sender reaches only the organisation's members, a few emails an hour.~~ 6–8 done by Mazen on 24 Oct, plus the Site URL
+   (`https://fullcircle-co.com`) and a 6-digit email OTP length; he signed in to `/admin` the same day.
 
 **Cloudflare dashboard:**
 9. ~~Open one failed *Workers Builds: full-circle* log and paste it into the session.~~ Done and

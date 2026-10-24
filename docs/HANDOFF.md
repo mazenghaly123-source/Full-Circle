@@ -153,16 +153,13 @@ Decisions:
   3. No Undo: a stage can be moved back.
   4. A decision can be opened without photos.
   5. When a person is removed, the log keeps their name.
-- **Staff roles** (owner / staff, §4) and the **names and emails of the 4 staff**.
 - Keep or drop the Cloudflare plugin commit on `claude/keen-gates-vu1na0`, and whether to disconnect
   Vercel.
 
 Dashboard and account tasks:
-- **Supabase Auth (staging):**
-  - Turn off "Allow new users to sign up".
-  - Set the email OTP expiry to 600 s.
-  - Put `{{ .Token }}` in the Magic Link template.
-  - Set SMTP to Resend (sender `hello@fullcircle-co.com`).
+- ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
+  SMTP through Resend.~~ Done by Mazen on 24 Oct, with the Site URL set to `https://fullcircle-co.com` and the
+  email OTP length set to 6 (Supabase's default had become 8). Confirmed: Mazen signed in to `/admin` as owner.
 - **Turnstile:**
   - Create a widget for fullcircle-co.com (Invisible).
   - At launch, put its site key in the build and its secret in the functions and Auth's Attack
