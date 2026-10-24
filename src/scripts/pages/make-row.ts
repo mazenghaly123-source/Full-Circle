@@ -14,7 +14,8 @@ export const makeRowFeature: Feature = {
       el.addEventListener('pointerenter', (e) => { if (wide.matches && e.pointerType === 'mouse') open(i); }, { signal });
       el.addEventListener('focus', () => { if (wide.matches) open(i); }, { signal });
     });
-    row.addEventListener('pointerleave', (e) => { if (wide.matches && e.pointerType === 'mouse') open(null); }, { signal });
+    // a card with keyboard focus stays open when the mouse leaves the row
+    row.addEventListener('pointerleave', (e) => { if (wide.matches && e.pointerType === 'mouse' && !row.contains(document.activeElement)) open(null); }, { signal });
     row.addEventListener('focusout', (e) => { if (wide.matches && !row.contains(e.relatedTarget as Node | null)) open(null); }, { signal });
 
     // phones: each card's size follows how close it is to the middle of the row
