@@ -76,7 +76,7 @@ export const PHOTO_ALT: Record<string, string> = {
   'cat-denim': 'Two pairs of washed wide-leg jeans with turned-up hems on a white cutting table',
   'cat-tees': 'A white and a black cotton T-shirt laid flat on a white cutting table',
   'cat-hoodies': 'Grey heavyweight hoodie on a cutting table with its hang tag, drawcord and eyelets',
-  'cat-shirts': 'Light blue button-up shirt and olive overshirt laid flat with buttons and thread',
+  'cat-shirts': 'Light blue button-up shirt and brown pleated tailored trousers hanging on a rail, with a hang tag',
   'cat-outerwear': 'Khaki work jacket and black zip jacket hanging on a rail, each with a hang tag',
   'cat-knit': 'Taupe chunky-knit sweater and a knitted piece with balls of its yarn on a cutting table',
   'promise-sample': 'Approved black hoodie sample on a dress form in the cutting room, with its hang tag',

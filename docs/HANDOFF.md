@@ -132,8 +132,8 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
        block and mirrored in `approvePrototype`.
      - Phones show tall versions of the hero and the 8 stage photos (Mazen made them, 24 Oct), so a
        wide photo is not cropped to a strip: `PHOTOS_PHONE` and `BgImg`'s `phoneUpTo`.
-     - The category photos (all but Shirts) and the Starting and Scaling cards were replaced on 24 Oct
-       with Mazen's photos in the same style; the Shirts photo stays as it is.
+     - All six category photos and the Starting and Scaling cards were replaced on 24 Oct with Mazen's
+       photos in the same style.
      - When line figures come back, the subject is not a shirt.
 2. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
    been tried. It needs the Auth settings below, so that staff and a test client can get codes.
