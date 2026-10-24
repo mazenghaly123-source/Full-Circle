@@ -1,7 +1,7 @@
 import type { ImageMetadata } from 'astro';
 import catDenim from '../assets/photos/cat-denim.jpg';
 import catHoodies from '../assets/photos/cat-hoodies.jpg';
-import catKnit from '../assets/photos/cat-knit.png';
+import catKnit from '../assets/photos/cat-knit.jpg';
 import catOuterwear from '../assets/photos/cat-outerwear.jpg';
 import catShirts from '../assets/photos/cat-shirts.jpg';
 import catTees from '../assets/photos/cat-tees.jpg';
@@ -73,19 +73,19 @@ export const PHOTOS_PHONE: Record<string, ImageMetadata> = {
  * keeps an empty alt, so the link is not read twice.
  */
 export const PHOTO_ALT: Record<string, string> = {
-  'cat-denim': 'Raw and washed denim jeans laid on a workshop table',
-  'cat-tees': 'A white and a black cotton T-shirt laid flat on a workshop table',
-  'cat-hoodies': 'Charcoal heavyweight hoodie on a cutting table with fabric and trims',
+  'cat-denim': 'Two pairs of washed wide-leg jeans with turned-up hems on a white cutting table',
+  'cat-tees': 'A white and a black cotton T-shirt laid flat on a white cutting table',
+  'cat-hoodies': 'Grey heavyweight hoodie on a cutting table with its hang tag, drawcord and eyelets',
   'cat-shirts': 'Light blue button-up shirt and olive overshirt laid flat with buttons and thread',
-  'cat-outerwear': 'Khaki work jacket and black jacket on a workshop table',
-  'cat-knit': 'Oatmeal knit crewneck sweater with yarn and knitting needles',
+  'cat-outerwear': 'Khaki work jacket and black zip jacket hanging on a rail, each with a hang tag',
+  'cat-knit': 'Taupe chunky-knit sweater and a knitted piece with balls of its yarn on a cutting table',
   'promise-sample': 'Approved black hoodie sample on a dress form in the cutting room, with its hang tag',
   'promise-bulk': 'Stack of folded black hoodies from the bulk run, each with the same hang tag',
   'portal-sample': 'Raw indigo jeans sample hanging on the cutting room wall, labelled with tape',
 };
 
 /** Where to keep the subject when a photo is cropped. */
-export const PHOTO_FOCUS: Record<string, string> = { 'cat-knit': '30% 50%' };
+export const PHOTO_FOCUS: Record<string, string> = {};
 
 /** Widths generated for every photo (capped at the original's width). */
 export const PHOTO_WIDTHS = [320, 480, 640, 800, 1024, 1376, 1600];

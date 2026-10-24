@@ -190,6 +190,8 @@ export async function approvePrototype(page: Page) {
         h3.insertAdjacentHTML('afterend', `<div class="meta"><span>${re.icon.pieces}${re.make[i].sub}</span><span>${re.icon.clock}${re.make[i].samp}</span></div><span class="go mono">See details</span>`);
         if (i === 0) a.classList.add('on');
       });
+      // the new knitwear photo (24 Oct 2026) is centred: no crop focus
+      document.querySelectorAll<HTMLImageElement>('[data-img="cat-knit"] img').forEach((im) => { im.style.objectPosition = ''; });
       // phones get the tall versions of the full-width photos (24 Oct 2026)
       const tallHow = matchMedia('(max-width: 860px)').matches;
       if (matchMedia('(max-width: 760px)').matches) document.querySelector<HTMLImageElement>('.hero .bgimg img')!.src = 'img/hero-phone.jpg';

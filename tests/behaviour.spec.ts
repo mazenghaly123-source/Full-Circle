@@ -842,7 +842,7 @@ test.describe('approved changes', () => {
     await expect(page.locator('.promise .ph img').first()).toHaveAttribute('alt', /black hoodie sample/);
     await expect(page.locator('#makeGrid img').first()).toHaveAttribute('alt', '');
     await page.goto('/what-we-make');
-    await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', 'Raw and washed denim jeans laid on a workshop table');
+    await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', /washed wide-leg jeans/);
   });
 
   test('search engines and shares: the address on the domain, the share card, the business, the sitemap', async ({ page, request }) => {
