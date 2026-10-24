@@ -814,7 +814,7 @@ test.describe('approved changes', () => {
   test('search titles, and product photos described where no link names them', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle('Full Circle / Clothing manufacturer in Cairo, Egypt');
-    await expect(page.locator('.promise .ph img').first()).toHaveAttribute('alt', /denim overshirt sample/);
+    await expect(page.locator('.promise .ph img').first()).toHaveAttribute('alt', /black hoodie sample/);
     await expect(page.locator('#makeGrid img').first()).toHaveAttribute('alt', '');
     await page.goto('/what-we-make');
     await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', 'Raw and washed denim jeans laid on a workshop table');
