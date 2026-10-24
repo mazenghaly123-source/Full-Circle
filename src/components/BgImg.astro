@@ -8,12 +8,13 @@ interface Props {
   img: string;
   sizes: string;
   eager?: boolean;
+  class?: string;
 }
 
-const { img: slot, sizes, eager = false } = Astro.props;
+const { img: slot, sizes, eager = false, class: cls } = Astro.props;
 const photo = PHOTOS[slot];
 ---
-<div class="bgimg" data-img={slot}>
+<div class:list={['bgimg', cls]} data-img={slot}>
   {photo && (
     <Picture
       src={photo}

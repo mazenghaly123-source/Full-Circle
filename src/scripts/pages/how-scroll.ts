@@ -1,5 +1,5 @@
 // Home "How it works": the section pins and the ring completes stage by stage as you scroll. At
-// 100% the centre becomes the mark ("Full circle"). On short screens a click jumps the ring instead.
+// 100% the centre becomes the mark ("Full circle"). The stage's photo sits behind the ring and changes with it. On short screens a click jumps the ring instead.
 import type { Feature } from '../core/lifecycle';
 import { $, pad, ring, rm } from '../core/util';
 import { STAGES } from '../../data/site';
@@ -9,6 +9,7 @@ export const howScrollFeature: Feature = {
     const steps = document.getElementById('steps');
     if (!steps) return;
     const ticks = $('howTicks'), howSec = $('h-how'), howTrack = $('howScroll'), howPin = $('howPin'), howRingEl = howSec.querySelector('.howring')!;
+    const bgs = [...howPin.querySelectorAll('.hbgs .bgimg')];
     const howPinned = () => !!howTrack.offsetParent && getComputedStyle(howPin).position === 'sticky';
     const howRange = () => Math.max(1, howTrack.offsetHeight - howPin.offsetHeight);
     [...steps.children].forEach((li, i) => {
@@ -22,6 +23,7 @@ export const howScrollFeature: Feature = {
       if (i === howI) return;
       const first = howI < 0; howI = i;
       [...steps!.children].forEach((li, k) => { li.classList.toggle('on', k === i); li.querySelector('button')!.setAttribute('aria-expanded', String(k === i)); });
+      bgs.forEach((b, k) => b.classList.toggle('on', k === i));
       $('howNum').textContent = pad(i + 1); $('howLbl').textContent = howDone ? 'Full circle' : STAGES[i].n;
       $('howNext').textContent = i < 7 ? 'Next / ' + pad(i + 2) + ' ' + STAGES[i + 1].n : 'Next run / back to 01';
       if (!first && !rm) ['howNum', 'howLbl'].forEach((id) => { const el = $(id); el.classList.remove('flip'); void el.getBoundingClientRect(); el.classList.add('flip'); });
@@ -31,7 +33,7 @@ export const howScrollFeature: Feature = {
       const [x, y] = ring(200, 200, 170, f);
       ['howDot', 'howPing'].forEach((id) => { $(id).setAttribute('cx', String(x)); $(id).setAttribute('cy', String(y)); });
       [...ticks.children].forEach((t, k) => t.classList.toggle('on', f >= k / 8 - 0.0001));
-      if (done !== howDone) { howDone = done; howRingEl.classList.toggle('done', done); $('howLbl').textContent = done ? 'Full circle' : STAGES[Math.max(0, howI)].n; }
+      if (done !== howDone) { howDone = done; howRingEl.classList.toggle('done', done); howPin.classList.toggle('done', done); $('howLbl').textContent = done ? 'Full circle' : STAGES[Math.max(0, howI)].n; }
     }
     // fallback (short screens): click a stage, the ring jumps to it
     function setStep(i: number) { setStage(i); drawRing((i + 0.5) / 8, false); }

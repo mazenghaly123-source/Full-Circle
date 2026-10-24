@@ -89,6 +89,9 @@ export const DEMO_PRODUCTS = [
 
 export const pad = (n: number) => String(n).padStart(2, '0');
 
+/** A category's sampling time as the short line on Home ("Samples from 7 days"): drops any note in brackets. */
+export const sampleLine = (samp: string) => { const s = samp.replace(/ \(.*\)$/, ''); return `Samples ${s.charAt(0).toLowerCase()}${s.slice(1)}`; };
+
 /** A point on a circle, starting at 12 o'clock and running clockwise (f = 0..1). */
 export const ring = (cx: number, cy: number, r: number, f: number): [number, number] => {
   const a = (f * 360 - 90) * Math.PI / 180;

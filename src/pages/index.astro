@@ -5,7 +5,7 @@ import BgImg from '../components/BgImg.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import { STAGE_ICONS } from '../data/icons';
-import { FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring } from '../data/site';
+import { FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring, sampleLine } from '../data/site';
 
 // hero ring: stage labels just outside the ring, between the ticks
 const heroLabels = STAGES.map((g, i) => {
@@ -96,8 +96,8 @@ const ATELIER = [
 
 <section class="wrap" id="h-make" style="padding-bottom:clamp(88px,10vw,150px)">
   <div class="sh"><h2 class="camp wide">What we make</h2><p>Denim first. Imported fabrics and trims.</p></div>
-  <div class="make snap" id="makeGrid">{MAKE.map((m, i) => (
-    <a class={i === 0 ? 'cat lead-cat' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[i === 0 ? 'Our specialty' : pad(i + 1), 'Photo']} sizes={i === 0 ? '(max-width: 620px) 56vw, (max-width: 1000px) 33vw, 34vw' : '(max-width: 620px) 56vw, (max-width: 1000px) 33vw, 17vw'} /><h3 class="camp">{m.n}</h3><span class="mono">{m.sub}</span></a>
+  <div class="make snap acc" id="makeGrid">{MAKE.map((m, i) => (
+    <a class={i === 0 ? 'cat on' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} sizes="(max-width: 760px) 72vw, 45vw" /><span class="num mono">{i === 0 ? 'Our specialty' : pad(i + 1)}</span><span class="v" aria-hidden="true">{m.n}</span><div class="t"><h3 class="camp">{m.n}</h3><div class="meta"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><span class="go mono">See details</span></div></a>
   ))}</div><div class="dots" data-for="makeGrid"></div>
   <div class="make-foot"><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
 </section>
@@ -105,6 +105,7 @@ const ATELIER = [
 <section class="wrap sec" id="h-how" style="border-top:1px solid var(--faint)">
   <div class="sh"><h2 class="camp wide">How it works</h2><p>Eight stages. You approve each one.</p></div>
   <div class="howscroll" id="howScroll"><div class="howpin" id="howPin">
+  <div class="hbgs" aria-hidden="true">{STAGES.map((g, i) => <BgImg img={`stage-${pad(i + 1)}`} sizes="100vw" class={i === 0 ? 'on' : undefined} />)}</div>
   <div class="how">
     <div class="howring" aria-hidden="true">
       <svg viewBox="0 0 400 400">

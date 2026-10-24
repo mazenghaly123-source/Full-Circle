@@ -139,6 +139,28 @@ test('desktop: the bottom bar stays out of the way', async ({ page }, info) => {
   await expect(page.locator('#mbar')).toBeHidden();
 });
 
+test('home: What we make, the photo you point at grows and the others step back (pointer), the middle card is the big one (phone)', async ({ page }, info) => {
+  await page.goto('/');
+  const cards = page.locator('#makeGrid .cat');
+  await cards.first().scrollIntoViewIfNeeded();
+  if (isPhone(info)) {
+    await page.locator('#makeGrid').evaluate((r) => { r.scrollLeft = (r.children[2] as HTMLElement).offsetLeft - (r.clientWidth - (r.children[2] as HTMLElement).offsetWidth) / 2; });
+    await expect(cards.nth(2)).toHaveClass(/\bon\b/);
+    await expect(cards.first()).not.toHaveClass(/\bon\b/);
+    expect(Number(await cards.nth(2).evaluate((e) => (e as HTMLElement).style.getPropertyValue('--s')))).toBeGreaterThan(0.99);
+    expect(Number(await cards.first().evaluate((e) => (e as HTMLElement).style.getPropertyValue('--s')))).toBeLessThan(0.9);
+    return;
+  }
+  const w = (i: number) => cards.nth(i).evaluate((e) => e.getBoundingClientRect().width);
+  const rest = await w(0);
+  expect(Math.abs((await w(5)) - rest)).toBeLessThan(2);
+  await cards.nth(2).hover();
+  await expect.poll(() => w(2), { timeout: 5000 }).toBeGreaterThan(rest * 2);
+  await expect.poll(() => w(0), { timeout: 5000 }).toBeLessThan(rest);
+  await page.mouse.move(5, 5);
+  await expect.poll(() => w(2), { timeout: 5000 }).toBeLessThan(rest * 1.1);
+});
+
 test('home: the How it works ring fills with scroll and closes as the mark', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
@@ -153,6 +175,9 @@ test('home: the How it works ring fills with scroll and closes as the mark', asy
   await at(0.55);
   await expect(page.locator('#howNum')).toHaveText('05', slow);
   await expect(page.locator('#steps .step').nth(4)).toHaveClass(/on/);
+  // the photo of the stage sits behind the ring, and goes when the ring closes
+  await expect(page.locator('#howPin .hbgs .bgimg.on')).toHaveAttribute('data-img', 'stage-05', slow);
+  await expect(page.locator('#howPin .hbgs .bgimg.on')).toHaveCount(1);
   await at(1);
   await expect(page.locator('#h-how .howring')).toHaveClass(/done/, slow);
   await expect(page.locator('#howLbl')).toHaveText('Full circle');

@@ -10,6 +10,7 @@ import { portalDemoFeature } from './pages/portal-demo';
 import { faqFeature } from './pages/faq';
 import { demoOrderFeature } from './pages/demo-order';
 import { makeFeature } from './pages/make';
+import { makeRowFeature } from './pages/make-row';
 import { requestFeature } from './pages/request';
 import { trackFeature } from './pages/track';
 import { contactFeature } from './pages/contact';
@@ -37,6 +38,7 @@ start([
   faqFeature,
   demoOrderFeature,
   makeFeature,
+  makeRowFeature,
   requestFeature,
   trackFeature,
   contactFeature,
