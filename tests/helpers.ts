@@ -135,7 +135,7 @@ export async function approvePrototype(page: Page) {
       document.getElementById('fFile')!.closest('label')!.remove();
       document.querySelector('.sent-box')!.insertAdjacentHTML('beforeend', '<a class="btn btn-line" id="sentWa" target="_blank" rel="noopener">Continue on WhatsApp</a>');
       // less text, no TBC left (15 Oct 2026): fabrics, bulk lead times, techniques, the scope list and
-      // the sample price go; stage times show only where known; the team waits for its portraits
+      // the sample price go; stage times show only where known; the team section is gone (24 Oct 2026)
       const byText = (sel: string, start: string) => [...document.querySelectorAll(sel)].find((e) => e.textContent!.trim().startsWith(start))!;
       for (const tr of document.querySelectorAll('.spec2 tr')) if (['Fabrics', 'Bulk lead time'].includes(tr.querySelector('th')!.textContent!)) tr.remove();
       for (const dt of document.querySelectorAll('.kv2 dt')) if (dt.textContent === 'Typical time' && dt.nextElementSibling!.querySelector('.tbc')) { dt.nextElementSibling!.remove(); dt.remove(); }
@@ -210,7 +210,7 @@ export async function approvePrototype(page: Page) {
       ul.innerHTML = ([['phone', 'Approve from your phone'], ['camera', 'Ask for a photo of any stage'], ['log', 'Every decision on record']] as const).map(([k, t]) => `<li>${re.icon[k]}${t}</li>`).join('');
       const trackCta = $h('.track > div > div'); trackCta.setAttribute('style', 'margin-top:28px'); trackCta.querySelector('span.mono')!.remove();
       $h('.portal .prow > span:first-child').textContent = 'FC-2418 / Denim jeans';
-      $h('#proof').remove();
+      $h('#proof').remove(); // the atelier is gone until there are real photos (Mazen, 24 Oct 2026)
       $h('.ctaband p').textContent = 'Four picks, under a minute. No account needed.';
       wide('#faq .sh h2');
       document.getElementById('faqList')!.innerHTML =faq.map(([q, a], i) => `<details><summary><span class="mono dim">${String(i + 1).padStart(2, '0')}</span><h3>${q}</h3><span class="plus"></span></summary><p class="ans">${a}</p></details>`).join('');

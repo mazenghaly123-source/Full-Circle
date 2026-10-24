@@ -34,8 +34,8 @@ Phones get a tall version of the full-width photos (Mazen, 24 Oct 2026): `hero-p
 `BgImg` switches to them up to 760px (the hero) or 860px (the How it works backgrounds). Their
 originals are the `…_tall_20261024.jpg` files in `assets/photos-raw/`.
 
-Slots that still have no photo show the tinted placeholder, as in the prototype: `atelier-1` to
-`atelier-5`, `about-floor` and `team-1` to `team-4`. These must be real photos, not AI images.
+`about-floor` still has no photo and shows the tinted placeholder; it must be a real photo, not an AI
+image. The atelier and team slots went with their sections (24 Oct 2026).
 
 To add or replace a photo, put the file here under the slot name (`.jpg` or `.png`) and register it
 in `src/data/photos.ts`.

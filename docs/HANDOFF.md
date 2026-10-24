@@ -104,14 +104,14 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
      section headlines only; rounded corners on every box, button, field and option site-wide
      (`--r-s/m/l` in the *approved changes* block); far fewer words; the facts, the two paths, the
      8 stages, the sample check and the portal shown with line icons (`src/data/icons.ts`,
-     `Icon.astro`). The atelier section on Home is hidden (`SHOW_ATELIER`) until the real photos come.
+     `Icon.astro`). The atelier section on Home and the team section on About were removed (24 Oct).
    - The parity, behaviour, CSS, admin and unit suites all pass. `approvePrototype` loads Microgramma
      into the prototype and mirrors Home's new markup, so **a Home text change must be mirrored
      there too**.
    - Inner pages, one at a time, **each as a mock for Mazen first** (24 Oct): What we make is done (mock
      https://claude.ai/artifact/KBD9Mda8zDTzoMPn2VBnB1, mirrored in `approvePrototype`). About, Contact, Request a
-     sample and Track followed straight on the preview (Mazen: no mocks for those). How it works is last
-     (Mazen wants more changes there).
+     sample and Track followed straight on the preview (Mazen: no mocks for those). How it works stays as it is
+     (Mazen approved it unchanged, 24 Oct).
    - Line figures (the Hairline skill, hairline.lucasmarkes.com): at most one per page, factory
      subjects only, the 3D mark stays the hero, and on phones they work by touch (drag sideways,
      the pose holds after the finger lifts). **Parked:** the first test, a shirt that opens into its
@@ -169,8 +169,8 @@ Dashboard and account tasks:
   - A **new SIM** for the system number.
   - Submit and approve the **6 templates** in [whatsapp.md](./whatsapp.md).
   - Then set the 5 WhatsApp secrets and the Send SMS hook.
-- **Real photos:** atelier-1..5, about-floor, team-1..4. The team section stays hidden
-  (`SHOW_TEAM`) until there are names and portraits.
+- **A real photo of the floor** for About (`about-floor`). The atelier and team sections were removed
+  (24 Oct), and About gets its own pass later.
 - At launch: the live Supabase project (Pro), Umami (EU), and the PDPC filings (§7).
 
 ## Gotchas
