@@ -130,6 +130,8 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
        the stage behind the pinned ring, changing with the stage and fading out when the ring closes
        into the mark (`.hbgs` in `index.astro`, `how-scroll.ts`). Both are in the *approved changes*
        block and mirrored in `approvePrototype`.
+     - Phones show tall versions of the hero and the 8 stage photos (Mazen made them, 24 Oct), so a
+       wide photo is not cropped to a strip: `PHOTOS_PHONE` and `BgImg`'s `phoneUpTo`.
      - Still the old wooden-table AI photos: the six category photos (the "Shirts" one is a shirt), and
        the two cards for Starting and Scaling. Mazen has not asked to change them yet.
      - When line figures come back, the subject is not a shirt.

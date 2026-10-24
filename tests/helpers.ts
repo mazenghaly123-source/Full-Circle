@@ -190,8 +190,11 @@ export async function approvePrototype(page: Page) {
         h3.insertAdjacentHTML('afterend', `<div class="meta"><span>${re.icon.pieces}${re.make[i].sub}</span><span>${re.icon.clock}${re.make[i].samp}</span></div><span class="go mono">See details</span>`);
         if (i === 0) a.classList.add('on');
       });
+      // phones get the tall versions of the full-width photos (24 Oct 2026)
+      const tallHow = matchMedia('(max-width: 860px)').matches;
+      if (matchMedia('(max-width: 760px)').matches) document.querySelector<HTMLImageElement>('.hero .bgimg img')!.src = 'img/hero-phone.jpg';
       // How it works: the photo of the stage behind the ring, the first one showing at rest
-      $h('#howPin').insertAdjacentHTML('afterbegin', `<div class="hbgs" aria-hidden="true">${[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<div class="bgimg${n === 1 ? ' on' : ''}" data-img="stage-0${n}"><img src="img/stage-0${n}.jpg" alt="" class="ok"></div>`).join('')}</div>`);
+      $h('#howPin').insertAdjacentHTML('afterbegin', `<div class="hbgs" aria-hidden="true">${[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<div class="bgimg${n === 1 ? ' on' : ''}" data-img="stage-0${n}"><img src="img/stage-0${n}${tallHow ? '-phone' : ''}.jpg" alt="" class="ok"></div>`).join('')}</div>`);
       wide('#h-how .sh h2'); $h('#h-how .sh p').textContent = 'Eight stages. You approve each one.';
       home.querySelectorAll('#steps .step').forEach((li, i) => {
         li.querySelector('.a')!.innerHTML = re.icon[re.stageIcons[i]];

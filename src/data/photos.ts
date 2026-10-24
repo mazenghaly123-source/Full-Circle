@@ -19,6 +19,15 @@ import stage05 from '../assets/photos/stage-05.jpg';
 import stage06 from '../assets/photos/stage-06.jpg';
 import stage07 from '../assets/photos/stage-07.jpg';
 import stage08 from '../assets/photos/stage-08.jpg';
+import heroPhone from '../assets/photos/hero-phone.jpg';
+import stage01Phone from '../assets/photos/stage-01-phone.jpg';
+import stage02Phone from '../assets/photos/stage-02-phone.jpg';
+import stage03Phone from '../assets/photos/stage-03-phone.jpg';
+import stage04Phone from '../assets/photos/stage-04-phone.jpg';
+import stage05Phone from '../assets/photos/stage-05-phone.jpg';
+import stage06Phone from '../assets/photos/stage-06-phone.jpg';
+import stage07Phone from '../assets/photos/stage-07-phone.jpg';
+import stage08Phone from '../assets/photos/stage-08-phone.jpg';
 
 /** Photos published so far, by slot name. A slot that is not listed shows its tinted placeholder. */
 export const PHOTOS: Record<string, ImageMetadata> = {
@@ -42,6 +51,20 @@ export const PHOTOS: Record<string, ImageMetadata> = {
   'stage-06': stage06,
   'stage-07': stage07,
   'stage-08': stage08,
+};
+
+/** Tall versions of full-width photos, shown instead on phones (Mazen, 24 Oct 2026: a wide photo cropped to a
+ * phone screen loses its subject). By slot name; BgImg switches to them below its `phoneUpTo` width. */
+export const PHOTOS_PHONE: Record<string, ImageMetadata> = {
+  hero: heroPhone,
+  'stage-01': stage01Phone,
+  'stage-02': stage02Phone,
+  'stage-03': stage03Phone,
+  'stage-04': stage04Phone,
+  'stage-05': stage05Phone,
+  'stage-06': stage06Phone,
+  'stage-07': stage07Phone,
+  'stage-08': stage08Phone,
 };
 
 /**

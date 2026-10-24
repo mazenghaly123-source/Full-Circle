@@ -30,6 +30,11 @@ the tracking card and the eight stages were replaced with photos made to look li
 | stage-07 | Measuring_jeans_for_QC_20261024.jpg |
 | stage-08 | Packing_hoodies_into_cartons_20261024.jpg |
 
+Phones get a tall version of the full-width photos (Mazen, 24 Oct 2026): `hero-phone.jpg` and
+`stage-01-phone.jpg` to `stage-08-phone.jpg`, registered in `PHOTOS_PHONE` (`src/data/photos.ts`).
+`BgImg` switches to them up to 760px (the hero) or 860px (the How it works backgrounds). Their
+originals are the `…_tall_20261024.jpg` files in `assets/photos-raw/`.
+
 Slots that still have no photo show the tinted placeholder, as in the prototype: `atelier-1` to
 `atelier-5`, `about-floor` and `team-1` to `team-4`. These must be real photos, not AI images.
 

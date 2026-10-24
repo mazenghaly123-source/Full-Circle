@@ -105,7 +105,7 @@ const ATELIER = [
 <section class="wrap sec" id="h-how" style="border-top:1px solid var(--faint)">
   <div class="sh"><h2 class="camp wide">How it works</h2><p>Eight stages. You approve each one.</p></div>
   <div class="howscroll" id="howScroll"><div class="howpin" id="howPin">
-  <div class="hbgs" aria-hidden="true">{STAGES.map((g, i) => <BgImg img={`stage-${pad(i + 1)}`} sizes="100vw" class={i === 0 ? 'on' : undefined} />)}</div>
+  <div class="hbgs" aria-hidden="true">{STAGES.map((g, i) => <BgImg img={`stage-${pad(i + 1)}`} sizes="100vw" phoneUpTo={860} class={i === 0 ? 'on' : undefined} />)}</div>
   <div class="how">
     <div class="howring" aria-hidden="true">
       <svg viewBox="0 0 400 400">
