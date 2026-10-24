@@ -33,7 +33,7 @@ const LOOK = {
  * open) shows as a button.
  */
 function render(title: string, intro: string, rows: Row[], outro: string[] = []) {
-  const text = [title, '', intro, '', ...rows.map(([l, v, h]) => `${l}: ${v}${h && !v.includes(h) ? ` (${h})` : ''}`), ...(outro.length ? ['', ...outro] : [])].join('\n');
+  const text = [title, '', intro, '', ...rows.map(([l, v, h]) => `${l}: ${v}${h && !v.includes(h) ? ` (${h})` : ''}`), ...(outro.length ? ['', ...outro] : []), '', 'Full Circle / Cairo / fullcircle-co.com'].join('\n');
   const L = LOOK;
   const button = (label: string, href: string) =>
     `<tr><td style="padding-top:22px;"><a href="${esc(href)}" style="display:inline-block;background:${L.red};color:#ffffff;font-family:${L.sans};font-size:13px;line-height:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 22px;border-radius:10px;">${esc(label)}</a></td></tr>`;
