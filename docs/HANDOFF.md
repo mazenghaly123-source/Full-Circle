@@ -122,7 +122,7 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
        the tracking card and the 8 stage photos are new AI photos made to look like our own cutting
        room, tidier (Soul 2; `src/assets/photos/README.md`). The sample and the bulk are black hoodies,
        the tracking card is raw jeans ("FC-2418 / Denim jeans", mirrored in `approvePrototype`). The
-       stage photos are not shown anywhere yet; they are for the How it works background below.
+       stage photos are the How it works background.
        Four unused photos from the same set are in `assets/photos-raw/` (`…_20261024.jpg`).
      - Done (Mazen approved the mock, 24 Oct): *What we make* is a row where the photo under the
        pointer grows and the others step back (no lead denim card), and on phones a swipe row where the
