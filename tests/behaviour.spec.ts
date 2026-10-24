@@ -58,7 +58,8 @@ test.describe('every page', () => {
       await page.waitForTimeout(800);
       expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
       const families = await page.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family).join('|'); });
-      expect(families).toContain('Saira Condensed');
+      // the display faces: the logo's face for titles (24 Oct 2026), Saira Condensed for card titles where a page has them
+      expect(families).toMatch(/Microgramma D Extended|Saira Condensed/);
       expect(families).toContain('Geist');
       expect(families).toContain('IBM Plex Mono');
       expect(errors).toEqual([]);
