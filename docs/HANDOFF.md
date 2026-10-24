@@ -124,10 +124,14 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
        the tracking card is raw jeans ("FC-2418 / Denim jeans", mirrored in `approvePrototype`). The
        stage photos are not shown anywhere yet; they are for the How it works background below.
        Four unused photos from the same set are in `assets/photos-raw/` (`…_20261024.jpg`).
-     - Mocked, waiting for Mazen (https://claude.ai/artifact/8PUr6tbVzWGS4sMSPAVcky): *What we make*
-       as a row where the hovered photo grows and the others shrink (no lead denim card), and on
-       phones a swipe row where the centred photo is largest; *How it works* with the stage photos
-       crossfading behind the pinned ring.
+     - Done (Mazen approved the mock, 24 Oct): *What we make* is a row where the photo under the
+       pointer grows and the others step back (no lead denim card), and on phones a swipe row where the
+       card in the middle is full size (`scripts/pages/make-row.ts`). *How it works* shows the photo of
+       the stage behind the pinned ring, changing with the stage and fading out when the ring closes
+       into the mark (`.hbgs` in `index.astro`, `how-scroll.ts`). Both are in the *approved changes*
+       block and mirrored in `approvePrototype`.
+     - Still the old wooden-table AI photos: the six category photos (the "Shirts" one is a shirt), and
+       the two cards for Starting and Scaling. Mazen has not asked to change them yet.
      - When line figures come back, the subject is not a shirt.
 2. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
    been tried. It needs the Auth settings below, so that staff and a test client can get codes.

@@ -1047,7 +1047,7 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
    shrink and dim (scripts/pages/make-row.ts sets --s and --k; the first card is the one in the middle at rest) */
 .make.acc{display:flex;gap:8px;height:clamp(420px,44vw,560px)}
 .make.acc>.cat{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:var(--r-l);overflow:hidden;isolation:isolate;transition:flex-grow 750ms var(--ease),box-shadow 500ms var(--ease)}
-.make.acc>.cat::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(to top,rgba(17,17,15,0.92) 0%,rgba(17,17,15,0.35) 42%,rgba(17,17,15,0.05) 70%)}
+.make.acc>.cat::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(rgba(17,17,15,0.05) 30%,rgba(17,17,15,0.35) 58%,rgba(17,17,15,0.92) 100%)}
 .make.acc .cat .ph{position:absolute;inset:0;aspect-ratio:auto;border-radius:0;box-shadow:none;transform:none;transition:none}
 .make.acc .cat:hover .ph{box-shadow:none;transform:none}
 .make.acc .cat .ph img.fill{transform:scale(1.06);filter:saturate(0.85) brightness(0.86);transition:opacity 600ms var(--ease),transform 1100ms var(--ease),filter 700ms var(--ease)}
