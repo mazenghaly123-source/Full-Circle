@@ -455,7 +455,7 @@ nameservers are then pointed at Cloudflare.
 
 ## 10. What I need from you
 
-As of 23 Oct 2026. Done: ~~the domain~~ (20 Oct), ~~the lawyer's review~~ (15 Oct), ~~Supabase
+As of 24 Oct 2026. Done: ~~the domain~~ (20 Oct), ~~the lawyer's review~~ (15 Oct), ~~Supabase
 staging~~, ~~the Resend key~~ (20 Oct), ~~the domain verified at Resend~~ (21 Oct), ~~the Arabic
 privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~~ (15 Oct).
 
@@ -495,8 +495,8 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
     WhatsApp secrets and the Send SMS hook (steps in whatsapp.md).
 
 **Content:**
-14. The real photos: atelier-1..5, about-floor and team-1..4. The team section stays hidden until
-    there are names and portraits.
+14. A real photo of the floor for About (`about-floor`). The atelier and team sections were removed
+    (Mazen, 24 Oct 2026).
 
 **At launch:** the live Supabase project (Pro, Frankfurt), Umami Cloud (EU), and the PDPC filings
 (§7).

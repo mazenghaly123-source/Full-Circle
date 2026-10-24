@@ -2,19 +2,10 @@
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
-import Photo from '../components/Photo.astro';
 import BgImg from '../components/BgImg.astro';
 import Icon from '../components/Icon.astro';
 import { ROUTES } from '../data/site';
 
-// The team section stays hidden until the names and portraits are in (Mazen, 15 Oct 2026).
-const SHOW_TEAM = false;
-const TEAM = [
-  { slot: 'team-1', role: 'Founder / production' },
-  { slot: 'team-2', role: 'Design + development' },
-  { slot: 'team-3', role: 'Pattern + sampling' },
-  { slot: 'team-4', role: 'Client lead' },
-];
 ---
 <Base page="about" title="About / Clothing development partner in Cairo / Full Circle" description="A development and manufacturing partner for clothing brands, based in Cairo. One team holds the whole chain, from first sketch to delivered bulk.">
 <PageHero crumb="About" title="Fashion culture leads. Process proves it." lead="One partner in Cairo, from the first sketch to delivered bulk." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(40% 50% at 20% 90%,#A63F3F,transparent 72%)" wide><BgImg img="about-floor" sizes="100vw" eager slot="bg" /></PageHero>
@@ -28,12 +19,6 @@ const TEAM = [
       <div class="onering"><svg viewBox="0 0 256.86 262.30" aria-hidden="true" style="color:var(--bone)"><use href="#fc-mark"/></svg><p style="margin:0">One team. The sample you approve is what ships.</p></div></div>
   </div>
 </section>
-{SHOW_TEAM && <section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
-  <div class="sh"><h2 class="camp">The team</h2><p>The people your brand works with, from first call to delivery.</p></div>
-  <div class="team">
-    {TEAM.map((t) => <div><Photo img={t.slot} caption={['Portrait']} sizes="(max-width: 860px) 50vw, 25vw" /><b>Name</b><span class="mono dim">{t.role}</span></div>)}
-  </div>
-</section>}
 <section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
   <div class="sh"><h2 class="camp wide">How we work with you</h2></div>
   <div class="three"><div><Icon name="techpack" /><b>Every stage has an output</b><span>You see it before we move on.</span></div><div><Icon name="qc" /><b>Every decision is yours</b><span>Nothing moves without your approval.</span></div><div><Icon name="camera" /><b>Nothing ships unseen</b><span>Ask for a photo of any stage.</span></div></div>

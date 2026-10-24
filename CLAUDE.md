@@ -84,12 +84,12 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   closest competitor: same promise, light and orange, condensed type, technical labels, loud
   tone): the headline face, the corners and the icons above; Home cut to half its words, icons in
   place of text, fewer mono labels, denim first, the five checks behind "What you approve is what
-  ships" (chest, length, sleeve, stitch, colour); the atelier on Home hidden (`SHOW_ATELIER` in
-  `index.astro`) until there are real photos. No pop-ups, tickers or slang. Inner pages get the
+  ships" (chest, length, sleeve, stitch, colour); the atelier section on Home and the team
+  section on About removed (Mazen, 24 Oct 2026). No pop-ups, tickers or slang. Inner pages get the
   same treatment, one page at a time, each as a mock for Mazen first (24 Oct 2026). Done: What we make
   (equal category cards with icon facts, three icon cards, no limits block), then About, Contact, Request
   a sample and Track straight on the preview without mocks (Mazen): titles in the logo's face, one-line
-  leads, icon cards (`.three`). How it works is last, as it needs more changes.
+  leads, icon cards (`.three`). How it works stays as it is: Mazen approved it unchanged (24 Oct 2026).
 - Interactive line figures (the Hairline skill, 23 Oct 2026): a few, at most one per page, never
   on the hero (the 3D mark stays the hero). On phones they answer a finger (sideways drag, tap),
   not only a self-running loop. Parked: the first test (a shirt opening into its pattern pieces)
@@ -112,9 +112,8 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 Keep the site's words short; details are not needed for everything. Removed and not to come back
 unless Mazen asks: fabrics/weights per category, bulk lead times, the techniques list, the "not in
 scope" list, the sample-price FAQ, stage times other than sampling's. No TBC tag is left on the
-site. The team section on About is hidden (`SHOW_TEAM` in `about.astro`) until there are names and
-portraits. The domain is **fullcircle-co.com** (20 Oct 2026). Still to come: the real photos
-(atelier-1..5, about-floor, team-1..4).
+site. The atelier and team sections are gone (24 Oct 2026). The domain is **fullcircle-co.com** (20 Oct
+2026). Still to come: a real photo of the floor for About (`about-floor`); About gets its own pass later.
 
 ## Site code
 - **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at

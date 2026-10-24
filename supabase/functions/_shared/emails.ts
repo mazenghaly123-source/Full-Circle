@@ -20,18 +20,42 @@ export function reachLink(typed: string, reach: Contact): { label: string; href?
 
 type Row = [label: string, value: string, href?: string];
 
-/** A plain-text and an HTML version of the same rows, in a quiet layout that survives any mail app. */
+/** The site's look in an email (as the sign-in code email, supabase/templates/sign-in-code.html): dark,
+ * the logo, one card. Table layout and inline styles so it holds up in Gmail, Outlook and Apple Mail. */
+const LOOK = {
+  bg: '#11110F', card: '#1B1B18', line: '#2E2D29', bone: '#E8E2D8', cotton: '#D8D0C3', dim: '#A39C90', faint: '#7E786D', red: '#BC2F29',
+  sans: "'Helvetica Neue',Helvetica,Arial,sans-serif", mono: "'IBM Plex Mono',Menlo,Consolas,monospace",
+  img: 'https://fullcircle-co.com/email',
+};
+
+/**
+ * A plain-text and an HTML version of the same rows. A row whose value is its own link (an address to
+ * open) shows as a button.
+ */
 function render(title: string, intro: string, rows: Row[], outro: string[] = []) {
   const text = [title, '', intro, '', ...rows.map(([l, v, h]) => `${l}: ${v}${h && !v.includes(h) ? ` (${h})` : ''}`), ...(outro.length ? ['', ...outro] : [])].join('\n');
-  const cell = 'padding:6px 12px 6px 0;vertical-align:top;font-size:14px;line-height:1.45';
-  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f4f1ec;color:#11110F;font-family:Helvetica,Arial,sans-serif">
-<div style="max-width:560px;margin:0 auto;background:#fff;padding:28px;border-top:4px solid #11110F">
-<h1 style="margin:0 0 12px;font-size:22px;letter-spacing:.01em">${esc(title)}</h1>
-<p style="margin:0 0 18px;font-size:15px;line-height:1.5">${esc(intro)}</p>
-<table role="presentation" style="border-collapse:collapse">${rows.map(([l, v, h]) =>
-    `<tr><td style="${cell};color:#6b6458;white-space:nowrap">${esc(l)}</td><td style="${cell}">${h ? `<a href="${esc(h)}" style="color:#11110F">${esc(v)}</a>` : esc(v).replace(/\n/g, '<br>')}</td></tr>`).join('')}</table>
-${outro.map((p) => `<p style="margin:18px 0 0;font-size:14px;line-height:1.5;color:#3d3a34">${esc(p)}</p>`).join('')}
-</div></body></html>`;
+  const L = LOOK;
+  const button = (label: string, href: string) =>
+    `<tr><td style="padding-top:22px;"><a href="${esc(href)}" style="display:inline-block;background:${L.red};color:#ffffff;font-family:${L.sans};font-size:13px;line-height:16px;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 22px;border-radius:10px;">${esc(label)}</a></td></tr>`;
+  const row = ([l, v, h]: Row) => h && h === v && /^https?:/.test(h)
+    ? button(l, h)
+    : `<tr><td style="padding:14px 0;border-top:1px solid ${L.line};"><div style="font-family:${L.mono};font-size:11px;line-height:16px;letter-spacing:1.5px;text-transform:uppercase;color:${L.dim};padding-bottom:4px;">${esc(l)}</div><div style="font-family:${L.sans};font-size:15px;line-height:22px;color:${L.bone};">${h ? `<a href="${esc(h)}" style="color:${L.bone};text-decoration:underline;">${esc(v)}</a>` : esc(v).replace(/\n/g, '<br>')}</div></td></tr>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(title)}</title></head>
+<body style="margin:0;padding:0;background:${L.bg};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${L.bg};">${esc(intro)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${L.bg};"><tr><td align="center" style="padding:40px 16px 48px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+<tr><td style="padding:0 4px 28px;"><a href="https://fullcircle-co.com" style="text-decoration:none;"><img src="${L.img}/logo.png" width="180" height="30" alt="Full Circle" style="display:block;border:0;width:180px;height:auto;"></a></td></tr>
+<tr><td style="background:${L.card};border:1px solid ${L.line};border-radius:16px;padding:36px 32px 32px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="font-family:${L.sans};font-size:24px;line-height:29px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:${L.bone};padding-bottom:12px;">${esc(title)}</td></tr>
+<tr><td style="font-family:${L.sans};font-size:15px;line-height:23px;color:${L.cotton};padding-bottom:22px;">${esc(intro)}</td></tr>
+${rows.map(row).join('\n')}
+${outro.map((p) => `<tr><td style="font-family:${L.sans};font-size:13px;line-height:20px;color:${L.dim};padding-top:20px;">${esc(p)}</td></tr>`).join('\n')}
+</table></td></tr>
+<tr><td style="padding:28px 4px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right:12px;vertical-align:middle;"><img src="${L.img}/mark.png" width="22" height="22" alt="" style="display:block;border:0;width:22px;height:auto;"></td><td style="font-family:${L.sans};font-size:12px;line-height:18px;color:${L.faint};vertical-align:middle;">Full Circle / Cairo / <a href="https://fullcircle-co.com" style="color:${L.dim};text-decoration:none;">fullcircle-co.com</a></td></tr></table></td></tr>
+</table></td></tr></table>
+</body></html>`;
   return { text, html };
 }
 
@@ -71,7 +95,7 @@ export function clientReceiptEmail(r: { code: string; brand: string }) {
       ['First call', 'We will message you to book it. We go through the product, the quantity and where you are now.'],
       ['Price range', 'A sample price and a range for bulk, before you commit to anything.'],
       ['Your order code', 'Once you approve, your order opens on the tracking page, at the stage where you enter.'],
-    ], [`Questions? Reply to this email, or message us on WhatsApp: ${SITE.whatsapp} (${SITE.whatsappUrl}).`, 'Full Circle, Cairo']),
+    ], [`Questions? Reply to this email, or message us on WhatsApp: ${SITE.whatsapp} (${SITE.whatsappUrl}).`]),
     replyTo: SITE.email,
   };
 }
@@ -115,17 +139,17 @@ export function orderEmail(event: OrderEvent, o: OrderMail, site: string, count 
     case 'decision_opened': return {
       subject: `${o.code} / Your decision: ${o.decision ?? 'waiting for you'}`,
       ...render('A decision is waiting for you.', `${o.brand}, we need your answer on ${o.name} before it moves on.`,
-        [order, ['Decision', o.decision ?? '—'], ['Open it', portal, portal]], [signIn, 'Full Circle, Cairo']),
+        [order, ['Decision', o.decision ?? '—'], ['Open it', portal, portal]], [signIn]),
     };
     case 'stage_moved': return {
       subject: `${o.code} / ${o.name} is at ${stageName(o.stage)}`,
       ...render(`Now at ${stageName(o.stage)}.`, `${o.brand}, your order moved to its next stage.`,
-        [order, ['Stage', stageName(o.stage)], ['Follow it', portal, portal]], [signIn, 'Full Circle, Cairo']),
+        [order, ['Stage', stageName(o.stage)], ['Follow it', portal, portal]], [signIn]),
     };
     case 'photo_added': return {
       subject: `${o.code} / ${count > 1 ? `${count} new photos` : 'A new photo'} of ${o.name}`,
       ...render(count > 1 ? `${count} new photos.` : 'A new photo.', `${o.brand}, there ${count > 1 ? 'are new photos' : 'is a new photo'} of ${o.name} on your order page.`,
-        [order, ['See them', portal, portal]], [signIn, 'Full Circle, Cairo']),
+        [order, ['See them', portal, portal]], [signIn]),
     };
     case 'decision_approved': return {
       subject: `${o.code} / ${o.brand} approved: ${o.decision ?? 'a decision'}`,
@@ -151,7 +175,7 @@ export function inviteEmail(i: { kind: 'client' | 'staff'; name: string; brand?:
     ? {
       subject: `Follow your orders with Full Circle`,
       ...render(`Hello ${i.name}.`, `${i.by} at Full Circle added you to ${i.brand}. You can now follow its orders: each stage, the decisions waiting for you, photos and the approval log.`,
-        [['Sign in at', i.url, i.url], ['With', 'this email address; we send you a 6-digit code each time']], ['Full Circle, Cairo']),
+        [['Sign in at', i.url, i.url], ['With', 'this email address; we send you a 6-digit code each time']]),
     }
     : {
       subject: 'You are on the Full Circle team',

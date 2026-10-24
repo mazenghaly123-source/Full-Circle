@@ -19,15 +19,6 @@ const howTicks = STAGES.map((_, i) => {
   const [x1, y1] = ring(200, 200, 160, i / 8), [x2, y2] = ring(200, 200, 180, i / 8);
   return { x1, y1, x2, y2 };
 });
-// the atelier waits for real photos of the floor (Mazen, 23 Oct 2026): placeholders read as a to-do
-const SHOW_ATELIER = false;
-const ATELIER = [
-  { slot: 'atelier-1', tone: 'radial-gradient(70% 60% at 30% 30%,#6b5644,#2a2622 72%)', cap: 'Worktable / Cairo' },
-  { slot: 'atelier-2', tone: 'radial-gradient(70% 60% at 50% 40%,#8a7f6c,#3a352e 72%)', cap: 'Sketch' },
-  { slot: 'atelier-3', tone: 'radial-gradient(70% 60% at 50% 50%,#7a6450,#30291f 72%)', cap: 'Pattern' },
-  { slot: 'atelier-4', tone: 'radial-gradient(70% 60% at 40% 40%,#3d3d38,#1b1b18 72%)', cap: 'Fabric' },
-  { slot: 'atelier-5', tone: 'radial-gradient(70% 60% at 50% 40%,#3b4f7a,#1d2638 72%)', cap: 'Garment' },
-];
 ---
 <Base page="home" title="Full Circle / Clothing manufacturer in Cairo, Egypt" description="Design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands starting or scaling. From 60 pieces per colour.">
 <section class="hero grain"><BgImg img="hero" sizes="100vw" eager />
@@ -171,17 +162,6 @@ const ATELIER = [
     </div>
   </div>
 </section>
-
-{SHOW_ATELIER && (
-<section class="wrap sec" id="proof">
-  <div class="sh"><h2 class="camp">The atelier</h2><p>Real photos from the floor go here. Client work and logos are added after the first pilot run.</p></div>
-  <div class="proof snap" id="proofRow" tabindex="0" role="region" aria-label="Atelier photos">
-    {ATELIER.map((a) => <Photo img={a.slot} tone={a.tone} caption={[a.cap, 'Photo']} sizes="(max-width: 760px) 68vw, 50vw" />)}
-  </div>
-  <div class="dots" data-for="proofRow"></div>
-  <div class="logos" role="img" aria-label="Client logos, coming after pilot run"><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div><div class="mono">Logo</div></div>
-</section>
-)}
 
 <CtaBand title="Request a sample." text="Four picks, under a minute. No account needed."><a href={ROUTES.start} class="btn btn-red" style="padding:16px 22px">Start the request</a></CtaBand>
 
