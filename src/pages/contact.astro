@@ -1,23 +1,24 @@
 ---
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
 import { EMAIL, INSTAGRAM, INSTAGRAM_URL, PHONE, PHONE_URL, ROUTES, WHATSAPP, WHATSAPP_URL } from '../data/site';
 import { PRIVACY } from '../data/backend';
 import { NOTICE } from '../../supabase/functions/_shared/forms';
 ---
 <Base page="contact" title="Contact / Clothing manufacturer in Cairo / Full Circle" description="WhatsApp is the fastest way to reach Full Circle in Cairo. Phone, email and Instagram are here too. To start production, request a sample.">
-<PageHero crumb="Contact" title="Talk to us." lead="WhatsApp is the fastest way to reach us. For a production enquiry, the sample request gets you an answer quicker." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" />
+<PageHero crumb="Contact" title="Talk to us." lead="WhatsApp is the fastest way to reach us." light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%)" wide />
 <section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
   <div class="cgrid">
     <div class="ccards">
-      <div><span class="mono dim">WhatsApp</span><span><a class="cv" href={WHATSAPP_URL} target="_blank" rel="noopener"><b id="cWa">{WHATSAPP}</b></a><button class="copy" data-copy="cWa">Copy</button><a class="copy" href={WHATSAPP_URL} target="_blank" rel="noopener">Open chat <span aria-hidden="true">↗</span></a></span></div>
-      <div><span class="mono dim">Phone</span><span><a class="cv" href={PHONE_URL}><b id="cTel">{PHONE}</b></a><button class="copy" data-copy="cTel">Copy</button></span></div>
-      <div><span class="mono dim">Instagram</span><span><a class="cv" href={INSTAGRAM_URL} target="_blank" rel="noopener"><b>{INSTAGRAM}</b></a><a class="copy" href={INSTAGRAM_URL} target="_blank" rel="noopener">Open <span aria-hidden="true">↗</span></a></span></div>
-      <div><span class="mono dim">Email</span><span><a class="cv" href={`mailto:${EMAIL}`}><b id="cMail">{EMAIL}</b></a><button class="copy" data-copy="cMail">Copy</button></span></div>
-      <div><span class="mono dim">Where</span><b>Cairo, Egypt / visits by appointment</b></div>
-      <div><span class="mono dim">Hours</span><b>Sunday – Thursday / 9:00 – 17:00</b></div>
-      <div><span class="mono dim">Markets</span><b>Gulf + Middle East / Turkey / China</b></div>
-      <div><span class="mono dim">Other</span><span style="color:var(--cotton)">Press, partnerships and careers: email us and put the topic in the subject line.</span></div>
+      <div><span class="mono dim"><Icon name="chat" />WhatsApp</span><span><a class="cv" href={WHATSAPP_URL} target="_blank" rel="noopener"><b id="cWa">{WHATSAPP}</b></a><button class="copy" data-copy="cWa">Copy</button><a class="copy" href={WHATSAPP_URL} target="_blank" rel="noopener">Open chat <span aria-hidden="true">↗</span></a></span></div>
+      <div><span class="mono dim"><Icon name="phone" />Phone</span><span><a class="cv" href={PHONE_URL}><b id="cTel">{PHONE}</b></a><button class="copy" data-copy="cTel">Copy</button></span></div>
+      <div><span class="mono dim"><Icon name="camera" />Instagram</span><span><a class="cv" href={INSTAGRAM_URL} target="_blank" rel="noopener"><b>{INSTAGRAM}</b></a><a class="copy" href={INSTAGRAM_URL} target="_blank" rel="noopener">Open <span aria-hidden="true">↗</span></a></span></div>
+      <div><span class="mono dim"><Icon name="mail" />Email</span><span><a class="cv" href={`mailto:${EMAIL}`}><b id="cMail">{EMAIL}</b></a><button class="copy" data-copy="cMail">Copy</button></span></div>
+      <div><span class="mono dim"><Icon name="pin" />Where</span><b>Cairo, Egypt / visits by appointment</b></div>
+      <div><span class="mono dim"><Icon name="clock" />Hours</span><b>Sunday – Thursday / 9:00 – 17:00</b></div>
+      <div><span class="mono dim"><Icon name="globe" />Markets</span><b>Gulf + Middle East / Turkey / China</b></div>
+      <div><span class="mono dim"><Icon name="log" />Other</span><span style="color:var(--cotton)">Press, partnerships and careers: email us.</span></div>
     </div>
     <div>
       <form id="cForm" novalidate style="display:grid;gap:14px">

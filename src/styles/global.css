@@ -1145,4 +1145,11 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
   .mcat .mfoot .btn{flex:1}
 }
 @media (prefers-reduced-motion:reduce){.mcat,.three>div{transition:none}}
+/* 24 Oct 2026 (Mazen): the other inner pages get the same treatment without a mock: titles in the logo's face,
+   one-line leads, icon cards (.three) in place of numbered text, icons beside the contact labels */
+.ccards>div>.mono{display:inline-flex;align-items:center;gap:10px}
+.ccards>div>.mono .ic{width:18px;height:18px;color:var(--cotton)}
+.contact .ic{width:24px;height:24px;color:var(--cotton)}
+.three.next3>div{border-top:1px solid var(--line)}
+@media (max-width:760px){.phero h1.wide{font-size:clamp(30px,9vw,40px)}}
 /* ===== end approved changes ===== */

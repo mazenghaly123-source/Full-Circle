@@ -109,8 +109,9 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
      into the prototype and mirrors Home's new markup, so **a Home text change must be mirrored
      there too**.
    - Inner pages, one at a time, **each as a mock for Mazen first** (24 Oct): What we make is done (mock
-     https://claude.ai/artifact/KBD9Mda8zDTzoMPn2VBnB1, mirrored in `approvePrototype`). Next: About, Contact,
-     Request a sample, Track; How it works last (Mazen wants more changes there).
+     https://claude.ai/artifact/KBD9Mda8zDTzoMPn2VBnB1, mirrored in `approvePrototype`). About, Contact, Request a
+     sample and Track followed straight on the preview (Mazen: no mocks for those). How it works is last
+     (Mazen wants more changes there).
    - Line figures (the Hairline skill, hairline.lucasmarkes.com): at most one per page, factory
      subjects only, the 3D mark stays the hero, and on phones they work by touch (drag sideways,
      the pose holds after the finger lifts). **Parked:** the first test, a shirt that opens into its

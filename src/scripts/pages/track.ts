@@ -30,7 +30,7 @@ const portal = {
   /** a call to the server is under way: the buttons wait */
   busy: false,
 };
-const LOGIN_LEAD = 'Sign in with the email or WhatsApp number on your order. You will see every order, its stage, the next decision, photos and the full approval log.';
+const LOGIN_LEAD = 'Sign in with the email or WhatsApp on your order.';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const stage = (n: number) => STAGES[Math.min(Math.max(n, 1), 8) - 1];

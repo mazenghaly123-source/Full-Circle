@@ -235,6 +235,29 @@ export async function approvePrototype(page: Page) {
       why.nextElementSibling!.outerHTML = `<div class="three">${([['denim', 'Denim speciality', 'Pattern to wash, from 150 pcs / colour.'], ['source', 'Imported fabrics', 'Denims and fabrics not sold in Cairo.'], ['trims', 'Imported trims', 'Buttons, rivets, zips and labels from abroad.']] as const).map(([k, b, t]) => `<div>${re.icon[k]}<b>${b}</b><span>${t}</span></div>`).join('')}</div>`;
       $m('.limits').closest('section')!.remove();
       $m('.ctaband p').textContent = 'Tell us. If it is not for us, we say so.';
+      // the other inner pages (24 Oct 2026): titles in the logo's face, one-line leads, icons in place of text
+      const pg = (k: string) => document.querySelector(`[data-page="${k}"]`)!;
+      const head = (k: string, lead: string) => { pg(k).querySelector('.phero h1')!.classList.add('wide'); pg(k).querySelector('.phero .lead')!.textContent = lead; };
+      const sh = (root: Element, start: string) => [...root.querySelectorAll('.sh')].find((e) => e.textContent!.trim().startsWith(start))!;
+      const cards = (rows: (readonly [keyof typeof re.icon, string, string])[]) => rows.map(([k, b, t]) => `<div>${re.icon[k]}<b>${b}</b><span>${t}</span></div>`).join('');
+      head('about', 'One partner in Cairo, from the first sketch to delivered bulk.');
+      const about = pg('about');
+      for (const t of ['Why one partner', 'How we work with you', 'Where we sell']) { const h = sh(about, t); h.querySelector('h2')!.classList.add('wide'); h.querySelector('p')?.remove(); }
+      const chainP = about.querySelectorAll('.chain p');
+      chainP[0].textContent = 'Four suppliers, and a bulk run that does not match the sample.';
+      chainP[1].textContent = 'One team. The sample you approve is what ships.';
+      about.querySelector('.rules')!.outerHTML = `<div class="three">${cards([['techpack', 'Every stage has an output', 'You see it before we move on.'], ['qc', 'Every decision is yours', 'Nothing moves without your approval.'], ['camera', 'Nothing ships unseen', 'Ask for a photo of any stage.']])}</div>`;
+      about.querySelector('.contact')!.innerHTML = ([['pin', 'Made in Cairo'], ['globe', 'Gulf + Middle East'], ['globe', 'Turkey'], ['globe', 'China']] as const).map(([k, b]) => `<div>${re.icon[k]}<b>${b}</b></div>`).join('');
+      about.querySelector('.ctaband p')!.textContent = 'A first call, or a visit to the floor in Cairo.';
+      head('contact', 'WhatsApp is the fastest way to reach us.');
+      const icons: Record<string, keyof typeof re.icon> = { WhatsApp: 'chat', Phone: 'phone', Instagram: 'camera', Email: 'mail', Where: 'pin', Hours: 'clock', Markets: 'globe', Other: 'log' };
+      for (const l of pg('contact').querySelectorAll('.ccards > div > .mono')) l.insertAdjacentHTML('afterbegin', re.icon[icons[l.textContent!.trim()]]);
+      [...pg('contact').querySelectorAll('.ccards > div')].at(-1)!.lastElementChild!.textContent = 'Press, partnerships and careers: email us.';
+      head('start', 'Four picks and your contact. No commitment.');
+      const next3 = pg('start').querySelector('.next3')!;
+      next3.className = 'three next3';
+      next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
+      head('track', 'Sign in with the email or WhatsApp on your order.');
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }

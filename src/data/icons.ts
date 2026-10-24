@@ -9,6 +9,11 @@ export const ICONS = {
   pieces: '<rect x="4" y="13.5" width="16" height="6" rx="2"/><rect x="5.5" y="8.5" width="13" height="5" rx="2"/><rect x="7" y="4.5" width="10" height="4" rx="1.5"/><circle class="rd" cx="19.5" cy="5" r="1.7"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/><circle class="rd" cx="12" cy="12" r="1.4"/>',
   trims: '<circle cx="12" cy="12" r="8.5"/><circle cx="10" cy="10" r="1"/><circle cx="14" cy="10" r="1"/><circle cx="10" cy="14" r="1"/><circle cx="14" cy="14" r="1"/><circle class="rd" cx="18.2" cy="5.8" r="1.4"/>',
+  chat: '<path d="M4.5 19.5l1.2-3.6A8 8 0 1 1 9 19.2z"/><circle class="rd" cx="12" cy="11.5" r="1.3"/>',
+  mail: '<rect x="3.5" y="6" width="17" height="12" rx="2"/><path d="M4 7.5l8 5.5 8-5.5"/><circle class="rd" cx="19.5" cy="5.5" r="1.5"/>',
+  pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle class="rd" cx="12" cy="10" r="2"/>',
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.2 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.2-3.5-8.5s1.1-6.1 3.5-8.5z"/><circle class="rd" cx="18.6" cy="6.6" r="1.3"/>',
+  tag: '<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.4 1.4 0 0 1 0 2l-6.7 6.7a1.4 1.4 0 0 1-2 0z"/><circle class="rd" cx="8" cy="8" r="1.5"/>',
   denim: '<path d="M7 3.5h10l1.2 17h-4.4L12 10.5l-1.8 10H5.8z"/><path d="M7.1 6.8h9.8"/><circle class="rd" cx="9.3" cy="9" r="1.1"/>',
   ring: '<circle cx="12" cy="12" r="7.5"/><circle class="rd" cx="12" cy="4.5" r="2.2"/>',
   // the eight stages, in order (STAGE_ICONS)
