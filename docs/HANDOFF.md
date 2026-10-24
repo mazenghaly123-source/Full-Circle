@@ -11,7 +11,7 @@ from a cloud session, it says so.
 | Branch | Holds | State |
 |---|---|---|
 | `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, and the redesign of Home (see *In progress*) | Live |
-| `claude/tender-rubin-ahjc3t` | The redesign of Home + this handoff, on top of all the phases | Merged to `main` (23 Oct) |
+| `claude/tender-rubin-ahjc3t` | The redesign of Home + this handoff, on top of all the phases | Merged to `main` (23 Oct); the Home edits since then (see *In progress*) are not |
 | `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
 | `claude/phase-2-requests`, `claude/intelligent-fermi-ddqnas`, `claude/audit-code-cleanup`, `claude/bold-mccarthy-t9fppt`, `claude/trusting-albattani-5sxko8` | Already fully in `main` | Safe to delete |
@@ -115,6 +115,20 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
      six pattern pieces (https://claude.ai/artifact/3uMMhCdonw82iRABVTGVS3), did not convince Mazen
      (23 Oct), and figures wait until he picks them up again. Nothing of it is in the repo; the
      published page holds its whole code.
+   - **Home edits (Mazen, 23–24 Oct), on `claude/tender-rubin-ahjc3t`, not on `main` yet** (merge
+     when Mazen says so):
+     - Done: the hero fills the screen under the header at every size (*approved changes* block).
+     - Done, **fewer shirts** (nobody makes or wears them now): the hero, the sample and the bulk,
+       the tracking card and the 8 stage photos are new AI photos made to look like our own cutting
+       room, tidier (Soul 2; `src/assets/photos/README.md`). The sample and the bulk are black hoodies,
+       the tracking card is raw jeans ("FC-2418 / Denim jeans", mirrored in `approvePrototype`). The
+       stage photos are not shown anywhere yet; they are for the How it works background below.
+       Four unused photos from the same set are in `assets/photos-raw/` (`…_20261024.jpg`).
+     - Mocked, waiting for Mazen (https://claude.ai/artifact/8PUr6tbVzWGS4sMSPAVcky): *What we make*
+       as a row where the hovered photo grows and the others shrink (no lead denim card), and on
+       phones a swipe row where the centred photo is largest; *How it works* with the stage photos
+       crossfading behind the pinned ring.
+     - When line figures come back, the subject is not a shirt.
 2. **Phase 4's "done when"** (a test order through all 8 stages from a phone, on staging) has not
    been tried. It needs the Auth settings below, so that staff and a test client can get codes.
 3. **The email receipt to a brand** has not been tried: both 23 Oct tests gave a WhatsApp number.

@@ -192,6 +192,7 @@ export async function approvePrototype(page: Page) {
       const ul = $h('.track > div > ul'); ul.className = 'iclist';
       ul.innerHTML = ([['phone', 'Approve from your phone'], ['camera', 'Ask for a photo of any stage'], ['log', 'Every decision on record']] as const).map(([k, t]) => `<li>${re.icon[k]}${t}</li>`).join('');
       const trackCta = $h('.track > div > div'); trackCta.setAttribute('style', 'margin-top:28px'); trackCta.querySelector('span.mono')!.remove();
+      $h('.portal .prow > span:first-child').textContent = 'FC-2418 / Denim jeans';
       $h('#proof').remove();
       $h('.ctaband p').textContent = 'Four picks, under a minute. No account needed.';
       wide('#faq .sh h2');

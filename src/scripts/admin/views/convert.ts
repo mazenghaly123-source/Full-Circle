@@ -18,7 +18,7 @@ ${r ? `<p class="t2" style="margin:0">${esc(r.code)} becomes the order's code. $
 ${select('Client', 'client', [['new', 'A new client'], ...list.map((c): [string, string] => [String(c.id), c.brand])], same ? String(same.id) : 'new')}
 <div id="cv-brand">${field('Brand name', 'brand', r?.brand ?? '', { req: true })}</div>
 <div class="divk">Order</div>
-<div class="g2">${field('Order name', 'name', r?.product ?? '', { req: true, ph: 'Overshirt' })}${field('Product', 'product', r?.product ?? '', { req: true })}</div>
+<div class="g2">${field('Order name', 'name', r?.product ?? '', { req: true, ph: 'Denim jeans' })}${field('Product', 'product', r?.product ?? '', { req: true })}</div>
 <div class="g2">${select('Starts at', 'stage', [1, 2, 3, 4, 5, 6, 7, 8].map((n): [string, string] => [String(n), stageName(n)]), stage)}${field('Pieces', 'qty', '', { type: 'number', attrs: ' min="1" inputmode="numeric"' })}</div>
 <div class="g2">${field('Fabric', 'fabric', '')}${field('Delivery due', 'due', '', { type: 'date' })}</div>
 ${field('Line under the name on the portal', 'summary', '', { ph: 'Sample 01 / denim 12 oz / 300 pcs', hint: 'Optional. The client sees it next to the order.' })}

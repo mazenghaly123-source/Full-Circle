@@ -56,9 +56,9 @@ export const PHOTO_ALT: Record<string, string> = {
   'cat-shirts': 'Light blue button-up shirt and olive overshirt laid flat with buttons and thread',
   'cat-outerwear': 'Khaki work jacket and black jacket on a workshop table',
   'cat-knit': 'Oatmeal knit crewneck sweater with yarn and knitting needles',
-  'promise-sample': 'Approved denim overshirt sample on a dress form, with its hang tag',
-  'promise-bulk': 'Stack of folded denim overshirts from the bulk run, tagged for packing',
-  'portal-sample': 'Navy overshirt sample hanging on the studio wall, labelled ID-02',
+  'promise-sample': 'Approved black hoodie sample on a dress form in the cutting room, with its hang tag',
+  'promise-bulk': 'Stack of folded black hoodies from the bulk run, each with the same hang tag',
+  'portal-sample': 'Raw indigo jeans sample hanging on the cutting room wall, labelled with tape',
 };
 
 /** Where to keep the subject when a photo is cropped. */
