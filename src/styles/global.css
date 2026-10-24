@@ -1036,4 +1036,69 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .track .iclist li{align-items:center;font-size:16px}
 .track .iclist li::before{display:none}
 .iclist .ic{width:24px;height:24px}
+/* 23 Oct 2026 (Mazen): the Home hero fills the screen under the header, at every size; the words and
+   the ring stay centred and the facts sit at the bottom (on phones, above the bottom bar) */
+.hero{display:flex;flex-direction:column;min-height:calc(100svh - 65px)}
+.hero>.wrap{width:100%}
+.hero>.wrap:not(:last-child){flex:1 0 auto}
+@media (max-width:760px){.hero{min-height:calc(100svh - 57px);padding-bottom:56px}}
+/* 24 Oct 2026 (Mazen): What we make on Home is a row where the photo you are on grows and the others step back
+   (no lead denim card). On phones it is a swipe row: the card in the middle is full size, the ones beside it
+   shrink and dim (scripts/pages/make-row.ts sets --s and --k; the first card is the one in the middle at rest) */
+.make.acc{display:flex;gap:8px;height:clamp(420px,44vw,560px)}
+.make.acc>.cat{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:var(--r-l);overflow:hidden;isolation:isolate;transition:flex-grow 750ms var(--ease),box-shadow 500ms var(--ease)}
+.make.acc>.cat::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(rgba(17,17,15,0.05) 30%,rgba(17,17,15,0.35) 58%,rgba(17,17,15,0.92) 100%)}
+.make.acc .cat .ph{position:absolute;inset:0;aspect-ratio:auto;border-radius:0;box-shadow:none;transform:none;transition:none}
+.make.acc .cat:hover .ph{box-shadow:none;transform:none}
+.make.acc .cat .ph img.fill{transform:scale(1.06);filter:saturate(0.85) brightness(0.86);transition:opacity 600ms var(--ease),transform 1100ms var(--ease),filter 700ms var(--ease)}
+.make.acc .num{position:absolute;z-index:2;top:16px;left:18px;color:var(--cotton);white-space:nowrap;transition:opacity 400ms var(--ease)}
+.make.acc .t{position:absolute;z-index:2;left:18px;right:18px;bottom:18px;display:grid;gap:10px;transition:opacity 400ms var(--ease)}
+.make.acc .cat h3,.make.acc .cat:hover h3{margin:0;font-size:clamp(26px,2.3vw,36px);line-height:0.95;letter-spacing:0.01em;text-wrap:balance;transform:none}
+.make.acc .meta{display:flex;flex-wrap:wrap;gap:6px;max-height:0;opacity:0;overflow:hidden;transition:max-height 600ms var(--ease),opacity 400ms var(--ease)}
+.make.acc .meta span{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r-s);background:rgba(17,17,15,0.5);font:500 11px/1 var(--f-mono);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.make.acc .meta .ic{width:15px;height:15px}
+.make.acc .go{display:inline-flex;align-items:center;gap:8px;margin-top:4px;color:var(--bone)}
+.make.acc .go::after{content:"→";transition:transform 300ms var(--ease)}
+.make.acc .v{position:absolute;z-index:2;left:50%;bottom:20px;writing-mode:vertical-rl;transform:translateX(-50%) rotate(180deg);font:700 22px/1 var(--f-camp);text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;opacity:0;transition:opacity 400ms var(--ease);pointer-events:none}
+.make.acc .cat:focus-visible{outline:2px solid var(--bone);outline-offset:2px}
+@media (min-width:761px){
+  .make.acc.has>.cat{flex-grow:0.62}
+  .make.acc.has>.cat.on{flex-grow:3.6;box-shadow:0 0 0 1px rgba(232,226,216,0.3),0 30px 60px -30px rgba(36,62,143,0.7)}
+  .make.acc.has .cat.on .ph img.fill{transform:scale(1);filter:saturate(1) brightness(0.95)}
+  .make.acc.has .cat.on .meta{max-height:120px;opacity:1}
+  .make.acc.has .cat.on .go::after{transform:translateX(4px)}
+  .make.acc.has .cat:not(.on) .t,.make.acc.has .cat:not(.on) .num{opacity:0}
+  .make.acc.has .cat:not(.on) .v{opacity:1}
+  .make.acc.has .cat:not(.on) .ph img.fill{filter:saturate(0.6) brightness(0.6)}
+}
+@media (max-width:760px){
+  .make.acc{height:auto;gap:10px;padding-block:6px 10px;padding-inline:14vw;scroll-padding-inline:14vw}
+  .make.acc>.cat{flex:0 0 72vw;width:72vw;aspect-ratio:4/5;scroll-snap-align:center;transform:scale(var(--s,0.86));transition:box-shadow 400ms var(--ease);will-change:transform;--s:0.86;--k:0}
+  .make.acc>.cat:first-child{--s:1;--k:1}
+  .make.acc .cat .ph img.fill{filter:saturate(0.8) brightness(calc(0.55 + var(--k) * 0.4));transform:none;transition:opacity 600ms var(--ease)}
+  .make.acc .cat.on .meta{max-height:120px;opacity:1}
+  .make.acc>.cat.on{box-shadow:0 0 0 1px rgba(232,226,216,0.3),0 24px 50px -24px rgba(36,62,143,0.75)}
+  .make.acc .t{left:16px;right:16px;bottom:16px}
+  .make.acc .num{top:14px;left:16px}
+  .make.acc h3,.make.acc .cat h3{font-size:30px}
+}
+/* 24 Oct 2026 (Mazen): behind the pinned How it works ring on Home, the photo of the stage you are on, full width,
+   changing with the stage; it fades out when the ring closes into the mark */
+.howpin{isolation:isolate}
+.hbgs{display:none;position:absolute;top:0;bottom:0;left:50%;width:100vw;margin-left:-50vw;z-index:-1;pointer-events:none}
+#h-how.scrolly .hbgs{display:block}
+.hbgs .bgimg{--bg-o:1;z-index:0;opacity:0;transition:opacity 1000ms var(--ease)}
+.hbgs .bgimg img{transform:scale(1.12);transition:opacity 900ms var(--ease),transform 7s linear}
+.hbgs .bgimg.on{opacity:0.62}
+.hbgs .bgimg.on img{transform:scale(1)}
+.howpin.done .hbgs .bgimg.on{opacity:0}
+.hbgs::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(var(--bg) 0%,rgba(17,17,15,0) 22%,rgba(17,17,15,0) 78%,var(--bg) 100%),
+  linear-gradient(90deg,rgba(17,17,15,0.45) 0%,rgba(17,17,15,0.3) 34%,rgba(17,17,15,0.86) 52%,rgba(17,17,15,0.95) 100%)}
+@media (max-width:860px){
+  .hbgs::after{background:
+    linear-gradient(var(--bg) 0%,rgba(17,17,15,0) 20%,rgba(17,17,15,0) 70%,var(--bg) 100%),
+    linear-gradient(rgba(17,17,15,0.42),rgba(17,17,15,0.42) 40%,rgba(17,17,15,0.9) 60%,rgba(17,17,15,0.95))}
+}
+@media (prefers-reduced-motion:reduce){.hbgs .bgimg,.hbgs .bgimg img,.make.acc>.cat,.make.acc .cat .ph img.fill{transition:none}}
 /* ===== end approved changes ===== */

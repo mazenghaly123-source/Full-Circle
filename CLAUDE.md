@@ -55,6 +55,7 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   fallback with a 360° sweep reveal if WebGL fails. On phones (14 Oct 2026) the mark is 1.25×
   bigger inside its ring, and a finger turns it 1.7× as far as the mouse (full turn over 90px),
   following closer. Tilt by gyroscope was considered and dropped: keep it touch only.
+  The Home hero fills the screen under the header at every size (Mazen, 23 Oct 2026).
 - Mazen REJECTED: the old stacked-layers 3D logo, continuous rotation, magnetic red buttons.
   Keep: custom cursor ring (desktop), photo zoom/card lift, nav underline, row shift with
   red dot, ring-wipe page transitions, count-up numbers, reveal-on-scroll.
@@ -69,6 +70,11 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   it again.
 - Tracking portal is part of the build.
 - Atelier, floor and team photos must be REAL photos (not AI). Everything else may be AI.
+- Fewer shirts (Mazen, 23 Oct 2026): nobody makes or wears them now, so photos, demo orders and
+  figures show hoodies, jeans and other products. AI photos must look like our own cutting room
+  (white walls with a grey lower band, terrazzo floor, fluorescent tubes, white tables, the FULL
+  CIRCLE sign), tidier than it is, and like a phone photo, not a styled shoot. The hero, sample,
+  bulk, tracking-card and stage photos were replaced that way on 24 Oct.
 - Image generation: never use Higgsfield Nano Banana / GPT Image; give Mazen prompts.
 - Site audit part B (13 Oct 2026), all approved: the button red above, Bone + red dot for small
   red text, a scrim over the hero, a gradient behind photo captions, the hero ring stops after one

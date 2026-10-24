@@ -1,7 +1,7 @@
 import type { ImageMetadata } from 'astro';
 import catDenim from '../assets/photos/cat-denim.jpg';
 import catHoodies from '../assets/photos/cat-hoodies.jpg';
-import catKnit from '../assets/photos/cat-knit.png';
+import catKnit from '../assets/photos/cat-knit.jpg';
 import catOuterwear from '../assets/photos/cat-outerwear.jpg';
 import catShirts from '../assets/photos/cat-shirts.jpg';
 import catTees from '../assets/photos/cat-tees.jpg';
@@ -19,6 +19,15 @@ import stage05 from '../assets/photos/stage-05.jpg';
 import stage06 from '../assets/photos/stage-06.jpg';
 import stage07 from '../assets/photos/stage-07.jpg';
 import stage08 from '../assets/photos/stage-08.jpg';
+import heroPhone from '../assets/photos/hero-phone.jpg';
+import stage01Phone from '../assets/photos/stage-01-phone.jpg';
+import stage02Phone from '../assets/photos/stage-02-phone.jpg';
+import stage03Phone from '../assets/photos/stage-03-phone.jpg';
+import stage04Phone from '../assets/photos/stage-04-phone.jpg';
+import stage05Phone from '../assets/photos/stage-05-phone.jpg';
+import stage06Phone from '../assets/photos/stage-06-phone.jpg';
+import stage07Phone from '../assets/photos/stage-07-phone.jpg';
+import stage08Phone from '../assets/photos/stage-08-phone.jpg';
 
 /** Photos published so far, by slot name. A slot that is not listed shows its tinted placeholder. */
 export const PHOTOS: Record<string, ImageMetadata> = {
@@ -44,25 +53,39 @@ export const PHOTOS: Record<string, ImageMetadata> = {
   'stage-08': stage08,
 };
 
+/** Tall versions of full-width photos, shown instead on phones (Mazen, 24 Oct 2026: a wide photo cropped to a
+ * phone screen loses its subject). By slot name; BgImg switches to them below its `phoneUpTo` width. */
+export const PHOTOS_PHONE: Record<string, ImageMetadata> = {
+  hero: heroPhone,
+  'stage-01': stage01Phone,
+  'stage-02': stage02Phone,
+  'stage-03': stage03Phone,
+  'stage-04': stage04Phone,
+  'stage-05': stage05Phone,
+  'stage-06': stage06Phone,
+  'stage-07': stage07Phone,
+  'stage-08': stage08Phone,
+};
+
 /**
  * Descriptions for the product photos (site audit B8), for screen readers and image search. Other
  * photos stay decorative. A photo inside a link that already names it (the Home category cards)
  * keeps an empty alt, so the link is not read twice.
  */
 export const PHOTO_ALT: Record<string, string> = {
-  'cat-denim': 'Raw and washed denim jeans laid on a workshop table',
-  'cat-tees': 'A white and a black cotton T-shirt laid flat on a workshop table',
-  'cat-hoodies': 'Charcoal heavyweight hoodie on a cutting table with fabric and trims',
-  'cat-shirts': 'Light blue button-up shirt and olive overshirt laid flat with buttons and thread',
-  'cat-outerwear': 'Khaki work jacket and black jacket on a workshop table',
-  'cat-knit': 'Oatmeal knit crewneck sweater with yarn and knitting needles',
-  'promise-sample': 'Approved denim overshirt sample on a dress form, with its hang tag',
-  'promise-bulk': 'Stack of folded denim overshirts from the bulk run, tagged for packing',
-  'portal-sample': 'Navy overshirt sample hanging on the studio wall, labelled ID-02',
+  'cat-denim': 'Two pairs of washed wide-leg jeans with turned-up hems on a white cutting table',
+  'cat-tees': 'A white and a black cotton T-shirt laid flat on a white cutting table',
+  'cat-hoodies': 'Grey heavyweight hoodie on a cutting table with its hang tag, drawcord and eyelets',
+  'cat-shirts': 'Light blue button-up shirt and brown pleated tailored trousers hanging on a rail, with a hang tag',
+  'cat-outerwear': 'Khaki work jacket and black zip jacket hanging on a rail, each with a hang tag',
+  'cat-knit': 'Taupe chunky-knit sweater and a knitted piece with balls of its yarn on a cutting table',
+  'promise-sample': 'Approved black hoodie sample on a dress form in the cutting room, with its hang tag',
+  'promise-bulk': 'Stack of folded black hoodies from the bulk run, each with the same hang tag',
+  'portal-sample': 'Raw indigo jeans sample hanging on the cutting room wall, labelled with tape',
 };
 
 /** Where to keep the subject when a photo is cropped. */
-export const PHOTO_FOCUS: Record<string, string> = { 'cat-knit': '30% 50%' };
+export const PHOTO_FOCUS: Record<string, string> = {};
 
 /** Widths generated for every photo (capped at the original's width). */
 export const PHOTO_WIDTHS = [320, 480, 640, 800, 1024, 1376, 1600];

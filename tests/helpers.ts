@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { NOTICE } from '../supabase/functions/_shared/forms';
-import { FAQ, STAGES } from '../src/data/site';
+import { FAQ, MAKE, STAGES, sampleLine } from '../src/data/site';
 import { ICONS, STAGE_ICONS, iconSvg, type IconName } from '../src/data/icons';
 
 export const PROTOTYPE = pathToFileURL(resolve('prototype/index.html')).href;
@@ -93,6 +93,7 @@ const REDESIGN = {
   icon: Object.fromEntries((Object.keys(ICONS) as IconName[]).map((k) => [k, iconSvg(k)])) as Record<IconName, string>,
   stageIcons: STAGE_ICONS,
   stageOk: STAGES.map((g) => g.ok),
+  make: MAKE.map((m) => ({ sub: m.sub, samp: sampleLine(m.samp) })),
 };
 
 /**
@@ -179,7 +180,23 @@ export async function approvePrototype(page: Page) {
         cta.removeAttribute('style'); cta.querySelector('span.mono')!.remove();
       });
       wide('#h-make .sh h2'); $h('#h-make .sh p').textContent = 'Denim first. Imported fabrics and trims.';
-      const lead = $h('#makeGrid .cat'); lead.classList.add('lead-cat'); lead.querySelector('.cap span')!.textContent = 'Our specialty';
+      // What we make (24 Oct 2026): a row where the photo you are on grows; no lead card
+      const row = $h('#makeGrid'); row.classList.add('acc');
+      [...row.querySelectorAll('.cat')].forEach((a, i) => {
+        a.querySelector('.cap')!.remove();
+        const h3 = a.querySelector('h3')!; a.querySelector('span.mono')!.remove();
+        a.querySelector('.ph')!.insertAdjacentHTML('afterend', `<span class="num mono">${i === 0 ? 'Our specialty' : String(i + 1).padStart(2, '0')}</span><span class="v" aria-hidden="true">${h3.textContent}</span><div class="t"></div>`);
+        a.querySelector('.t')!.append(h3);
+        h3.insertAdjacentHTML('afterend', `<div class="meta"><span>${re.icon.pieces}${re.make[i].sub}</span><span>${re.icon.clock}${re.make[i].samp}</span></div><span class="go mono">See details</span>`);
+        if (i === 0) a.classList.add('on');
+      });
+      // the new knitwear photo (24 Oct 2026) is centred: no crop focus
+      document.querySelectorAll<HTMLImageElement>('[data-img="cat-knit"] img').forEach((im) => { im.style.objectPosition = ''; });
+      // phones get the tall versions of the full-width photos (24 Oct 2026)
+      const tallHow = matchMedia('(max-width: 860px)').matches;
+      if (matchMedia('(max-width: 760px)').matches) document.querySelector<HTMLImageElement>('.hero .bgimg img')!.src = 'img/hero-phone.jpg';
+      // How it works: the photo of the stage behind the ring, the first one showing at rest
+      $h('#howPin').insertAdjacentHTML('afterbegin', `<div class="hbgs" aria-hidden="true">${[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<div class="bgimg${n === 1 ? ' on' : ''}" data-img="stage-0${n}"><img src="img/stage-0${n}${tallHow ? '-phone' : ''}.jpg" alt="" class="ok"></div>`).join('')}</div>`);
       wide('#h-how .sh h2'); $h('#h-how .sh p').textContent = 'Eight stages. You approve each one.';
       home.querySelectorAll('#steps .step').forEach((li, i) => {
         li.querySelector('.a')!.innerHTML = re.icon[re.stageIcons[i]];
@@ -192,6 +209,7 @@ export async function approvePrototype(page: Page) {
       const ul = $h('.track > div > ul'); ul.className = 'iclist';
       ul.innerHTML = ([['phone', 'Approve from your phone'], ['camera', 'Ask for a photo of any stage'], ['log', 'Every decision on record']] as const).map(([k, t]) => `<li>${re.icon[k]}${t}</li>`).join('');
       const trackCta = $h('.track > div > div'); trackCta.setAttribute('style', 'margin-top:28px'); trackCta.querySelector('span.mono')!.remove();
+      $h('.portal .prow > span:first-child').textContent = 'FC-2418 / Denim jeans';
       $h('#proof').remove();
       $h('.ctaband p').textContent = 'Four picks, under a minute. No account needed.';
       wide('#faq .sh h2');
