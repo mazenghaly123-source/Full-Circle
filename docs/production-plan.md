@@ -477,7 +477,8 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
    Circle code is {{ .Token }}. It works for 10 minutes." Without `{{ .Token }}` the email carries a
    link, not a code.
 8. ~~*Authentication → SMTP:* Resend as the sender (`hello@fullcircle-co.com`). Until then, Supabase's
-   own sender reaches only the organisation's members, a few emails an hour.~~ 6–8 done by Mazen on 24 Oct.
+   own sender reaches only the organisation's members, a few emails an hour.~~ 6–8 done by Mazen on 24 Oct, plus the Site URL
+   (`https://fullcircle-co.com`) and a 6-digit email OTP length; he signed in to `/admin` the same day.
 
 **Cloudflare dashboard:**
 9. ~~Open one failed *Workers Builds: full-circle* log and paste it into the session.~~ Done and

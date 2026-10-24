@@ -158,7 +158,8 @@ Decisions:
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
-  SMTP through Resend.~~ Done by Mazen on 24 Oct (not yet confirmed by a sign-in).
+  SMTP through Resend.~~ Done by Mazen on 24 Oct, with the Site URL set to `https://fullcircle-co.com` and the
+  email OTP length set to 6 (Supabase's default had become 8). Confirmed: Mazen signed in to `/admin` as owner.
 - **Turnstile:**
   - Create a widget for fullcircle-co.com (Invisible).
   - At launch, put its site key in the build and its secret in the functions and Auth's Attack
