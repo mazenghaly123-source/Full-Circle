@@ -58,7 +58,8 @@ test.describe('every page', () => {
       await page.waitForTimeout(800);
       expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
       const families = await page.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family).join('|'); });
-      expect(families).toContain('Saira Condensed');
+      // the display faces: the logo's face for titles (24 Oct 2026), Saira Condensed for card titles where a page has them
+      expect(families).toMatch(/Microgramma D Extended|Saira Condensed/);
       expect(families).toContain('Geist');
       expect(families).toContain('IBM Plex Mono');
       expect(errors).toEqual([]);
@@ -351,7 +352,7 @@ test('home and what we make: buttons start the request with the right pick', asy
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Scaling' })).toHaveAttribute('aria-pressed', 'true');
   await page.goto('/what-we-make');
-  await page.locator('#cat-denim a', { hasText: 'Request a sample for this' }).click();
+  await page.locator('#cat-denim a', { hasText: 'Request a sample' }).click();
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('.q[data-k="product"] .opt', { hasText: 'Denim' })).toHaveAttribute('aria-pressed', 'true');
 });

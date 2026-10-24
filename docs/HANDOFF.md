@@ -108,7 +108,10 @@ and `EMAIL_FROM` is set with the staff alert confirmed.
    - The parity, behaviour, CSS, admin and unit suites all pass. `approvePrototype` loads Microgramma
      into the prototype and mirrors Home's new markup, so **a Home text change must be mirrored
      there too**.
-   - Next: the same treatment for the inner pages, **as a mock for Mazen first**.
+   - Inner pages, one at a time, **each as a mock for Mazen first** (24 Oct): What we make is done (mock
+     https://claude.ai/artifact/KBD9Mda8zDTzoMPn2VBnB1, mirrored in `approvePrototype`). About, Contact, Request a
+     sample and Track followed straight on the preview (Mazen: no mocks for those). How it works is last
+     (Mazen wants more changes there).
    - Line figures (the Hairline skill, hairline.lucasmarkes.com): at most one per page, factory
      subjects only, the 3D mark stays the hero, and on phones they work by touch (drag sideways,
      the pose holds after the finger lifts). **Parked:** the first test, a shirt that opens into its
