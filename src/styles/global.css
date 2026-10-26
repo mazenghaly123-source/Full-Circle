@@ -947,6 +947,14 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .priv b{color:var(--bone);font-weight:500}
 .priv a{color:var(--bone);text-decoration:underline;text-underline-offset:3px}
 @media (max-width:760px){.priv section{grid-template-columns:1fr}}
+/* the analytics consent bar (26 Oct 2026): a slim panel at the bottom, shown only on the live domain
+   until the visitor answers; both buttons weigh the same */
+.consent{position:fixed;z-index:40;left:24px;bottom:24px;max-width:600px;display:flex;gap:16px;align-items:center;padding:14px 16px;background:rgba(26,26,23,0.92);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:0 18px 40px -12px rgba(0,0,0,0.6)}
+.consent p{margin:0;font-size:14px;line-height:1.45;color:var(--cotton)}
+.consent a{color:var(--bone);text-decoration:underline;text-underline-offset:3px}
+.consent div{display:flex;gap:8px;flex-shrink:0}
+.consent .btn{padding:10px 16px;min-height:44px}
+@media (max-width:760px){.consent{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:none;flex-direction:column;align-items:stretch;gap:12px}.consent div .btn{flex:1}}
 /* ===== approved changes (decided by Mazen: site audit part B on 13 Oct 2026, then as dated) =====
    Deliberate departures from the prototype. tests/parity.spec.ts injects this block (between the
    two markers) and the matching markup into the prototype before comparing, so everything else is

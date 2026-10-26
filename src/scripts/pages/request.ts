@@ -9,6 +9,7 @@ import { $, byId, focusHeading, markInvalid, rm, toast, vib } from '../core/util
 import { picked, request } from '../core/state';
 import { arrival } from '../core/nav';
 import { source } from '../core/source';
+import { track } from '../shell/analytics';
 import { isProblem, submit } from '../core/send';
 import { REQUEST_QUESTIONS, belowMinimum, whatsappLink, type RequestKey } from '../../data/site';
 import { ERRORS, NOTICE, isOption, readContact, type RequestData } from '../../../supabase/functions/_shared/forms';
@@ -127,6 +128,7 @@ export const requestFeature: Feature = {
         return;
       }
       request.sent = true; request.code = out.code;
+      track('generate_lead', { form: 'sample_request', product: request.sel.product ?? '' });
       toast(out.code + ' / request received'); updGo();
       if (!here) return;
       // the phone bar reads "Request sent" and slides away on the next scroll, as in the prototype

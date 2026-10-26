@@ -69,6 +69,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - The legal review of the forms and the privacy notice is done (Mazen, 15 Oct 2026). Don't raise
   it again.
 - Tracking portal is part of the build.
+- Analytics (Mazen, 26 Oct 2026): Google Analytics 4 (`G-XNT9FPB5RQ`, `src/data/analytics.ts`) behind a
+  slim consent bar at the bottom, on the live domain only. Nothing reaches Google before Accept; the
+  privacy notice says so and has a Cookie settings button. Search Console is verified by DNS.
 - Atelier, floor and team photos must be REAL photos (not AI). Everything else may be AI.
 - Fewer shirts (Mazen, 23 Oct 2026): nobody makes or wears them now, so photos, demo orders and
   figures show hoodies, jeans and other products. AI photos must look like our own cutting room

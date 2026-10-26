@@ -42,7 +42,7 @@ The site then answers on `full-circle.<your-subdomain>.workers.dev`.
 4. In `astro.config.mjs`, set `site` to the domain (needed for the sitemap and canonical links in
    phase 5).
 5. In the Cloudflare dashboard for the domain, turn off **Web Analytics** (Cloudflare switches it on
-   by default; the plan uses Umami instead).
+   by default; the site uses Google Analytics behind a consent bar instead).
 
 ## Backend (Supabase)
 

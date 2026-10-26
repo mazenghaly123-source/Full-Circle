@@ -20,7 +20,7 @@ attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2,
 | Q7 | Who uses the admin view | **About 4 people** (proposed roles in §4) | |
 | Q8 | Domain | **fullcircle-co.com**, bought 20 Oct 2026, nameservers on Cloudflare, attached to the site from `main` (`wrangler.jsonc`) | |
 | Q9 | TBC content | **Settled 15 Oct 2026:** what was unknown was cut from the site (Mazen wants less text), the rest filled in. No TBC tag remains | |
-| Q10 | Analytics | Recommendation: **Umami Cloud**, free plan, EU region (§6) | |
+| Q10 | Analytics | **Google Analytics 4 behind a consent bar** (Mazen, 26 Oct 2026; the recommendation was Umami Cloud, §6) | |
 | Q11 | Privacy note | §7, as built. **Reviewed by the lawyer and confirmed** (Mazen, 15 Oct 2026) | |
 | — | Hosting | **Cloudflare Workers (static assets)** rather than Pages, following Cloudflare's current advice | [ADR 0002](./adr/0002-cloudflare-workers-static-assets.md) |
 
@@ -362,7 +362,14 @@ approves that template as a utility message.
 All messages are transactional. Anything promotional (new fabrics, offers) would need separate
 consent and falls under Egypt's e-marketing rules, so it is out of scope.
 
-## 6. Analytics: Umami Cloud (recommendation)
+## 6. Analytics
+
+**Decided 26 Oct 2026 (Mazen): Google Analytics 4, behind a consent bar** (`src/scripts/shell/analytics.ts`).
+Nothing is loaded from Google until the visitor accepts; declining, or withdrawing on `/privacy`, sets
+no cookie. It counts page views, "sample request sent" and "message sent" (`generate_lead`) and
+WhatsApp clicks; the portal and admin are never tracked. The notes below were the recommendation
+before that choice.
+
 
 - **Why:** no cookies (so no cookie banner), counts the events that matter ("Sample request sent",
   "Contact message sent", "WhatsApp clicked"), counts page changes made by the ClientRouter on its
@@ -394,7 +401,7 @@ portal was reported as not yet open in September 2026. So:
 - who we are and how to reach us about privacy
 - what we collect: request and contact details, portal account, order records
 - why we collect it and on what basis
-- who processes it: Supabase, Cloudflare, Resend, Meta (WhatsApp), Umami
+- who processes it: Supabase, Cloudflare, Resend, Meta (WhatsApp), Google (Analytics, only with consent)
 - where it is stored: mainly Frankfurt, with some providers in the US and elsewhere
 - how long we keep it
 - your rights, and how to ask for a copy or deletion
@@ -418,9 +425,9 @@ the Arabic site.
 
 These additions were approved on 15 Oct 2026 and are built.
 
-**Cookie banner: not needed** as long as analytics stays cookieless, fonts and three.js stay
-self-hosted (they already are), and the only browser storage is the signed-in client's session.
-The notice describes this instead.
+**Cookie banner:** needed since Google Analytics was chosen (26 Oct 2026): a slim consent bar at the
+bottom of the page, with Accept and Decline weighing the same, and a Cookie settings button in the
+notice's Cookies section. Fonts and three.js stay self-hosted.
 
 The accounts are in Mazen's name, but Meta business verification and the PDPC filings have to be in
 Full Circle's legal name and use its commercial register and tax card.
