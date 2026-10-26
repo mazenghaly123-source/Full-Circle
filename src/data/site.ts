@@ -26,6 +26,62 @@ export const ROUTES = {
   contact: '/contact',
 } as const;
 
+/** Who Full Circle is, said once for the Home structured data, llms.txt and ai.txt. */
+export const SITE = {
+  name: 'Full Circle',
+  description: 'Fashion development and manufacturing for brands that are starting or scaling.',
+  /** Who Full Circle is in a few sentences, for agents and search (llms.txt, ai.txt, the Organization). */
+  summary: 'Full Circle is a clothing development and manufacturing partner in Cairo, Egypt, for brands that are starting or scaling. One team takes a product through eight stages, from research and design support to sampling, bulk production, QC and delivery. What the brand approves in sampling is what ships, and every order can be followed on a tracking page.',
+  address: { street: 'Gisr El Suez', city: 'Cairo', country: 'EG' },
+  hours: 'Sunday – Thursday, 9:00 – 17:00',
+};
+
+/** Paths kept out of search and AI crawlers: robots.txt disallows them and ai.txt excludes them. */
+export const PRIVATE_PATHS = ['/admin'];
+
+/**
+ * Each page's search title and description, and, for the main pages, a summary written for AI
+ * agents (the `ai-summary` tag; elsewhere the description stands in).
+ */
+export const PAGES: Record<PageKey, { title: string; description: string; summary?: string }> = {
+  home: {
+    title: 'Full Circle / Clothing manufacturer in Cairo, Egypt',
+    description: 'Design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands starting or scaling. From 60 pieces per colour.',
+    summary: 'Home page of Full Circle, a clothing development and manufacturing partner in Cairo, Egypt: what it makes and from how many pieces, its eight stages from research to delivery, the client tracking page, and answers to common questions.',
+  },
+  how: {
+    title: 'How it works / From idea to bulk / Full Circle',
+    description: 'Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.',
+    summary: 'Full Circle’s eight stages (research, design support, sourcing, development, sampling, production, QC, delivery), with what the client receives and approves at each, shown as a demo order.',
+  },
+  make: {
+    title: 'Denim, tees, hoodies and more, made in Cairo / Full Circle',
+    description: 'Denim, tees, hoodies, shirts, jackets and knitwear, developed and made in Cairo. Minimums from 60 pieces per colour; samples in 7 to 25 days.',
+    summary: 'The six clothing categories Full Circle makes in Cairo (denim, tees and tops, hoodies and sweats, shirts and tailoring, jackets, knitwear), with minimum orders and sampling times.',
+  },
+  about: {
+    title: 'About / Clothing development partner in Cairo / Full Circle',
+    description: 'A development and manufacturing partner for clothing brands, based in Cairo. One team holds the whole chain, from first sketch to delivered bulk.',
+  },
+  start: {
+    title: 'Request a clothing sample / Full Circle',
+    description: 'Four quick picks and your contact. Full Circle replies with a first call, a price range and the next decision. No commitment.',
+  },
+  track: {
+    title: 'Track order / Full Circle',
+    description: 'Sign in with the email or WhatsApp number on your order to see every order, its stage, the next decision, photos and the full approval log.',
+  },
+  contact: {
+    title: 'Contact / Clothing manufacturer in Cairo / Full Circle',
+    description: 'WhatsApp is the fastest way to reach Full Circle in Cairo. Phone, email and Instagram are here too. To start production, request a sample.',
+  },
+  privacy: {
+    title: 'Privacy notice / Full Circle',
+    description: 'What Full Circle collects when you request a sample, send a message or follow an order, why, where it is kept, and what you can ask for.',
+  },
+  notfound: { title: 'Not found / Full Circle', description: 'This page does not exist.' },
+};
+
 export type Stage = {
   n: string; s: string; line: string; get: string; ok: string; tone: string;
   /** Typical time for the stage, where it is known (How it works shows it only then). */

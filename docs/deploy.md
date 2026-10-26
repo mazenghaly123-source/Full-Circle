@@ -2,7 +2,8 @@
 
 The site is static and is hosted on **Cloudflare Workers (static assets)**: see
 [ADR 0002](./adr/0002-cloudflare-workers-static-assets.md). `wrangler.jsonc` in the repo root holds
-the whole configuration (assets only, no Worker code). Once connected, Cloudflare builds every push:
+the whole configuration: the static assets, plus one small Worker (`src/worker.ts`) that serves the
+pages' markdown versions on the paths `run_worker_first` lists ([ADR 0006](./adr/0006-a-worker-for-markdown.md)). Once connected, Cloudflare builds every push:
 `main` goes live, and every other branch or pull request gets its own preview URL.
 
 Connected on 15 October 2026: the site answers on <https://full-circle.mazenghaly123.workers.dev/>.
