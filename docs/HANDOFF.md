@@ -114,18 +114,17 @@ Done on 23–25 Oct: the WhatsApp-era functions are on staging, the Cloudflare p
 site's look.
 
 0. **SEO, GEO and analytics** (Mazen, 24 Oct: "start SEO and GEO, and connect Google Analytics").
-   Waiting on Mazen for: the GA4 Measurement ID (`G-…`), Search Console verified as a Domain property
-   (a TXT record in Cloudflare DNS), and a choice between a consent bar + GA4 or cookieless analytics
-   (production-plan.md had Umami, EU). Then: FAQPage and Service structured data, Instagram
-   in the Organization's `sameAs` (it is in `Base.astro`, Home only), a pass over titles and
-   descriptions, and analytics events for "request sent" and the WhatsApp click.
-   - **AI-readable site (26 Oct), built, not committed:** Mazen approved the plan, the Worker
+   - **Analytics (26 Oct):** GA4 `G-XNT9FPB5RQ` behind a consent bar (Mazen's choice), with page views,
+     `generate_lead` for a sent request or message, and `whatsapp_click`; the privacy notice now names
+     Google (dated 26 Oct). Search Console is verified by DNS; Mazen submits the sitemap there.
+   - Still to do: FAQPage and Service structured data, and a pass over titles and descriptions.
+   - **AI-readable site (26 Oct), live** (PR #18; the GEO checker scores 8/9, the missing one is an MCP
+     file, as there is no MCP server). Mazen approved the plan, the Worker
      ([ADR 0006](./adr/0006-a-worker-for-markdown.md)) and allowing every training crawler. Every public
      page has a markdown version (`src/md/registry.ts`; `/about.md`, `Accept: text/markdown`,
      `/api/md/about`, `/api/md/_catalog`), and `llms.txt`, `llms-full.txt`, `ai.txt` and `robots.txt`
      come from `src/md/agents.ts`. Pages carry `ai-summary` and a markdown `alternate` link; Home's
-     structured data is an Organization plus a WebSite. The prompt asked for no commit: Mazen reviews the
-     diff first. `ai.txt` follows ai-visibility.org.uk's current spec (v1.7.0: an H1 and `##` sections;
+     structured data is an Organization plus a WebSite. `ai.txt` follows ai-visibility.org.uk's current spec (v1.7.0: an H1 and `##` sections;
      the prompt named v1.1.1, whose `[section]` form the spec now calls superseded).
 1. **The redesign** (Mazen, 23 Oct), to set the site apart from a competitor, factory21.co, whose
    Home looks like ours. On `main` since 23 Oct:
@@ -183,7 +182,9 @@ Decisions:
   4. A decision can be opened without photos.
   5. When a person is removed, the log keeps their name.
 - Keep or drop the Cloudflare plugin commit on `claude/keen-gates-vu1na0`.
-- The SEO, GEO and analytics answers, and his review of the AI-readable site diff (*In progress*, 0).
+- Submitting the sitemap in Search Console (`https://fullcircle-co.com/sitemap.xml`).
+- In GA4, turning off Enhanced measurement → "Page changes based on browser history events" (the
+  site sends its own page views; see production-plan.md §6).
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
@@ -200,7 +201,7 @@ Dashboard and account tasks:
   - Then set the 5 WhatsApp secrets and the Send SMS hook.
 - **A real photo of the floor** for About (`about-floor`). The atelier and team sections were removed
   (24 Oct), and About gets its own pass later.
-- At launch: the live Supabase project (Pro), Umami (EU), and the PDPC filings (§7).
+- At launch: the live Supabase project (Pro) and the PDPC filings (§7).
 
 ## Gotchas
 
@@ -244,10 +245,10 @@ Dashboard and account tasks:
 
 ## Next 3 steps
 
-1. **SEO, GEO and analytics** once Mazen sends the GA4 ID, the Search Console verification and the
-   consent choice; his review of the AI-readable site diff (*In progress*, 0).
+1. **SEO and GEO:** FAQPage and Service structured data, and a pass over titles and descriptions
+   (*In progress*, 0).
 2. **Prove phases 2–4 on staging** when Mazen wants the order test: send a test request with an
    email, convert it to an order in `/admin`, sign in to `/track` as the client, and take the order
    through all 8 stages from a phone.
 3. **The phase 5 launch items:** the live Supabase project, Turnstile, the production build
-   variables, `workers_dev: false`, Umami, and Lighthouse on the domain.
+   variables, `workers_dev: false`, and Lighthouse on the domain.

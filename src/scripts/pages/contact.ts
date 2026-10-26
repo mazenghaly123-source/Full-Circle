@@ -4,6 +4,7 @@ import { $, focusHeading, markInvalid, toast } from '../core/util';
 import { source } from '../core/source';
 import { isProblem, submit } from '../core/send';
 import { ERRORS, NOTICE, readContact, type MessageData } from '../../../supabase/functions/_shared/forms';
+import { track } from '../shell/analytics';
 
 const msg = { sent: false, sending: false, name: '', reach: '', text: '', err: '', bad: [] as string[] };
 const FIELDS = ['cName', 'cReach', 'cMsg'] as const;
@@ -55,6 +56,7 @@ export const contactFeature: Feature = {
       if (here) showSending(document);
       if (isProblem(out)) { msg.err = out.error; if (here) $('cErr').textContent = out.error; return; }
       msg.sent = true; toast('Message sent');
+      track('generate_lead', { form: 'contact' });
       if (!here) return;
       $('cForm').hidden = true; $('cDone').hidden = false;
       focusHeading($('cDoneH'));

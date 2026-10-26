@@ -18,6 +18,7 @@ import { revealFeature } from './shell/reveal';
 import { dotsFeature } from './shell/dots';
 import { imagesFeature } from './shell/images';
 import { mbarFeature } from './shell/mbar';
+import { analyticsFeature } from './shell/analytics';
 import { ROUTES } from '../data/site';
 import { decode } from './core/util';
 
@@ -46,4 +47,5 @@ start([
   dotsFeature,
   imagesFeature,
   mbarFeature,
+  analyticsFeature,
 ]);

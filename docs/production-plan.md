@@ -20,7 +20,7 @@ attached (20 Oct), and Resend has its key and the domain (20–21 Oct). See §2,
 | Q7 | Who uses the admin view | **About 4 people** (proposed roles in §4) | |
 | Q8 | Domain | **fullcircle-co.com**, bought 20 Oct 2026, nameservers on Cloudflare, attached to the site from `main` (`wrangler.jsonc`) | |
 | Q9 | TBC content | **Settled 15 Oct 2026:** what was unknown was cut from the site (Mazen wants less text), the rest filled in. No TBC tag remains | |
-| Q10 | Analytics | Recommendation: **Umami Cloud**, free plan, EU region (§6) | |
+| Q10 | Analytics | **Google Analytics 4 behind a consent bar** (Mazen, 26 Oct 2026; the recommendation was Umami Cloud, §6) | |
 | Q11 | Privacy note | §7, as built. **Reviewed by the lawyer and confirmed** (Mazen, 15 Oct 2026) | |
 | — | Hosting | **Cloudflare Workers (static assets)** rather than Pages, following Cloudflare's current advice | [ADR 0002](./adr/0002-cloudflare-workers-static-assets.md) |
 
@@ -209,7 +209,7 @@ requests and messages a year old that never became orders (`/privacy`) is built 
   - *Clients*: each brand, its people and orders; add a client, add a person (emailed the link).
   - *Analytics*: requests and how many became orders, month by month, and over 90 days by source
     (the ad tags and referring site saved with each request), product and brand stage. Website
-    visits come with Umami at launch.
+    visits are counted by Google Analytics, for visitors who accept it.
   - *Team*: owners add staff or owners (emailed the admin link).
 
   The canvas's Settings screen (stage targets, currencies) and the money and team-load panels are
@@ -265,7 +265,7 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
  ├─ /admin   staff app (JS app, noindex) ───────────► │    email  → Resend (SMTP)
  └─ forms ───────────────────────────────────────────► │    WhatsApp → Send SMS hook → Meta Cloud API
                                                        ├─ Storage: private buckets (stage photos)
- Umami Cloud (EU) ◄── pageviews + 3 events            └─ Edge Functions (run in Frankfurt):
+ Google Analytics ◄── pageviews + 3 events (consent) └─ Edge Functions (run in Frankfurt):
                                                             submit-request, submit-contact, notify,
                                                             whatsapp-webhook
 ```
@@ -362,7 +362,16 @@ approves that template as a utility message.
 All messages are transactional. Anything promotional (new fabrics, offers) would need separate
 consent and falls under Egypt's e-marketing rules, so it is out of scope.
 
-## 6. Analytics: Umami Cloud (recommendation)
+## 6. Analytics
+
+**Decided 26 Oct 2026 (Mazen): Google Analytics 4, behind a consent bar** (`src/scripts/shell/analytics.ts`).
+Nothing is loaded from Google until the visitor accepts; declining, or withdrawing on `/privacy`, sets
+no cookie. It counts page views, "sample request sent" and "message sent" (`generate_lead`) and
+WhatsApp clicks; the portal and admin are never tracked. **In GA4, turn off Admin → Data streams → the web
+stream → Enhanced measurement → "Page changes based on browser history events"**: the site sends
+its own page views (so `/track` can be left out), and with that setting on, every page change would
+be counted twice and `/track` too. The notes below were the recommendation before that choice.
+
 
 - **Why:** no cookies (so no cookie banner), counts the events that matter ("Sample request sent",
   "Contact message sent", "WhatsApp clicked"), counts page changes made by the ClientRouter on its
@@ -394,7 +403,7 @@ portal was reported as not yet open in September 2026. So:
 - who we are and how to reach us about privacy
 - what we collect: request and contact details, portal account, order records
 - why we collect it and on what basis
-- who processes it: Supabase, Cloudflare, Resend, Meta (WhatsApp), Umami
+- who processes it: Supabase, Cloudflare, Resend, Meta (WhatsApp), Google (Analytics, only with consent)
 - where it is stored: mainly Frankfurt, with some providers in the US and elsewhere
 - how long we keep it
 - your rights, and how to ask for a copy or deletion
@@ -418,9 +427,9 @@ the Arabic site.
 
 These additions were approved on 15 Oct 2026 and are built.
 
-**Cookie banner: not needed** as long as analytics stays cookieless, fonts and three.js stay
-self-hosted (they already are), and the only browser storage is the signed-in client's session.
-The notice describes this instead.
+**Cookie banner:** needed since Google Analytics was chosen (26 Oct 2026): a slim consent bar at the
+bottom of the page, with Accept and Decline weighing the same, and a Cookie settings button in the
+notice's Cookies section. Fonts and three.js stay self-hosted.
 
 The accounts are in Mazen's name, but Meta business verification and the PDPC filings have to be in
 Full Circle's legal name and use its commercial register and tax card.
@@ -434,7 +443,7 @@ Full Circle's legal name and use its commercial register and tax card.
 | 2 | 🔶 Requests: Supabase (live + staging), submit-request and submit-contact with Turnstile, staff emails, request receipts, consent records, privacy notice page, form lines, Continue on WhatsApp | A test request lands in the database and in the staff inboxes (test data only). **Built on staging; lands in the database. Resend is set up; the staff inboxes are still to be confirmed with a test request** |
 | 3 | 🔶 Client portal: sign-in by email and WhatsApp code, orders, decisions, photos, log, consent settings; RLS tests (one client can never see another's orders); week 1 starts by testing WhatsApp codes on Meta's test number | A test client signs in both ways and approves a sample. **Built; email codes wait on the settings in §10, WhatsApp codes on phase 4** |
 | 4 | 🔶 Admin for the 4 staff (roles), WhatsApp notifications, the reply-handling webhook | A test order goes through all 8 stages from a phone. **Admin, email and WhatsApp built; WhatsApp switches on once Meta is set up** |
-| 5 | 🔶 Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), Umami, security headers, Lighthouse, **no TBC left** | Live on the domain. **Search and sharing built (canonical addresses, the share card, the business on Home, sitemap, robots, HSTS); Umami and Lighthouse wait for the site on its domain** |
+| 5 | 🔶 Launch: domain live, SEO (titles, descriptions, OG images, sitemap, robots, structured data), analytics, security headers, Lighthouse, **no TBC left** | Live on the domain. **Search and sharing built (canonical addresses, the share card, the business on Home, sitemap, robots, HSTS); Google Analytics behind a consent bar (26 Oct 2026); Lighthouse waits for the site on its domain** |
 | Later | Arabic/RTL site, Starting/Scaling ad landing pages, Full Circle Studio | — |
 
 **The domain blocked phases 2–4** (bought 20 Oct 2026). Without it, email can only reach the person who owns the email
@@ -449,7 +458,7 @@ nameservers are then pointed at Cloudflare.
 |---|---|
 | Supabase Pro (free projects pause after a week without activity) | about $25 |
 | Cloudflare Workers, static site | $0 |
-| Umami Cloud (free plan; Pro if you want 2-year history and staff logins) | $0 (or $20) |
+| Google Analytics 4 (standard property) | $0 |
 | Resend email (free: 3,000 a month, at most 100 a day) | $0 (or $20) |
 | WhatsApp messages through Meta (≈200 a month at $0.004–0.016 each) | about $1–5 |
 | A SIM for the system WhatsApp number | top-ups |
@@ -501,5 +510,5 @@ privacy page~~ (English now, Arabic with the Arabic site), ~~the form additions~
 14. A real photo of the floor for About (`about-floor`). The atelier and team sections were removed
     (Mazen, 24 Oct 2026).
 
-**At launch:** the live Supabase project (Pro, Frankfurt), Umami Cloud (EU), and the PDPC filings
+**At launch:** the live Supabase project (Pro, Frankfurt) and the PDPC filings
 (§7).
