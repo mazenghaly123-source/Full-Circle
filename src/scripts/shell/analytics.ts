@@ -40,7 +40,9 @@ function load() {
   // gtag reads the arguments object itself, as Google's snippet passes it
   window.gtag = function () { window.dataLayer.push(arguments); };
   window.gtag('js', new Date());
-  window.gtag('config', ANALYTICS.id, { send_page_view: false, page_location: pageLocation(), cookie_flags: 'SameSite=Lax;Secure' });
+  // the address goes in with set, not config: a value given to config would outrank every later set
+  window.gtag('set', { page_location: pageLocation() });
+  window.gtag('config', ANALYTICS.id, { send_page_view: false, cookie_flags: 'SameSite=Lax;Secure' });
   const s = document.createElement('script');
   s.async = true;
   s.src = `https://www.googletagmanager.com/gtag/js?id=${ANALYTICS.id}`;

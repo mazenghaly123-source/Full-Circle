@@ -66,15 +66,19 @@ test('accepting: Google is loaded, and page views, sent forms and WhatsApp click
   await expect.poll(() => google.length).toBeGreaterThan(0);
   expect(google[0]).toContain('id=G-XNT9FPB5RQ');
   // the ad tag stays; the phone number and the #part do not, for the page view and for every event GA sends itself
-  const config = (await calls(page)).find((c) => c[0] === 'config')!;
-  expect((config[2] as { page_location: string }).page_location).toMatch(/\/about\?utm_source=instagram$/);
-  expect((await calls(page)).filter((c) => c[0] === 'set').map((c) => (c[1] as { page_location: string }).page_location)).toEqual([expect.stringMatching(/\/about\?utm_source=instagram$/)]);
+  // (set, never config: a config value would outrank the address set after a page swap)
+  const sets = async () => (await calls(page)).filter((c) => c[0] === 'set').map((c) => (c[1] as { page_location: string }).page_location);
+  expect((await calls(page)).find((c) => c[0] === 'config')![2]).not.toHaveProperty('page_location');
+  expect(await sets()).not.toHaveLength(0);
+  for (const l of await sets()) expect(l).toMatch(/\/about\?utm_source=instagram$/);
   expect((await events(page, 'page_view')).map((c) => (c[2] as { page_location: string }).page_location)).toEqual([expect.stringMatching(/\/about\?utm_source=instagram$/)]);
   // a page swap counts as a page view of its own
   await page.goto('/about');
   await page.locator('footer a[href="/contact"]').first().click();
   await page.waitForURL('**/contact');
   await expect.poll(async () => (await events(page, 'page_view')).length).toBe(2);
+  // after the swap, the address GA uses for its own events is the new page's
+  expect((await sets()).at(-1)).toMatch(/\/contact$/);
   // the WhatsApp link, without leaving the page
   await page.evaluate(() => document.querySelector('a[href^="https://wa.me/"]')!.addEventListener('click', (e) => e.preventDefault()));
   await page.locator('#cWa').click();
