@@ -26,6 +26,12 @@ grant select on storage.buckets to anon, authenticated, service_role;
 create function storage.foldername(name text) returns text[] language plpgsql as $$
 declare _parts text[]; begin select string_to_array(name, '/') into _parts; return _parts[1:array_length(_parts, 1) - 1]; end $$;
 grant execute on function storage.foldername(text) to anon, authenticated, service_role;
+-- pg_cron's job list and the call that adds a job (named jobs are replaced, as pg_cron does)
+create schema cron;
+create table cron.job (jobid bigserial primary key, jobname text unique, schedule text not null, command text not null);
+create function cron.schedule(job_name text, schedule text, command text) returns bigint language sql as $$
+  insert into cron.job (jobname, schedule, command) values (job_name, schedule, command)
+  on conflict (jobname) do update set schedule = excluded.schedule, command = excluded.command returning jobid $$;
 -- Supabase grants the API roles everything on new tables in public by default
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
