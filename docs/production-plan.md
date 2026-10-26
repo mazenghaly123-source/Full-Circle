@@ -152,7 +152,7 @@ Small, deliberate differences from the prototype:
 alert is confirmed, the receipt to a brand's email is still to try); a real
 Turnstile widget (staging's test key lets everything through). The nightly clean-up that deletes
 requests and messages a year old that never became orders (`/privacy`) is built (migration
-`20261026090000`, 26 Oct) and waits to be run on staging from the SQL editor.
+`20261026090000`, 26 Oct) and runs on staging.
 
 **Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, PR #8, merged 23 Oct; its migrations are on staging):
 

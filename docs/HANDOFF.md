@@ -47,16 +47,15 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 
 - Project **full-circle-staging**, ref **`kmsrzeqxgufrodefclty`**, Frankfurt (eu-central-1), free
   plan, test data only. The live project does not exist yet; it is created at launch.
-- **Migrations applied** (8 of the 9 in `supabase/migrations/`, and the versions match):
+- **Migrations applied** (all 9 in `supabase/migrations/`, and the versions match):
   `20261015103850` requests_and_messages, `20261015103905` consents_request_index,
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
   `20261021022945` sample_gate_latest, `20261021064023` whatsapp.
-- **Not applied yet: `20261026090000` delete_expired** (26 Oct), the nightly clean-up `/privacy`
-  promises: at 01:15 UTC pg_cron deletes requests without an order, and messages, a year after they
-  arrived (consent records stay; `supabase/tests/database/retention.test.sql`). The MCP counts its
-  DELETE as destructive and times out, so Mazen runs the file in the SQL editor, then
-  `insert into supabase_migrations.schema_migrations (version, name) values ('20261026090000', 'delete_expired');`
+- `20261026090000` delete_expired (applied by Mazen in the SQL editor, 26 Oct; the MCP counts its
+  DELETE as destructive): the nightly clean-up `/privacy` promises. At 01:15 UTC pg_cron deletes
+  requests without an order, and messages, a year after they arrived; consent records stay
+  (`supabase/tests/database/retention.test.sql`).
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
   - `submit-request` v8, `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
@@ -178,8 +177,6 @@ site's look.
 4. **About** gets its own pass later (Mazen), with the real `about-floor` photo.
 
 ## Waiting on Mazen
-
-- **Run the clean-up migration** in the SQL editor (see *Supabase staging*).
 
 Decisions:
 - The **5 items "decided in the build"** ([production-plan.md](./production-plan.md) §2):
