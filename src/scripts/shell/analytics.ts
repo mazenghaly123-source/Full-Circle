@@ -15,7 +15,9 @@ declare global {
 
 const store = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
-  set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* private mode: asked again next visit */ } },
+  /** False when the browser would not keep it (private mode, storage full): the bar asks again next visit. */
+  set(k: string, v: string) { try { localStorage.setItem(k, v); return true; } catch { return false; } },
+  remove(k: string) { try { localStorage.removeItem(k); } catch { /* nothing kept to remove */ } },
 };
 
 /** On the live domain; the browser tests turn it on elsewhere with a flag of their own. */
@@ -77,7 +79,8 @@ export function askAgain() {
 }
 
 function decide(c: Choice) {
-  store.set(KEY, c);
+  // a decline that cannot be kept must not leave an earlier accept behind to switch counting back on
+  if (!store.set(KEY, c) && c === 'denied') store.remove(KEY);
   $('consent').hidden = true;
   if (c === 'granted') { load(); pageView(); } else stop();
 }

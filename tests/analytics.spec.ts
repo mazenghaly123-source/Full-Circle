@@ -106,3 +106,18 @@ test('changing your mind on /privacy: the bar comes back, and declining stops co
   expect((await context.cookies()).map((c) => c.name)).not.toContain('_ga');
   expect(await page.evaluate(() => (window as unknown as Record<string, unknown>)['ga-disable-G-XNT9FPB5RQ'])).toBe(true);
 });
+
+test('a decline the browser will not keep still drops the earlier accept', async ({ page }) => {
+  await watchGoogle(page);
+  await turnOn(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('fc-analytics', 'granted');
+    // storage that refuses new values, as when it is full
+    const set = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k: string, v: string) { if (k === 'fc-analytics' && v === 'denied') throw new DOMException('full', 'QuotaExceededError'); return set.call(this, k, v); };
+  });
+  await page.goto('/privacy');
+  await page.getByRole('button', { name: 'Cookie settings' }).click();
+  await page.locator('#consent').getByRole('button', { name: 'Decline' }).click();
+  expect(await page.evaluate(() => localStorage.getItem('fc-analytics'))).toBeNull();
+});
