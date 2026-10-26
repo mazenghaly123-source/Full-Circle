@@ -227,13 +227,20 @@ export const listMarkdownRoutes = () => [...ROUTE_LIST].sort((x, y) => Number(x.
 /** The .md file name for a page path: /about → about, / → index. */
 export const mdFile = (path: string) => (path === '/' ? 'index' : path.slice(1));
 
-/** The date the files behind a page last changed in git, or today where git cannot tell (a shallow clone). */
+/**
+ * The date the files behind a page last changed in git, or null where git cannot tell. In a shallow
+ * clone every file seems to change in its one commit, so that date is not trusted (the build first
+ * tries to fetch the whole history: scripts/unshallow.mjs). A page not committed yet is dated today.
+ */
 function updated(sources: string[]) {
+  const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   try {
-    const d = execFileSync('git', ['log', '-1', '--format=%cs', '--', ...sources], { encoding: 'utf8' }).trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-  } catch { /* no git */ }
-  return day(new Date());
+    if (git('rev-parse', '--is-shallow-repository') === 'true') return null;
+    const d = git('log', '-1', '--format=%cs', '--', ...sources);
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : day(new Date());
+  } catch {
+    return null;
+  }
 }
 
 /** A page's markdown version. */

@@ -30,11 +30,11 @@ export const b = (s: string) => `**${esc(s)}**`;
 export const day = (d: Date) => d.toISOString().slice(0, 10);
 
 /** The parts of a page's markdown version, joined in the order every page uses. */
-export function page(p: { title: string; summary: string; canonical: string; updated: string; body: string[]; related: [string, string][] }) {
+export function page(p: { title: string; summary: string; canonical: string; updated: string | null; body: string[]; related: [string, string][] }) {
   return [
     `# ${esc(p.title)}`,
     `> ${esc(p.summary)}`,
-    `Canonical: ${p.canonical}\nLast updated: ${p.updated}`,
+    `Canonical: ${p.canonical}${p.updated ? `\nLast updated: ${p.updated}` : ''}`,
     ...p.body,
     p.related.length ? `${h2('Related')}\n${list(p.related.map(([t, u]) => link(t, u)))}` : '',
   ].filter(Boolean).join('\n\n') + '\n';

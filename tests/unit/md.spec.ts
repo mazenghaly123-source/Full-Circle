@@ -35,7 +35,8 @@ test('every public page has a markdown version, or a reason in the skip list', (
 test('each markdown page has its title, summary, canonical address, date and absolute links', () => {
   for (const r of listMarkdownRoutes()) {
     const md = renderMarkdown(r, site);
-    expect(md, r.path).toMatch(/^# .+\n\n> .+\n\nCanonical: https:\/\/fullcircle-co\.com\/\S*\nLast updated: \d{4}-\d{2}-\d{2}\n/);
+    // the date is left out where git cannot tell it (a shallow clone)
+    expect(md, r.path).toMatch(/^# .+\n\n> .+\n\nCanonical: https:\/\/fullcircle-co\.com\/\S*\n(Last updated: \d{4}-\d{2}-\d{2}\n)?\n/);
     expect(md).toContain(`Canonical: ${new URL(r.path, site).href}\n`);
     for (const [, url] of md.matchAll(/\]\(([^)]+)\)/g)) {
       expect(url, `${r.path}: ${url}`).toMatch(/^(https:|mailto:)/);
@@ -71,8 +72,9 @@ test('the Worker: .md, Accept and /api/md/ give markdown with its headers; every
   expect(md.headers.get('content-location')).toBe('https://fullcircle-co.com/what-we-make');
   expect(md.headers.get('link')).toBe('<https://fullcircle-co.com/what-we-make>; rel="canonical"');
   expect(md.headers.get('access-control-allow-origin')).toBe('*');
-  expect(md.headers.get('last-modified')).toMatch(/GMT$/);
   const body = await md.text();
+  if (body.includes('\nLast updated: ')) expect(md.headers.get('last-modified')).toMatch(/GMT$/);
+  else expect(md.headers.get('last-modified')).toBeNull();
   expect(Number(md.headers.get('x-markdown-tokens'))).toBe(Math.ceil(body.length / 4));
   expect(body).toContain('| Denim | From 150 pcs / colour |');
   expect(md.headers.get('vary')).toBeNull();

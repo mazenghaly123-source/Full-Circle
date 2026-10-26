@@ -13,9 +13,9 @@ const words = (s: string) => s.toLowerCase().replace(/&amp;/g, '&').replace(/&#3
 /** The page's visible words: its <main>, without scripts, styles and SVG. */
 const pageWords = (html: string) => words((html.match(/<main[^>]*>([\s\S]*)<\/main>/)?.[1] ?? '').replace(/<(script|style|svg)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' '));
 
-/** The markdown's sentences and list items, from the body (below "Last updated") and not "Related". */
+/** The markdown's sentences and list items, from the body (below "Canonical" and the date) and not "Related". */
 function phrases(md: string) {
-  const body = md.split(/^Last updated: .*$/m)[1].split(/^## Related$/m)[0];
+  const body = md.split(/^Canonical: .*$/m)[1].replace(/^Last updated: .*$/m, '').split(/^## Related$/m)[0];
   return body
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\\(.)/g, '$1')
