@@ -183,6 +183,8 @@ Decisions:
   5. When a person is removed, the log keeps their name.
 - Keep or drop the Cloudflare plugin commit on `claude/keen-gates-vu1na0`.
 - Submitting the sitemap in Search Console (`https://fullcircle-co.com/sitemap.xml`).
+- In GA4, turning off Enhanced measurement → "Page changes based on browser history events" (the
+  site sends its own page views; see production-plan.md §6).
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
