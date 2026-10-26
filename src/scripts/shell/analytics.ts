@@ -22,6 +22,15 @@ const store = {
 const enabled = ANALYTICS.hosts.includes(location.hostname) || store.get('fc-analytics-anyhost') === '1';
 const choice = () => { const v = store.get(KEY); return v === 'granted' || v === 'denied' ? (v as Choice) : null; };
 
+/** Query parameters a page view keeps: ad tags and the site's own links' picks; anything else (a crafted ?phone=…) and the #part are dropped. */
+const KEPT = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'path', 'product'];
+const pageLocation = () => {
+  const url = new URL(location.href);
+  for (const k of [...url.searchParams.keys()]) if (!KEPT.includes(k)) url.searchParams.delete(k);
+  url.hash = '';
+  return url.href;
+};
+
 let loaded = false;
 function load() {
   (window as unknown as Record<string, unknown>)[`ga-disable-${ANALYTICS.id}`] = false;
@@ -31,7 +40,7 @@ function load() {
   // gtag reads the arguments object itself, as Google's snippet passes it
   window.gtag = function () { window.dataLayer.push(arguments); };
   window.gtag('js', new Date());
-  window.gtag('config', ANALYTICS.id, { send_page_view: false, cookie_flags: 'SameSite=Lax;Secure' });
+  window.gtag('config', ANALYTICS.id, { send_page_view: false, page_location: pageLocation(), cookie_flags: 'SameSite=Lax;Secure' });
   const s = document.createElement('script');
   s.async = true;
   s.src = `https://www.googletagmanager.com/gtag/js?id=${ANALYTICS.id}`;
@@ -51,17 +60,14 @@ export function track(event: string, params: Record<string, string | number> = {
   if (loaded && choice() === 'granted') window.gtag('event', event, params);
 }
 
-/** Query parameters a page view keeps: ad tags and the site's own links' picks; anything else (a crafted ?phone=…) and the #part are dropped. */
-const KEPT = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'path', 'product'];
-const pageLocation = () => {
-  const url = new URL(location.href);
-  for (const k of [...url.searchParams.keys()]) if (!KEPT.includes(k)) url.searchParams.delete(k);
-  url.hash = '';
-  return url.href;
+// Every event GA sends on its own (a WhatsApp click, enhanced measurement) carries the page's address
+// too, so the filtered one is set for the page as well as sent with its view. The portal is never
+// tracked (docs/production-plan.md §6); the admin has a layout of its own, without this script.
+const pageView = () => {
+  if (!loaded || choice() !== 'granted') return;
+  window.gtag('set', { page_location: pageLocation() });
+  if (page() !== 'track') track('page_view', { page_location: pageLocation(), page_title: document.title });
 };
-
-// the portal is never tracked (docs/production-plan.md §6); the admin has a layout of its own, without this script
-const pageView = () => { if (page() !== 'track') track('page_view', { page_location: pageLocation(), page_title: document.title }); };
 
 /** Shows the consent bar again (the button on /privacy). */
 export function askAgain() {
