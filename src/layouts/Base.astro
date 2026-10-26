@@ -4,27 +4,37 @@ import { Font } from 'astro:assets';
 import Sprite from '../components/Sprite.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { EMAIL, INSTAGRAM_URL, PHONE, WHATSAPP, WHATSAPP_URL, type PageKey } from '../data/site';
+import { EMAIL, INSTAGRAM_URL, PAGES, PHONE, SITE, WHATSAPP, WHATSAPP_URL, type PageKey } from '../data/site';
+import { mdFile } from '../md/registry';
 import '../styles/global.css';
 
 interface Props {
   page: PageKey;
-  title: string;
-  description: string;
 }
 
-const { page, title, description } = Astro.props;
+const { page } = Astro.props;
+const { title, description, summary = description } = PAGES[page];
 // the page's address on the domain, as the site links to it (/about, not /about.html)
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/'), Astro.site).href;
 const image = new URL('/og.jpg', Astro.site).href;
+// the same page in markdown, for AI agents (src/md/registry.ts); every page but the 404 has one
+const markdown = page !== 'notfound' && new URL(`/${mdFile(new URL(canonical).pathname)}.md`, Astro.site).href;
 const tel = (n: string) => n.replace(/\s/g, '');
-// who Full Circle is, for search engines: on Home only, where the business is the page's subject
+// who Full Circle is, and the site, for search engines: on Home only, where the business is the
+// page's subject; the same words as llms.txt and ai.txt (SITE)
+const home = new URL('/', Astro.site).href;
 const business = page === 'home' && {
-  '@context': 'https://schema.org', '@type': 'Organization', name: 'Full Circle', url: new URL('/', Astro.site).href,
-  logo: new URL('/favicon.svg', Astro.site).href, image, description, email: EMAIL, telephone: tel(PHONE),
-  address: { '@type': 'PostalAddress', streetAddress: 'Gisr El Suez', addressLocality: 'Cairo', addressCountry: 'EG' },
-  contactPoint: [{ '@type': 'ContactPoint', contactType: 'sales', telephone: tel(WHATSAPP), email: EMAIL }],
-  sameAs: [INSTAGRAM_URL],
+  '@context': 'https://schema.org',
+  '@graph': [{
+    '@type': 'Organization', '@id': `${home}#organization`, name: SITE.name, url: home,
+    logo: new URL('/favicon.svg', Astro.site).href, image, description: SITE.summary, email: EMAIL, telephone: tel(PHONE),
+    address: { '@type': 'PostalAddress', streetAddress: SITE.address.street, addressLocality: SITE.address.city, addressCountry: SITE.address.country },
+    contactPoint: [{ '@type': 'ContactPoint', contactType: 'sales', telephone: tel(WHATSAPP), email: EMAIL }],
+    sameAs: [INSTAGRAM_URL],
+  }, {
+    '@type': 'WebSite', '@id': `${home}#website`, name: SITE.name, url: home, inLanguage: 'en',
+    publisher: { '@id': `${home}#organization` },
+  }],
 };
 ---
 <!doctype html>
@@ -34,6 +44,7 @@ const business = page === 'home' && {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{title}</title>
 <meta name="description" content={description}>
+<meta name="ai-summary" content={summary}>
 {page === 'notfound' ? <meta name="robots" content="noindex"> : <link rel="canonical" href={canonical}>}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Full Circle">
@@ -45,6 +56,7 @@ const business = page === 'home' && {
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Full Circle: Idea to product. Full circle. Development and manufacturing in Cairo, Egypt.">
 <meta name="twitter:card" content="summary_large_image">
+{markdown && <link rel="alternate" type="text/markdown" href={markdown}>}
 {business && <script type="application/ld+json" set:html={JSON.stringify(business)} />}
 <meta name="theme-color" content="#11110F">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">

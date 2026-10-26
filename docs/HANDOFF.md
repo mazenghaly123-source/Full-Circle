@@ -116,21 +116,17 @@ site's look.
 0. **SEO, GEO and analytics** (Mazen, 24 Oct: "start SEO and GEO, and connect Google Analytics").
    Waiting on Mazen for: the GA4 Measurement ID (`G-…`), Search Console verified as a Domain property
    (a TXT record in Cloudflare DNS), and a choice between a consent bar + GA4 or cookieless analytics
-   (production-plan.md had Umami, EU). Then: `llms.txt`, FAQPage and Service structured data, Instagram
+   (production-plan.md had Umami, EU). Then: FAQPage and Service structured data, Instagram
    in the Organization's `sameAs` (it is in `Base.astro`, Home only), a pass over titles and
    descriptions, and analytics events for "request sent" and the WhatsApp click.
-   - **Paused (26 Oct):** Mazen pasted a long prompt to make the site readable by AI agents: a
-     markdown version of every page (`/about.md`, `Accept: text/markdown`, `/api/md/…`),
-     `llms.txt`, `llms-full.txt`, `ai.txt`, an `ai-summary` meta tag, and robots.txt rules per AI
-     crawler. It asks for a plan (a route inventory and the files to add) and his OK before any code,
-     and for a question per training crawler (GPTBot, ClaudeBot, Google-Extended, Applebot-Extended,
-     CCBot, Bytespider). Mazen interrupted it before the plan; ask him whether to pick it up. What was
-     found so far: the site is **static assets only, with no Worker** ([ADR 0002](./adr/0002-cloudflare-workers-static-assets.md)),
-     so the `.md` files, `llms.txt`, `llms-full.txt` and `ai.txt` can be built as static endpoints
-     (like `src/pages/robots.txt.ts` and `sitemap.xml.ts`), but negotiating on the Accept header and
-     `/api/md/…` need Worker code, which changes that ADR. Raise that in the plan. The public pages are
-     the 7 in `src/pages/` plus `/privacy`; `/admin` and `/track` (signed-in) stay out. Content comes
-     from `src/data/site.ts` and the pages' own markup.
+   - **AI-readable site (26 Oct), built, not committed:** Mazen approved the plan, the Worker
+     ([ADR 0006](./adr/0006-a-worker-for-markdown.md)) and allowing every training crawler. Every public
+     page has a markdown version (`src/md/registry.ts`; `/about.md`, `Accept: text/markdown`,
+     `/api/md/about`, `/api/md/_catalog`), and `llms.txt`, `llms-full.txt`, `ai.txt` and `robots.txt`
+     come from `src/md/agents.ts`. Pages carry `ai-summary` and a markdown `alternate` link; Home's
+     structured data is an Organization plus a WebSite. The prompt asked for no commit: Mazen reviews the
+     diff first. `ai.txt` follows ai-visibility.org.uk's current spec (v1.7.0: an H1 and `##` sections;
+     the prompt named v1.1.1, whose `[section]` form the spec now calls superseded).
 1. **The redesign** (Mazen, 23 Oct), to set the site apart from a competitor, factory21.co, whose
    Home looks like ours. On `main` since 23 Oct:
    - Done on Home: Microgramma D Extended (the logo's face, `src/assets/fonts/`) for the hero and
@@ -187,7 +183,7 @@ Decisions:
   4. A decision can be opened without photos.
   5. When a person is removed, the log keeps their name.
 - Keep or drop the Cloudflare plugin commit on `claude/keen-gates-vu1na0`.
-- The SEO, GEO and analytics answers, and whether to resume the AI-readable site (*In progress*, 0).
+- The SEO, GEO and analytics answers, and his review of the AI-readable site diff (*In progress*, 0).
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
@@ -249,7 +245,7 @@ Dashboard and account tasks:
 ## Next 3 steps
 
 1. **SEO, GEO and analytics** once Mazen sends the GA4 ID, the Search Console verification and the
-   consent choice; ask him whether to resume the AI-readable site plan (*In progress*, 0).
+   consent choice; his review of the AI-readable site diff (*In progress*, 0).
 2. **Prove phases 2–4 on staging** when Mazen wants the order test: send a test request with an
    email, convert it to an order in `/admin`, sign in to `/track` as the client, and take the order
    through all 8 stages from a phone.

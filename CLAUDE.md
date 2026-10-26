@@ -135,9 +135,18 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   registered by slot in `src/data/photos.ts`. The request form's questions, the form rules and the
   words shown with the forms live in `supabase/functions/_shared/forms.ts`, which the site and the
   Edge Functions both import (site.ts re-exports the questions).
-- `Base.astro` writes each page's canonical address, share tags and (Home only) the business as
-  structured data; the share card is `public/og.jpg`, rendered by `scripts/og-image.mjs`. `sitemap.xml`
-  and `robots.txt` are endpoints in `src/pages/`.
+- `Base.astro` writes each page's canonical address, share tags and (Home only) the business and the
+  site as structured data; titles, descriptions and the `ai-summary` tag come from `PAGES` in
+  `src/data/site.ts`. The share card is `public/og.jpg`, rendered by `scripts/og-image.mjs`. `sitemap.xml`
+  is an endpoint in `src/pages/`.
+- Every public page has a markdown version for AI agents (26 Oct 2026): `/about.md`, `/about` with
+  `Accept: text/markdown`, and `/api/md/about`, written in `src/md/registry.ts` from the same data and
+  in the page's own words. The one Worker, `src/worker.ts` ([ADR 0006](./docs/adr/0006-a-worker-for-markdown.md)),
+  serves them on the paths `run_worker_first` lists in `wrangler.jsonc`. `tests/md.spec.ts` fails when
+  the markdown says something its page does not, so **a change to a page's words is mirrored in the
+  registry**; a new page needs an entry there and in `run_worker_first`. `robots.txt`, `llms.txt`,
+  `llms-full.txt` and `ai.txt` are built together in `src/md/agents.ts` (training crawlers allowed,
+  Mazen, 26 Oct 2026).
 - No test reaches the real backend: `mockBackend` (`tests/helpers.ts`) stands in for Turnstile and
   the form functions in the browser suites.
 - three.js is pinned to 0.160.0 (the prototype's version) so the 3D mark renders identically. Its mesh

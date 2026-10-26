@@ -865,7 +865,7 @@ test.describe('approved changes', () => {
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
     // the business, on Home
     await page.goto('/');
-    const org = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    const [org] = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
     expect(org).toMatchObject({ '@type': 'Organization', name: 'Full Circle', url: 'https://fullcircle-co.com/', telephone: '+20226987277', address: { addressLocality: 'Cairo', addressCountry: 'EG' } });
     expect(await head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/');
     // moving to another page without a reload swaps them too

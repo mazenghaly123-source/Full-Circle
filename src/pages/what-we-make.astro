@@ -6,7 +6,7 @@ import Photo from '../components/Photo.astro';
 import Icon from '../components/Icon.astro';
 import { MAKE, ROUTES, pad, sampleLine } from '../data/site';
 ---
-<Base page="make" title="Denim, tees, hoodies and more, made in Cairo / Full Circle" description="Denim, tees, hoodies, shirts, jackets and knitwear, developed and made in Cairo. Minimums from 60 pieces per colour; samples in 7 to 25 days.">
+<Base page="make">
 <PageHero crumb="What we make" title="What we make." lead="Six categories, made in Cairo. Denim first." light="radial-gradient(40% 50% at 80% 30%,#243E8F,transparent 70%),radial-gradient(40% 50% at 10% 90%,#C96832,transparent 72%)" wide>
     <div class="catnav" id="catNav">{MAKE.map((m, i) => <button class="opt" data-cat={m.id}><b>{pad(i + 1)}</b>{m.n}</button>)}</div>
 </PageHero>
