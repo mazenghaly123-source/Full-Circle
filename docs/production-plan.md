@@ -150,8 +150,9 @@ Small, deliberate differences from the prototype:
 **Left for phase 2 to be done:** ~~a Resend account and key~~ (set in Supabase, 20 Oct) and
 ~~the domain verified at Resend~~ (Mazen, 21 Oct): ~~`EMAIL_FROM`~~ (set 23 Oct; the staff
 alert is confirmed, the receipt to a brand's email is still to try); a real
-Turnstile widget (staging's test key lets everything through); the nightly clean-up that deletes
-requests and messages a year old that never became orders (`/privacy`).
+Turnstile widget (staging's test key lets everything through). The nightly clean-up that deletes
+requests and messages a year old that never became orders (`/privacy`) is built (migration
+`20261026090000`, 26 Oct) and runs on staging.
 
 **Phase 3 is built** (21 Oct 2026, branch `claude/phase-3-portal`, PR #8, merged 23 Oct; its migrations are on staging):
 
@@ -313,7 +314,9 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
 - **Staff roles** (open access, Mazen 24 Oct: no fixed list; the owner adds whoever he chooses): **owner** can do everything, including adding and
   removing staff and exporting or deleting someone's data when asked; **staff** answer requests,
   create orders, open decisions, upload photos and move stages. Staff sign in by email code.
-- **Housekeeping:** a nightly job deletes requests and messages older than the retention period.
+- **Housekeeping:** a nightly job (pg_cron, `private.delete_expired`) deletes requests that did not
+  lead to an order, and messages, a year after they arrived; consent records stay. Orders (five
+  years) are not deleted automatically yet: none is that old.
   The site takes no files from visitors; stage photos, which staff upload, are kept in a private
   bucket and shown only through signed links.
 
