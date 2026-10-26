@@ -32,6 +32,8 @@ export const ICONS = {
   // following an order
   phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M9.8 12.2l1.6 1.6 3-3.2"/><circle class="rd" cx="12" cy="18" r="1"/>',
   camera: '<rect x="3.5" y="7" width="17" height="12" rx="2.5"/><path d="M9 7l1.4-2.5h3.2L15 7"/><circle cx="12" cy="13" r="3.2"/><circle class="rd" cx="17.5" cy="10" r="1"/>',
+  // visits counted (the analytics consent bar)
+  visits: '<path d="M4 19.5h16"/><rect x="6" y="12" width="3" height="7.5" rx="1"/><rect x="10.5" y="8.5" width="3" height="11" rx="1"/><rect x="15" y="10.5" width="3" height="9" rx="1"/><circle class="rd" cx="12" cy="4.6" r="1.4"/>',
   log: '<path d="M9 7h11M9 12h11M9 17h7"/><circle cx="5" cy="7" r="1.1"/><circle cx="5" cy="12" r="1.1"/><circle class="rd" cx="5" cy="17" r="1.3"/>',
   // what bulk is checked against
   chest: TEE + '<path class="rl" d="M8.4 12.5h7.2"/>',
