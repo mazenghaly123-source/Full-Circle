@@ -202,7 +202,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       list([
         'Requests and messages that do not lead to an order: one year, then deleted.',
         'Orders and their approval records: five years.',
-        'Google Analytics data: two months.',
+        'Google Analytics’ visit-by-visit data: two months. Its summary reports, which name no one, are kept longer.',
         'The record that you asked for WhatsApp updates, and the words you agreed to: for as long as we send them, and one year after.',
       ]),
       h2('What you can ask for'),

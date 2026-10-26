@@ -52,7 +52,8 @@ test('declining: the bar goes for good, and nothing is sent to Google', async ({
 test('accepting: Google is loaded, and page views, sent forms and WhatsApp clicks are counted', async ({ page }, info) => {
   const google = await watchGoogle(page);
   await turnOn(page);
-  await page.goto('/about');
+  // a link with an ad tag and a value that is not ours to send
+  await page.goto('/about?utm_source=instagram&phone=0101#top');
   const bar = page.locator('#consent');
   // on a phone the bar fits the screen, above everything else
   if (isPhone(info)) {
@@ -64,7 +65,8 @@ test('accepting: Google is loaded, and page views, sent forms and WhatsApp click
   await expect(bar).toBeHidden();
   await expect.poll(() => google.length).toBeGreaterThan(0);
   expect(google[0]).toContain('id=G-XNT9FPB5RQ');
-  expect((await events(page, 'page_view')).map((c) => (c[2] as { page_location: string }).page_location)).toEqual([expect.stringMatching(/\/about$/)]);
+  // the ad tag stays; the phone number and the #part do not
+  expect((await events(page, 'page_view')).map((c) => (c[2] as { page_location: string }).page_location)).toEqual([expect.stringMatching(/\/about\?utm_source=instagram$/)]);
   // a page swap counts as a page view of its own
   await page.goto('/about');
   await page.locator('footer a[href="/contact"]').first().click();

@@ -51,8 +51,17 @@ export function track(event: string, params: Record<string, string | number> = {
   if (loaded && choice() === 'granted') window.gtag('event', event, params);
 }
 
+/** Query parameters a page view keeps: ad tags and the site's own links' picks; anything else (a crafted ?phone=…) and the #part are dropped. */
+const KEPT = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'path', 'product'];
+const pageLocation = () => {
+  const url = new URL(location.href);
+  for (const k of [...url.searchParams.keys()]) if (!KEPT.includes(k)) url.searchParams.delete(k);
+  url.hash = '';
+  return url.href;
+};
+
 // the portal is never tracked (docs/production-plan.md §6); the admin has a layout of its own, without this script
-const pageView = () => { if (page() !== 'track') track('page_view', { page_location: location.href, page_title: document.title }); };
+const pageView = () => { if (page() !== 'track') track('page_view', { page_location: pageLocation(), page_title: document.title }); };
 
 /** Shows the consent bar again (the button on /privacy). */
 export function askAgain() {
