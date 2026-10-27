@@ -31,7 +31,7 @@ export const SITE = {
   name: 'Full Circle',
   description: 'Fashion development and manufacturing for brands that are starting or scaling.',
   /** Who Full Circle is in a few sentences, for agents and search (llms.txt, ai.txt, the Organization). */
-  summary: 'Full Circle is a clothing development and manufacturing partner in Cairo, Egypt, for brands that are starting or scaling. One team takes a product through eight stages, from research and design support to sampling, bulk production, QC and delivery. What the brand approves in sampling is what ships, and every order can be followed on a tracking page.',
+  summary: 'Full Circle is a clothing development and manufacturing partner in Cairo, Egypt, for brands that are starting or scaling. One team takes a brand full circle in three parts: design (brand identity, product design, tech packs), build (fabric, patterns, sampling, bulk production and QC) and launch (delivery, product photos, ad creatives). What the brand approves in sampling is what ships, and every order can be followed on a tracking page.',
   address: { street: 'Gisr El Suez', city: 'Cairo', country: 'EG' },
   hours: 'Sunday – Thursday, 9:00 – 17:00',
 };
@@ -46,8 +46,8 @@ export const PRIVATE_PATHS = ['/admin'];
 export const PAGES: Record<PageKey, { title: string; description: string; summary?: string }> = {
   home: {
     title: 'Full Circle / Clothing manufacturer in Cairo, Egypt',
-    description: 'Design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands starting or scaling. From 60 pieces per colour.',
-    summary: 'Home page of Full Circle, a clothing development and manufacturing partner in Cairo, Egypt: what it makes and from how many pieces, its eight stages from research to delivery, the client tracking page, and answers to common questions.',
+    description: 'Branding, design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands starting or scaling. From 60 pieces per colour.',
+    summary: 'Home page of Full Circle, a clothing development and manufacturing partner in Cairo, Egypt: what it makes and from how many pieces, how it works in three parts (design, build, launch), the client tracking page, and answers to common questions.',
   },
   how: {
     title: 'How it works / From idea to bulk / Full Circle',
@@ -99,6 +99,19 @@ export const STAGES: Stage[] = [
   { n: 'Production', s: 'Produce', line: 'Bulk runs against the approved sample, checked along the line.', get: 'Progress at each checkpoint', ok: 'Quantity and delivery date', tone: '#55554d', demo: { ok: 'Quantity + delivery date' } },
   { n: 'QC', s: 'QC', line: 'Measurements, seams, colour, labels and packing count are inspected before anything is packed.', get: 'Inspection record', ok: 'QC result', tone: '#5b4a3c' },
   { n: 'Delivery', s: 'Deliver', line: 'Finished goods are packed, documented and shipped to you.', get: 'Goods and documents', ok: 'Receipt, next run', tone: '#7a5a44' },
+];
+
+/**
+ * How it works on Home: the work in three parts, one per arc of the mark (Mazen, 27 Oct 2026). The
+ * eight stages above stay what an order moves through: Design holds 01–02, Build 03–07, Launch 08,
+ * plus the branding and the launch content that Mazen does himself.
+ */
+export type Arc = { n: string; sub: string; line: string; steps: string[]; photo: string; /** the step the client approves */ gate?: number };
+
+export const ARCS: Arc[] = [
+  { n: 'Design', sub: 'Brand + product', line: 'Your brand and your product, drawn before anything is cut.', steps: ['Brand identity', 'Product design', 'Tech pack'], photo: 'stage-01' },
+  { n: 'Build', sub: 'Our Cairo factory', line: 'Made in our Cairo factory. You approve the sample, and bulk matches it.', steps: ['Fabric + trims', 'Patterns', 'Sample: you approve', 'Production', 'QC'], photo: 'stage-05', gate: 2 },
+  { n: 'Launch', sub: 'Ready to sell', line: 'It reaches you packed, shot and ready to sell.', steps: ['Delivery', 'Product photos', 'Ad creatives'], photo: 'stage-08' },
 ];
 
 export type Category = {

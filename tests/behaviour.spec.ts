@@ -169,7 +169,7 @@ test('home: What we make, the photo you point at grows and the others step back 
   await expect(cards.nth(4)).not.toHaveClass(/\bon\b/);
 });
 
-test('home: the How it works ring fills with scroll and closes as the mark', async ({ page }) => {
+test('home: How it works draws the mark arc by arc with scroll and closes it', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => document.fonts.ready);
   const pinned = await page.evaluate(() => getComputedStyle(document.getElementById('howPin')!).position === 'sticky');
@@ -180,15 +180,20 @@ test('home: the How it works ring fills with scroll and closes as the mark', asy
   }, f);
   // the ring eases toward the scroll position frame by frame; software rendering in CI is slow
   const slow = { timeout: 20_000 };
-  await at(0.55);
-  await expect(page.locator('#howNum')).toHaveText('05', slow);
-  await expect(page.locator('#steps .step').nth(4)).toHaveClass(/on/);
-  // the photo of the stage sits behind the ring, and goes when the ring closes
+  await expect(page.locator('#steps .step')).toHaveCount(3);
+  await at(0.5);
+  await expect(page.locator('#arcNum')).toHaveText('02 / 03', slow);
+  await expect(page.locator('#arcLbl')).toHaveText('Build');
+  await expect(page.locator('#steps .step').nth(1)).toHaveClass(/on/);
+  // Design is drawn whole, Build half way, Launch not yet
+  const drawn = () => page.locator('#h-how mask circle').evaluateAll((cs) => cs.map((c) => parseFloat((c as SVGElement).style.strokeDasharray) || 0));
+  await expect.poll(async () => { const [d, b, l] = await drawn(); return d > 200 && b > 50 && b < 230 && l === 0; }, slow).toBe(true);
+  // the photo of the part sits behind the mark, and goes when the circle closes
   await expect(page.locator('#howPin .hbgs .bgimg.on')).toHaveAttribute('data-img', 'stage-05', slow);
   await expect(page.locator('#howPin .hbgs .bgimg.on')).toHaveCount(1);
   await at(1);
   await expect(page.locator('#h-how .howring')).toHaveClass(/done/, slow);
-  await expect(page.locator('#howLbl')).toHaveText('Full circle');
+  await expect(page.locator('#arcLbl')).toHaveText('Full circle');
 });
 
 test('home: 3D mark appears and is kept when you come back', async ({ page }, info) => {
@@ -544,7 +549,7 @@ test('reduced motion: no wipe, and the hero ring is shown complete', async ({ br
   const page = await ctx.newPage();
   await page.goto(`${info.project.use.baseURL}/`);
   await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '14px');
-  await expect(page.locator('#heroLabels .st.on')).toHaveCount(8);
+  await expect(page.locator('#heroLabels .st.on')).toHaveCount(3);
   // the dot is back at the top, where the circle closes
   await expect(page.locator('#heroDot')).toHaveAttribute('cx', '200');
   await expect(page.locator('#heroDot')).toHaveAttribute('cy', '50');
@@ -559,7 +564,7 @@ test.describe('pages you come back to (the prototype was one document)', () => {
     const ctx = await browser.newContext({ viewport: info.project.use.viewport, javaScriptEnabled: false });
     const page = await ctx.newPage();
     await page.goto(`${info.project.use.baseURL}/`);
-    await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '87.5px');
+    await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '66.667px');
     await expect(page.locator('#heroLabels .st.on')).toHaveCount(1);
     await ctx.close();
   });
@@ -814,13 +819,13 @@ test.describe('approved changes', () => {
   test('home: the hero ring fills once and rests on the full circle', async ({ page }) => {
     await page.clock.install();
     await page.goto('/');
-    await page.clock.runFor(8 * 1100);
-    await expect(page.locator('#heroLabels .st.on')).toHaveCount(8);
+    await page.clock.runFor(3 * 1500);
+    await expect(page.locator('#heroLabels .st.on')).toHaveCount(3);
     await expect(page.locator('#heroArc')).toHaveCSS('stroke-dashoffset', '0px');
     await expect(page.locator('#heroDot')).toHaveAttribute('cy', '50');
     // and it does not start again
     await page.clock.runFor(5000);
-    await expect(page.locator('#heroLabels .st.on')).toHaveCount(8);
+    await expect(page.locator('#heroLabels .st.on')).toHaveCount(3);
   });
 
   test('every field has a visible label above it', async ({ page }) => {

@@ -15,7 +15,7 @@ Builds; about 20 minutes) and CodeRabbit's review, fix what they find, then merg
 | Branch | Holds | State |
 |---|---|---|
 | `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, the redesign (see *In progress*) and the designed emails | Live |
-| `claude/tender-rubin-ahjc3t` | The working branch | Merged (PR #20, requests on Track, 27 Oct); restart it from `main` for new work |
+| `claude/tender-rubin-ahjc3t` | The working branch: Design, Build, Launch on Home (27 Oct) | PR open; when merged, restart it from `main` for new work |
 | `claude/leather-imports` | Leather with the jackets, imported fabrics at a competitive price (PR #21, 27 Oct) | Merged to `main`, safe to delete |
 | `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
@@ -119,6 +119,12 @@ Done on 23–25 Oct: the WhatsApp-era functions are on staging, the Cloudflare p
 `EMAIL_FROM` is set with the staff alert confirmed, the Auth settings are done, and every email has the
 site's look.
 
+- **Design, Build, Launch (27 Oct, Mazen):** Full Circle covers a brand's whole circle, branding and
+  launch content included (Mazen does those himself, no prices yet). Home's How it works is now three
+  parts, one per arc of the mark (`ARCS` in `site.ts`, `src/data/mark.ts`, `how-scroll.ts`), and the hero
+  ring names them; mirrored in `approvePrototype`. Mock: https://claude.ai/artifact/3pEMxPmiymqqYwmfF9AQ9s.
+  **Next:** the How it works page on the three parts (mock first), the request form offering branding
+  and content, and photos for Design and Launch (give Mazen prompts).
 - **Requests on Track (27 Oct, Mazen, after comparing the site with Factory 21):** a request sent with
   an email opens a sign-in for that email (`submit-request`), the portal lists the person's requests
   until each becomes an order they can see (`my_requests`), the sent box links to Track, and the

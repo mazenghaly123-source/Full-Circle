@@ -3,8 +3,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { NOTICE } from '../supabase/functions/_shared/forms';
-import { FAQ, MAKE, STAGES, sampleLine } from '../src/data/site';
-import { ICONS, STAGE_ICONS, iconSvg, type IconName } from '../src/data/icons';
+import { ARCS, FAQ, MAKE, ring, sampleLine } from '../src/data/site';
+import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../src/data/mark';
+import { ICONS, iconSvg, type IconName } from '../src/data/icons';
 
 export const PROTOTYPE = pathToFileURL(resolve('prototype/index.html')).href;
 
@@ -86,14 +87,21 @@ const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
 
 /**
  * The redesign (23 Oct 2026): the headline face, which the prototype gets inline (the build serves it
- * through Astro's fonts), the icons as the build draws them, and each stage's approval.
+ * through Astro's fonts), the icons as the build draws them, and the words and arcs of How it works.
  */
 const REDESIGN = {
   font: `data:font/woff2;base64,${readFileSync(resolve('src/assets/fonts/microgramma-d-extended-bold.woff2')).toString('base64')}`,
   icon: Object.fromEntries((Object.keys(ICONS) as IconName[]).map((k) => [k, iconSvg(k)])) as Record<IconName, string>,
-  stageIcons: STAGE_ICONS,
-  stageOk: STAGES.map((g) => g.ok),
   make: MAKE.map((m) => ({ n: m.n, items: m.items, sub: m.sub, samp: sampleLine(m.samp) })),
+  // How it works in three parts, one per arc of the mark (27 Oct 2026), and the hero ring's labels for them
+  arcs: ARCS,
+  arcPaths: markArcPaths(readFileSync(resolve('src/components/sprite.svg'), 'utf8')),
+  arcTurns: MARK_ARCS.map((a) => a.start - ARC_PAD),
+  markC: MARK_C,
+  heroLabels: ARCS.map((a, i) => {
+    const [x, y] = ring(200, 200, 186, (i + 0.5) / ARCS.length);
+    return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : '') + (i < 1 ? ' on' : ''), t: a.n };
+  }),
 };
 
 /**
@@ -156,7 +164,9 @@ export async function approvePrototype(page: Page) {
       const $h = <T extends Element = HTMLElement>(sel: string) => home.querySelector<T>(sel)!;
       $h('.hero .wrap > div > div.mono.dim').remove();
       const h1 = $h('.hero h1'); h1.classList.add('wide'); h1.innerHTML = '<span class="l1">Idea to product.</span> <span class="l2">Full circle.</span>';
-      $h('.hero .lead').textContent = 'From idea to bulk, under one roof in Cairo. What you approve in sampling is what ships.';
+      $h('.hero .lead').textContent = 'From idea to launch, under one roof in Cairo. What you approve in sampling is what ships.';
+      // the hero ring names the three parts of the work (27 Oct 2026)
+      $h('#heroLabels').innerHTML = re.heroLabels.map((l) => `<text x="${l.x}" y="${l.y}" text-anchor="middle" class="${l.cls}">${l.t}</text>`).join('');
       const facts: [string, string | null][] = [['pieces', null], ['clock', '7–25 day samples'], ['denim', 'Denim + imports'], ['ring', null]];
       home.querySelectorAll('.facts > div').forEach((d, i) => {
         d.classList.add('fi'); d.querySelector('span.mono')!.remove();
@@ -195,13 +205,22 @@ export async function approvePrototype(page: Page) {
       // phones get the tall versions of the full-width photos (24 Oct 2026)
       const tallHow = matchMedia('(max-width: 860px)').matches;
       if (matchMedia('(max-width: 760px)').matches) document.querySelector<HTMLImageElement>('.hero .bgimg img')!.src = 'img/hero-phone.jpg';
-      // How it works: the photo of the stage behind the ring, the first one showing at rest
-      $h('#howPin').insertAdjacentHTML('afterbegin', `<div class="hbgs" aria-hidden="true">${[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `<div class="bgimg${n === 1 ? ' on' : ''}" data-img="stage-0${n}"><img src="img/stage-0${n}${tallHow ? '-phone' : ''}.jpg" alt="" class="ok"></div>`).join('')}</div>`);
-      wide('#h-how .sh h2'); $h('#h-how .sh p').textContent = 'Eight stages. You approve each one.';
+      // How it works: the photo of the part behind the mark, the first one showing at rest
+      $h('#howPin').insertAdjacentHTML('afterbegin', `<div class="hbgs" aria-hidden="true">${re.arcs.map((a, i) => `<div class="bgimg${i === 0 ? ' on' : ''}" data-img="${a.photo}"><img src="img/${a.photo}${tallHow ? '-phone' : ''}.jpg" alt="" class="ok"></div>`).join('')}</div>`);
+      wide('#h-how .sh h2'); $h('#h-how .sh p').textContent = 'Design, build, launch. One team, one circle.';
+      // in three parts, one per arc of the mark, drawn through masks (27 Oct 2026). The prototype's ring stays,
+      // hidden, for its own script, and the steps beyond the third go.
+      const howRing = $h('#h-how .howring'), [cx, cy] = re.markC;
+      howRing.classList.add('arcs'); howRing.querySelector('svg')!.style.display = 'none';
+      howRing.insertAdjacentHTML('beforeend', `<svg viewBox="-6 -6 268.86 274.3"><defs>${re.arcTurns.map((r, i) => `<mask id="howM${i}" maskUnits="userSpaceOnUse" x="-20" y="-20" width="300" height="310"><circle cx="${cx}" cy="${cy}" r="112" fill="none" stroke="#fff" stroke-width="112" pathLength="360" stroke-dasharray="0 400" transform="rotate(${r} ${cx} ${cy})"></circle></mask>`).join('')}</defs>${re.arcPaths.map((d) => `<path class="trk" d="${d}"></path>`).join('')}${re.arcPaths.map((d, i) => `<path class="arc" mask="url(#howM${i})" d="${d}"></path>`).join('')}</svg><div class="ctr"><span class="num">01 / 03</span><span class="lbl">${re.arcs[0].n}</span><span class="sub">${re.arcs[0].sub}</span></div>`);
       home.querySelectorAll('#steps .step').forEach((li, i) => {
-        li.querySelector('.a')!.innerHTML = re.icon[re.stageIcons[i]];
-        li.querySelector('.body > div')!.innerHTML = `<p class="ok1">${re.icon.qc}<span>${re.stageOk[i]}</span></p>`;
+        const a = re.arcs[i];
+        if (!a) { li.remove(); return; }
+        li.querySelector('.a')!.textContent = `${a.steps.length} steps`;
+        li.querySelector('.body > div')!.innerHTML = `<p>${a.line}</p><ul class="chips">${a.steps.map((st, k) => `<li${k === a.gate ? ' class="ok"' : ''}>${st}</li>`).join('')}</ul>`;
+        li.querySelector('.t')!.textContent = a.n;
       });
+      $h('#howNext').textContent = `Next / 02 ${re.arcs[1].n}`;
       $h('.promise .mono.dim').remove(); wide('.promise h2');
       const promise = $h('.promise .wrap > div > p'); promise.textContent = 'Every bulk piece is checked against your signed sample.';
       promise.insertAdjacentHTML('afterend', `<ul class="checks" aria-label="Checked against the sample">${(['chest', 'length', 'sleeve', 'stitch', 'colour'] as const).map((k) => `<li>${re.icon[k]}${k}</li>`).join('')}</ul>`);

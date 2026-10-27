@@ -1170,4 +1170,44 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .contact .ic{width:24px;height:24px;color:var(--cotton)}
 .three.next3>div{border-top:1px solid var(--line)}
 @media (max-width:760px){.phero h1.wide{font-size:clamp(30px,9vw,40px)}}
+/* 27 Oct 2026 (Mazen): How it works on Home in three parts, Design, Build and Launch, one per arc of the mark. The
+   mark draws itself arc by arc as you scroll and closes into the logo; each part lists its steps as chips */
+.howring.arcs .trk{fill:rgba(232,226,216,0.09)}
+.howring.arcs .arc{fill:var(--bone)}
+.howring.arcs mask circle{transition:stroke-dasharray 700ms var(--ease)}
+#h-how.scrolly .howring.arcs mask circle{transition:none}
+.howring.arcs .ctr{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;gap:6px;pointer-events:none}
+.howring.arcs .ctr .num{font-family:var(--f-mono);font-size:12px;letter-spacing:0.2em;color:var(--cotton)}
+.howring.arcs .ctr .lbl{font-family:var(--f-wide);font-weight:700;text-transform:uppercase;font-size:clamp(17px,2.1vw,28px);line-height:1.05;letter-spacing:0.01em;max-width:7.5em}
+.howring.arcs .ctr .sub{font-family:var(--f-mono);font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim)}
+.howring.arcs .flip{animation:numIn 520ms var(--ease) backwards}
+#steps .body p{margin-bottom:12px}
+.step .chips{list-style:none;margin:0 0 20px 58px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.step .chips li{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line);border-radius:var(--r-s);font-family:var(--f-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;background:rgba(17,17,15,0.5)}
+.step .chips li.ok::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red)}
+@media (min-width:861px) and (min-height:560px){
+  .howscroll{height:calc(100vh + 3 * 70vh)}
+  .howpin .step .t{font-size:clamp(28px,2.8vw,42px)}
+  .howpin .step button{padding:16px 0}
+}
+@media (max-width:860px) and (min-height:520px){
+  .howscroll{height:calc(100svh + 3 * 60svh)}
+  .howpin .step{display:block;border-bottom:1px solid var(--faint)}
+  .howpin .step.on{animation:none}
+  .howpin .step .t{font-size:28px}
+  .howpin .step button{padding:10px 0}
+  .howpin .step .body p{font-size:15px}
+  .howpin .howring.arcs .ctr{gap:4px}
+  .howpin .howring.arcs .ctr .num{font-size:10px;letter-spacing:0.12em}
+  .howpin .howring.arcs .ctr .sub{display:none}
+}
+@media (max-width:860px) and (min-height:520px) and (max-height:720px){
+  .howpin .step .t{font-size:24px}
+  .howpin .step button{padding:7px 0}
+  .howpin .step .body p{font-size:14px;margin-bottom:8px}
+  .howpin .step .chips{margin-bottom:10px;gap:5px}
+  .howpin .step .chips li{padding:4px 8px;font-size:9.5px}
+}
+@media (max-width:760px){.step .chips{margin-left:0;gap:6px}.step .chips li{padding:6px 9px;font-size:10px}}
+@media (prefers-reduced-motion:reduce){.howring.arcs .flip,.howring.arcs mask circle{animation:none;transition:none}}
 /* ===== end approved changes ===== */
