@@ -62,7 +62,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   request opened, a year on) is **not applied**: it holds a DELETE, so Mazen runs it in the SQL editor
   (*Waiting on Mazen*).
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
-  - `submit-request` v8, `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
+  - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
     `whatsapp-webhook` v1.
   - Deploying through the MCP needs every file a function imports (`<slug>/index.ts` and all four
