@@ -192,7 +192,10 @@ test('visitors leave no files: the one bucket is the private one for stage photo
 
 test('a brand that gave an email gets a sign-in account and follows its requests on the tracking page', async () => {
   const email = `follow-${run}@acme.test`;
-  const first = (await (await post('submit-request', requestForm({ contact: email }))).json()).code;
+  // the account is there before the answer, which says so
+  const sent = await (await post('submit-request', requestForm({ contact: email }))).json();
+  expect(sent.track).toBe(true);
+  const first = sent.code;
   const [receipt] = await mailsTo(email, 1);
   expect(receipt.text).toContain('/track');
   // a second request finds the account there already

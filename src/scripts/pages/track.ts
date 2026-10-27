@@ -31,7 +31,7 @@ const portal = {
   /** a call to the server is under way: the buttons wait */
   busy: false,
 };
-const LOGIN_LEAD = 'Sign in with the email or WhatsApp on your request or order.';
+const LOGIN_LEAD = 'Sign in with the email or WhatsApp on your order, or the email on your request.';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const stage = (n: number) => STAGES[Math.min(Math.max(n, 1), 8) - 1];

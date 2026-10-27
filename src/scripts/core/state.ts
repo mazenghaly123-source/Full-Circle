@@ -9,6 +9,8 @@ export const request = {
   sending: false,
   /** the code the server gave the request */
   code: '',
+  /** the server opened a sign-in for the request's email: it can be followed on Track */
+  track: false,
   brand: '',
   contact: '',
   note: '',

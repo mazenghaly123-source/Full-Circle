@@ -257,7 +257,7 @@ export async function approvePrototype(page: Page) {
       const next3 = pg('start').querySelector('.next3')!;
       next3.className = 'three next3';
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
-      head('track', 'Sign in with the email or WhatsApp on your request or order.');
+      head('track', 'Sign in with the email or WhatsApp on your order, or the email on your request.');
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }
@@ -298,7 +298,8 @@ export type Sent = { url: string; body: Buffer | null };
 /**
  * Stands in for the forms' backend: Cloudflare's Turnstile script (answers at once with its test
  * token) and the submit-request and submit-contact Edge Functions. `answer` decides each reply;
- * by default a request gets FC-2501 and a message is taken. Returns what was posted.
+ * by default a request gets FC-2501 (followable on Track when sent by email) and a message is taken.
+ * Returns what was posted.
  */
 export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 'submit-contact', n: number) => { status?: number; json?: object; abort?: boolean; delayMs?: number } = () => ({})) {
   const sent: Sent[] = [];
@@ -312,7 +313,9 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
     const a = answer(fn, sent.filter((s) => s.url.endsWith(fn)).length);
     if (a.delayMs) await new Promise((r) => setTimeout(r, a.delayMs));
     if (a.abort) return route.abort('failed');
-    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501' } : { ok: true }) });
+    // like the function, a request sent by email can be followed on Track
+    const track = fn === 'submit-request' && String(postedData(sent.at(-1)!).contact ?? '').includes('@');
+    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501', track } : { ok: true }) });
   });
   return sent;
 }

@@ -462,7 +462,7 @@ test('track: a brand that sent a request by email follows it there before it bec
     { code: 'FC-2509', product: 'Hoodies', status: 'replied', created_at: '2026-10-25T09:00:00Z' },
   ] });
   await page.goto('/track');
-  await expect(page.locator('#tLead')).toHaveText('Sign in with the email or WhatsApp on your request or order.');
+  await expect(page.locator('#tLead')).toHaveText('Sign in with the email or WhatsApp on your order, or the email on your request.');
   await signInPortal(page);
   await expect(page.locator('#tList .ord')).toHaveCount(5);
   const req = page.locator('#tList .ord.req');
@@ -969,6 +969,15 @@ test.describe('the forms send to the backend', () => {
     await expect(page.locator('#sentCode')).toHaveText('FC-2501');
     expect(postedData(sent[0]).source).toEqual({ utm_source: 'instagram', utm_campaign: 'denim-drop', landing: '/what-we-make' });
     expect(postedData(sent[0]).whatsappUpdates).toBeUndefined();
+  });
+
+  test('request: the Track link shows only when the server opened a sign-in for the email', async ({ page }) => {
+    await mockBackend(page, () => ({ json: { code: 'FC-2501', track: false } }));
+    await page.goto('/request-a-sample');
+    await fillRequest(page, 'hello@acme.test');
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#sentCode')).toHaveText('FC-2501');
+    await expect(page.locator('#sentTrack')).toBeHidden();
   });
 
   test('request: the server can turn it away, and a failed send can be tried again', async ({ page }) => {

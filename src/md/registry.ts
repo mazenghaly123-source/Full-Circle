@@ -144,7 +144,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
     key: 'track', path: ROUTES.track, name: 'Track order', section: 'core', sources: ['src/pages/track.astro'],
     related: ['how', 'start'],
     body: () => [
-      'Sign in with the email or WhatsApp on your request or order.',
+      'Sign in with the email or WhatsApp on your order, or the email on your request.',
       h2('Sign in'),
       ordered(['Email or WhatsApp number: Send me a code', '6-digit code: Sign in']),
     ],
@@ -214,7 +214,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       h2('Security'),
       'Everything travels encrypted, and only Full Circle staff can read what you send us. If a breach affects your data, we tell you and the authorities as the law requires.',
       h2('Changes'),
-      'Last updated 26 October 2026. Every change is dated here.',
+      'Last updated 27 October 2026. Every change is dated here.',
     ],
   },
 ];
