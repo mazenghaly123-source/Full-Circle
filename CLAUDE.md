@@ -75,6 +75,8 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   menu, snap carousels with dots, animated orange/indigo hero light, labelled hero ring.
   Phone quality matters a lot: test at 390×844 and 375×667.
 - Starting/Scaling: split section on Home now; dedicated ad landing pages later.
+- The request form starts at 60–150 pieces (Mazen, 27 Oct 2026): no "Under 60" option. The minimum line under the
+  quantity shows only for denim at 60–150, as a small quiet note (no red, it must not look like an error).
 - The site takes no files (Mazen, 15 Oct 2026): the request form has no upload, and sketches,
   tech packs and photos come on WhatsApp after the first contact. A sent request shows
   "Continue on WhatsApp", which opens a chat with its code ready to send.

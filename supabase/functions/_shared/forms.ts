@@ -6,7 +6,7 @@
 export const REQUEST_QUESTIONS = [
   { k: 'path', label: '01 / The brand is', hint: 'Pick one', summary: 'Brand', options: ['Starting', 'Scaling'] },
   { k: 'product', label: '02 / Product', hint: 'Pick one', summary: 'Product', options: ['Denim', 'Tees', 'Hoodies', 'Shirts', 'Jackets', 'Knitwear', 'Other'] },
-  { k: 'qty', label: '03 / Pieces per style', hint: 'Estimate', summary: 'Pieces per style', options: ['Under 60', '60–150', '150–500', '500+'] },
+  { k: 'qty', label: '03 / Pieces per style', hint: 'Estimate', summary: 'Pieces per style', options: ['60–150', '150–500', '500+'] },
   { k: 'have', label: '04 / You have', hint: 'Pick one', summary: 'You have', options: ['An idea', 'A sketch', 'A tech pack', 'A garment'] },
 ] as const;
 
@@ -14,9 +14,12 @@ export type RequestKey = (typeof REQUEST_QUESTIONS)[number]['k'];
 /** The options of one question, e.g. OptionOf<'qty'>. */
 export type OptionOf<K extends RequestKey> = Extract<(typeof REQUEST_QUESTIONS)[number], { k: K }>['options'][number];
 
-/** The quantity is under the product's minimum: under 60 for everything, under 150 per colour for denim. */
+/**
+ * The quantity is under the product's minimum: under 150 per colour for denim. The form offers nothing under 60
+ * (Mazen, 27 Oct 2026); for denim at 60–150 it shows a quiet note, and the staff alert notes it.
+ */
 export const belowMinimum = (qty: string | null, product: string | null) =>
-  qty === ('Under 60' satisfies OptionOf<'qty'>) || (qty === ('60–150' satisfies OptionOf<'qty'>) && product === ('Denim' satisfies OptionOf<'product'>));
+  qty === ('60–150' satisfies OptionOf<'qty'>) && product === ('Denim' satisfies OptionOf<'product'>);
 
 /** A pick counts only if it is one of that question's own options. */
 export const isOption = (k: RequestKey, v: unknown): v is string =>

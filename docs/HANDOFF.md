@@ -15,7 +15,7 @@ Builds; about 20 minutes) and CodeRabbit's review, fix what they find, then merg
 | Branch | Holds | State |
 |---|---|---|
 | `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, the redesign (see *In progress*) and the designed emails | Live |
-| `claude/tender-rubin-ahjc3t` | The working branch: Design, Build, Launch on Home (27 Oct) | PR open; when merged, restart it from `main` for new work |
+| `claude/tender-rubin-ahjc3t` | The working branch: Design, Build, Launch on Home (PR #22), then the request form's quantity (27 Oct) | Restart it from `main` for new work once merged |
 | `claude/leather-imports` | Leather with the jackets, imported fabrics at a competitive price (PR #21, 27 Oct) | Merged to `main`, safe to delete |
 | `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
@@ -66,6 +66,8 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
     `whatsapp-webhook` v1.
+  - The form rules changed on 27 Oct (no "Under 60"; `belowMinimum` is denim at 60–150 only) without a redeploy:
+    staging's `submit-request` still accepts "Under 60". Redeploy it with the next function change.
   - Deploying through the MCP needs every file a function imports (`<slug>/index.ts` and all four
     `_shared/*.ts`), passed with `verify_jwt: false`.
   - Checked: test request FC-2509 (23 Oct) was saved and logged with the WhatsApp version's wording.

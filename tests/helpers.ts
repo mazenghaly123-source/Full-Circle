@@ -273,6 +273,9 @@ export async function approvePrototype(page: Page) {
       for (const l of pg('contact').querySelectorAll('.ccards > div > .mono')) l.insertAdjacentHTML('afterbegin', re.icon[icons[l.textContent!.trim()]]);
       [...pg('contact').querySelectorAll('.ccards > div')].at(-1)!.lastElementChild!.textContent = 'Press, partnerships and careers: email us.';
       head('start', 'Four picks and your contact. No commitment.');
+      // nothing under 60 pieces, and no minimum warning (Mazen, 27 Oct 2026)
+      // (the prototype's warning stays, hidden, for its own script)
+      [...pg('start').querySelectorAll('.q[data-k="qty"] .opt')].find((o) => o.textContent === 'Under 60')!.remove();
       const next3 = pg('start').querySelector('.next3')!;
       next3.className = 'three next3';
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
