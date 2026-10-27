@@ -190,6 +190,26 @@ test('visitors leave no files: the one bucket is the private one for stage photo
   expect(upload.ok).toBe(false);
 });
 
+test('a brand that gave an email gets a sign-in account and follows its requests on the tracking page', async () => {
+  const email = `follow-${run}@acme.test`;
+  const first = (await (await post('submit-request', requestForm({ contact: email }))).json()).code;
+  const [receipt] = await mailsTo(email, 1);
+  expect(receipt.text).toContain('/track');
+  // a second request finds the account there already
+  const second = (await (await post('submit-request', requestForm({ contact: email }))).json()).code;
+  await mailsTo(email, 2);
+  const lookup = await fetch(`${URL_}/rest/v1/rpc/user_id_by_email`, { method: 'POST', headers: { apikey: SECRET, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_email: email }) });
+  const id: string | null = await lookup.json();
+  expect(id).toBeTruthy();
+  // tests sign in with a password (real people by code)
+  const admin: Record<string, string> = { apikey: SECRET, 'Content-Type': 'application/json', ...(SECRET.startsWith('sb_') ? {} : { Authorization: `Bearer ${SECRET}` }) };
+  expect((await fetch(`${URL_}/auth/v1/admin/users/${id}`, { method: 'PUT', headers: admin, body: JSON.stringify({ password: 'test-password-1' }) })).ok).toBe(true);
+  const signIn = await fetch(`${URL_}/auth/v1/token?grant_type=password`, { method: 'POST', headers: { apikey: PUBLISHABLE, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'test-password-1' }) });
+  const { access_token } = await signIn.json();
+  const mine = await fetch(`${URL_}/rest/v1/rpc/my_requests`, { method: 'POST', headers: { apikey: PUBLISHABLE, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' }, body: '{}' });
+  expect((await mine.json()).map((r: { code: string }) => r.code)).toEqual([second, first]);
+});
+
 // The admin's functions (phase 4) ------------------------------------------------------------------
 
 /** A signed-in person: an account with a password (tests only; real people sign in by code). */

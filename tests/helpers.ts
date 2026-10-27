@@ -257,7 +257,7 @@ export async function approvePrototype(page: Page) {
       const next3 = pg('start').querySelector('.next3')!;
       next3.className = 'three next3';
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
-      head('track', 'Sign in with the email or WhatsApp on your order.');
+      head('track', 'Sign in with the email or WhatsApp on your request or order.');
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }
@@ -355,14 +355,16 @@ const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQ
  * the database functions would (approving closes the decision and logs it; the stage stays).
  * Returns the calls made, as { fn, body }.
  */
-export async function mockPortal(page: Page) {
+export async function mockPortal(page: Page, opts: { requests?: object[] } = {}) {
   const calls: { fn: string; body: any }[] = [];
+  const requests = opts.requests ?? [];
   const orders = portalOrders();
   let updates = false, next = 500;
   const now = () => new Date().toISOString();
   const logRow = (o: PortalOrder, kind: string, extra: object) => o.order_events.push({ id: ++next, kind, side: 'client', actor_id: 'me', actor_label: 'Laila', stage: o.stage, to_stage: null, decision_id: null, title: null, note: null, created_at: now(), ...extra });
   const rpcs: Record<string, (b: any) => { status: number; json?: object }> = {
     my_updates_consent: () => ({ status: 200, json: updates ? [{ channel: 'whatsapp', opted_in: true }] : [] }),
+    my_requests: () => ({ status: 200, json: requests }),
     set_updates_consent: (b) => { updates = b.p_opted_in; return { status: 200 }; },
     approve_decision: (b) => {
       const o = orders.find((x) => x.order_decisions.some((d) => d.id === b.p_decision))!, d = o.order_decisions.find((x) => x.id === b.p_decision);

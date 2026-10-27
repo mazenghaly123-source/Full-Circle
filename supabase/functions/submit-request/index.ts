@@ -1,11 +1,12 @@
 // Receives the sample request form: checks it, saves the request, records the WhatsApp opt-in, and
 // emails staff. The brand gets a receipt with its code: by email when it gave one, on WhatsApp when it
-// gave a number and asked for updates there. Answers with the code.
+// gave a number and asked for updates there. An email also gets a sign-in account, so the brand can
+// follow the request on the tracking page (public.my_requests). Answers with the code.
 //
 // POST application/json: RequestData in _shared/forms.ts.
 import { ERRORS, NOTICE, belowMinimum, checkRequest } from '../_shared/forms.ts';
 import { clientReceiptEmail, staffRequestEmail } from '../_shared/emails.ts';
-import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
+import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, siteUrl, staffEmails } from '../_shared/server.ts';
 import { sendWhatsApp, template } from '../_shared/whatsapp.ts';
 
 /** Requests from one contact in an hour before it is asked to use WhatsApp instead. */
@@ -74,7 +75,15 @@ async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked) {
   await logNotification(client, { event: 'request_received', audience: 'staff', channel: 'email', recipients: staff, sent: toStaff, request_id: saved.id });
 
   if (r.reach.channel === 'email') {
-    const receipt = clientReceiptEmail({ code: saved.code, brand: r.brand });
+    // the account lets them sign in on Track; without it the receipt does not send them there
+    let account = true;
+    try {
+      if (!(await client.rpc<string | null>('user_id_by_email', { p_email: r.reach.email }))) await client.createUser(r.reach.email);
+    } catch (err) {
+      console.error('[account]', err);
+      account = false;
+    }
+    const receipt = clientReceiptEmail({ code: saved.code, brand: r.brand, track: account ? `${siteUrl()}/track` : undefined });
     const toBrand = await sendEmail({ to: [r.reach.email], ...receipt });
     await logNotification(client, { event: 'request_received', audience: 'client', channel: 'email', recipients: [r.reach.email], sent: toBrand, request_id: saved.id });
   } else {

@@ -25,7 +25,8 @@ const FIELD: Record<string, string[]> = { brand: ['fBrand'], contact: ['fContact
 const onWhatsApp = () => readContact(request.contact)?.channel === 'whatsapp';
 
 /**
- * The summary once the request is sent: its code, the sent look, and WhatsApp ready with the code.
+ * The summary once the request is sent: its code, the sent look, WhatsApp ready with the code, and
+ * for an email, the way to follow it on Track.
  * The form goes away (the prototype's .is-sent rule meant to hide it, but the box's inline display
  * won) and the picks can no longer change, so a request is never sent twice.
  */
@@ -33,6 +34,8 @@ function showSent(doc: Document) {
   const g = byId(doc);
   g('sentCode').textContent = request.code; g('reqCode').textContent = request.code; g('summary').classList.add('is-sent');
   (g('sentWa') as HTMLAnchorElement).href = whatsappLink(`Hi Full Circle, I just sent sample request ${request.code} (${request.brand.trim()}).`);
+  // a request sent by email has a sign-in account, so it can be followed on Track from today
+  g('sentTrack').hidden = readContact(request.contact)?.channel !== 'email';
   g('summary').querySelector<HTMLElement>('.form-box')!.hidden = true;
   g('qs').inert = true;
 }

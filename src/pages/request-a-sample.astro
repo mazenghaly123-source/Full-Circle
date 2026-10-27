@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
-import { REQUEST_QUESTIONS, WHATSAPP_URL } from '../data/site';
+import { REQUEST_QUESTIONS, ROUTES, WHATSAPP_URL } from '../data/site';
 import { PRIVACY } from '../data/backend';
 import { NOTICE } from '../../supabase/functions/_shared/forms';
 ---
@@ -35,7 +35,7 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
         <span class="mono errline" id="err" role="alert"></span>
         <p class="notice">{NOTICE.request} <a href={PRIVACY}>Privacy notice</a></p>
       </div>
-      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a></div>
+      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a><a class="sent-track" id="sentTrack" href={ROUTES.track} hidden>Follow it on Track: sign in with this email</a></div>
     </aside>
   </div>
   <div class="three next3"><div><Icon name="phone" /><b>First call</b><span>The product, the quantity, where you are now.</span></div><div><Icon name="tag" /><b>Price range</b><span>A sample price and a bulk range, before you commit.</span></div><div><Icon name="log" /><b>Your order code</b><span>Your order opens on the tracking page.</span></div></div>

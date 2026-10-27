@@ -380,6 +380,9 @@ test('request a sample: checks, counts picks, and confirms with a code', async (
   await clickStill(page.locator('#send'));
   await expect(page.locator('.sent-box')).toBeVisible();
   await expect(page.locator('#sentCode')).toHaveText(/^FC-\d{4}$/);
+  // sent by email, it can be followed on Track from today
+  await expect(page.locator('#sentTrack')).toBeVisible();
+  await expect(page.locator('#sentTrack')).toHaveAttribute('href', '/track');
   if (isPhone(info)) {
     // the bar reads "Request sent" until the next scroll, then slides away
     await expect(page.locator('#mbarGo')).toHaveText('Request sent');
@@ -451,6 +454,28 @@ test('track: sign-in by code, order view and approval', async ({ page }) => {
   await expect(page.locator('#oLog tr').first()).toContainText('You');
   await page.locator('#tAll').click();
   await expect(page.locator('#tList .ord').first()).toContainText('Approved / waiting on us');
+});
+
+test('track: a brand that sent a request by email follows it there before it becomes an order', async ({ page }) => {
+  await mockPortal(page, { requests: [
+    { code: 'FC-2510', product: 'Denim', status: 'new', created_at: '2026-10-27T09:00:00Z' },
+    { code: 'FC-2509', product: 'Hoodies', status: 'replied', created_at: '2026-10-25T09:00:00Z' },
+  ] });
+  await page.goto('/track');
+  await expect(page.locator('#tLead')).toHaveText('Sign in with the email or WhatsApp on your request or order.');
+  await signInPortal(page);
+  await expect(page.locator('#tList .ord')).toHaveCount(5);
+  const req = page.locator('#tList .ord.req');
+  await expect(req).toHaveCount(2);
+  await expect(req.first()).toContainText('FC-2510');
+  await expect(req.first()).toContainText('Sent 27 Oct');
+  await expect(req.first()).toContainText('Received / we reply quickly');
+  await expect(req.nth(1)).toContainText('In talks / first call');
+  // a request is not a link: the list stays
+  await req.first().click();
+  await expect(page.locator('#tOrders')).toBeVisible();
+  await page.locator('#tList .ord[data-o]').first().click();
+  await expect(page.locator('#tTitle')).toHaveText('FC-2418.');
 });
 
 test('track: a session is kept, order updates on WhatsApp can be turned on, and sign-out ends it', async ({ page }) => {
@@ -926,6 +951,8 @@ test.describe('the forms send to the backend', () => {
     await expect(page.locator('#sentWa')).toHaveText('Continue on WhatsApp');
     await expect(page.locator('#sentWa')).toHaveAttribute('href', 'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20just%20sent%20sample%20request%20FC-2501%20(Acme%20Studio).');
     await expect(page.locator('#sentWa')).toHaveAttribute('target', '_blank');
+    // a number cannot sign in to Track yet, so the way there is not offered
+    await expect(page.locator('#sentTrack')).toBeHidden();
     // once sent, the picks cannot change and the request is not sent twice
     expect(await page.locator('#qs').evaluate((e) => (e as HTMLElement).inert)).toBe(true);
     await expect(page.locator('#send')).toBeHidden();
