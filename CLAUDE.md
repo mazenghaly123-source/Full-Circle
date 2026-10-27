@@ -103,6 +103,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   tailored pants 100, jackets 100, denim jeans 150/colour, denim jackets 150, knitwear by order.
 - Sampling: 7–25 days (cotton fastest, denim longest).
 - Sets apart: denim speciality; imported fabrics not in the local market; imported trims.
+- To add to the site (Mazen, 27 Oct 2026): leather work (no laser), and distinctive imported fabrics
+  at a competitive price. Waiting on details (real or faux leather, which products, minimums and
+  sampling time) before the words go up.
 - Where they sell: Gulf + Middle East, Turkey, China (made in Cairo).
 - WhatsApp: +20 101 143 5406 (https://wa.me/201011435406), assumed to be the WhatsApp line.
 - Phone: +20 2 2698 7277 · Email: fullcircleworks.co@gmail.com · Instagram: @fullcircle_eg
@@ -168,7 +171,8 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   token. `supabase/tests/database/` holds who-can-reach-what tests; run `supabase test db`, or
   `scripts/test-db-local.sh` where there is no Docker (a cloud session).
 - The portal (`/track`, phase 3) signs in through Supabase Auth with a 6-digit code and reads the
-  client's orders under row-level security (`src/scripts/core/portal.ts`, no library). Clients and
+  client's orders under row-level security, and the person's requests that are not orders yet
+  (`my_requests`: a request sent with an email opens a sign-in for it, Mazen, 27 Oct 2026) (`src/scripts/core/portal.ts`, no library). Clients and
   staff change orders only through database functions that write the append-only approval log
   (migrations `20261020221044`, `20261021002550` and `20261021022945`); the browser tests stand in for Supabase with
   `mockPortal`.

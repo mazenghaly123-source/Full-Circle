@@ -1,5 +1,6 @@
 // Track order: the client portal (phase 3). A person signs in with a 6-digit code sent to the email
-// or WhatsApp number on their order (invite-only: staff add them), then sees their client's orders:
+// or WhatsApp number on their order (staff add them) or on a request they sent by email, then sees
+// their requests that are not orders yet, and their client's orders:
 // where each is, the decision waiting on them, the stage photos and the approval log. Approve, Ask
 // for changes and Request a photo go to checked database functions that write the log. Approving
 // does not move the stage (docs/adr/0005): the order says so until staff move it on.
@@ -30,7 +31,7 @@ const portal = {
   /** a call to the server is under way: the buttons wait */
   busy: false,
 };
-const LOGIN_LEAD = 'Sign in with the email or WhatsApp on your order.';
+const LOGIN_LEAD = 'Sign in with the email or WhatsApp on your order, or the email on your request.';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const stage = (n: number) => STAGES[Math.min(Math.max(n, 1), 8) - 1];
@@ -39,6 +40,9 @@ const stamp = (iso: string) => {
   const d = new Date(iso);
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 };
+
+/** Where a request is before it becomes an order the person can see. */
+const REQUEST_LINE: Record<api.Request['status'], string> = { new: 'Received / we reply quickly', replied: 'In talks / first call', converted: 'Order opening' };
 
 /**
  * What the order needs from the client: the open decision; or the last one, answered at this stage
@@ -98,8 +102,9 @@ function renderList(doc: Document) {
   const g = byId(doc), d = portal.data;
   g('tWho').textContent = d?.brand ? 'Signed in / ' + d.brand : 'Signed in';
   g('tList').innerHTML = !d ? '<p class="mono dim" style="margin:0;padding:18px 0">Loading your orders</p>'
-    : !d.orders.length ? '<p class="dim" style="margin:0;padding:18px 0">No orders on this account yet. Once we start one, it shows here.</p>'
-    : d.orders.map((o) => `<button class="ord" data-o="${o.id}"><span class="code">${esc(o.code)}</span><span>${esc(o.name)}<br><span class="mono dim">${esc(o.summary ?? o.product)}</span></span><span class="mono">${pad(o.stage)} / ${stage(o.stage).n}</span><span class="mono ${need(o).kind === 'open' ? 'need' : 'dim'}">${esc(needLine(o))}</span><span class="arrow" aria-hidden="true">→</span></button>`).join('');
+    : !d.orders.length && !d.requests.length ? '<p class="dim" style="margin:0;padding:18px 0">No orders on this account yet. Once we start one, it shows here.</p>'
+    : d.requests.map((r) => `<div class="ord req"><span class="code">${esc(r.code)}</span><span>${esc(r.product)}<br><span class="mono dim">Sample request</span></span><span class="mono">Sent ${new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span><span class="mono dim">${esc(REQUEST_LINE[r.status] ?? '')}</span><span></span></div>`).join('')
+    + d.orders.map((o) => `<button class="ord" data-o="${o.id}"><span class="code">${esc(o.code)}</span><span>${esc(o.name)}<br><span class="mono dim">${esc(o.summary ?? o.product)}</span></span><span class="mono">${pad(o.stage)} / ${stage(o.stage).n}</span><span class="mono ${need(o).kind === 'open' ? 'need' : 'dim'}">${esc(needLine(o))}</span><span class="arrow" aria-hidden="true">→</span></button>`).join('');
   g('tUpd').hidden = !d?.whatsapp;
   g<HTMLInputElement>('tUpdates').checked = !!d?.updates;
 }
@@ -166,7 +171,7 @@ export const trackFeature: Feature = {
     restore(document);
     const live = () => !signal.aborted;
     const bindPhotos = () => $('oPhotos').querySelectorAll<HTMLImageElement>('img').forEach(bindPhoto);
-    const bindList = () => $('tList').querySelectorAll<HTMLElement>('.ord').forEach((b) => b.addEventListener('click', () => openOrder(+b.dataset.o!), { signal }));
+    const bindList = () => $('tList').querySelectorAll<HTMLElement>('.ord[data-o]').forEach((b) => b.addEventListener('click', () => openOrder(+b.dataset.o!), { signal }));
     bindList(); bindPhotos();
     const busy = (on: boolean) => { portal.busy = on; if (live()) { renderLogin(document); if (order()) { for (const id of ['oApprove', 'oChanges']) $<HTMLButtonElement>(id).disabled = on; } } };
 

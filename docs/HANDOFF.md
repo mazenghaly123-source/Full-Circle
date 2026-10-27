@@ -56,6 +56,11 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   DELETE as destructive): the nightly clean-up `/privacy` promises. At 01:15 UTC pg_cron deletes
   requests without an order, and messages, a year after they arrived; consent records stay
   (`supabase/tests/database/retention.test.sql`).
+- `20261027071333` requests_in_portal (27 Oct, through the MCP): `my_requests()`, the requests the
+  portal lists. `20261027074938` my_requests_staff (same day, MCP): staff, who see every order
+  on Track, no longer see a converted request of theirs as well. `20261027100100` expired_accounts (the clean-up also deletes the sign-in accounts a
+  request opened, a year on) is **not applied**: it holds a DELETE, so Mazen runs it in the SQL editor
+  (*Waiting on Mazen*).
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
   - `submit-request` v8, `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
@@ -112,6 +117,15 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 Done on 23–25 Oct: the WhatsApp-era functions are on staging, the Cloudflare preview build is fixed,
 `EMAIL_FROM` is set with the staff alert confirmed, the Auth settings are done, and every email has the
 site's look.
+
+- **Requests on Track (27 Oct, Mazen, after comparing the site with Factory 21):** a request sent with
+  an email opens a sign-in for that email (`submit-request`), the portal lists the person's requests
+  until each becomes an order they can see (`my_requests`), the sent box links to Track, and the
+  receipt email says where to sign in. Sign-ups stay off ([ADR 0003](./adr/0003-supabase-backend-with-invite-only-sign-in.md),
+  amended). WhatsApp-only requests get no sign-in until codes on WhatsApp are on. Other ideas from
+  the comparison wait on Mazen: a Book a meeting button (Google Calendar or Cal.com, in person or a
+  call), proof figures and client logos, the sample fee credited to bulk, a "how did you hear about
+  us" question.
 
 0. **SEO, GEO and analytics** (Mazen, 24 Oct: "start SEO and GEO, and connect Google Analytics").
    - **Analytics (26 Oct):** GA4 `G-XNT9FPB5RQ` behind a consent bar (Mazen's choice), with page views,
@@ -185,6 +199,9 @@ Decisions:
 - Submitting the sitemap in Search Console (`https://fullcircle-co.com/sitemap.xml`).
 - In GA4, turning off Enhanced measurement → "Page changes based on browser history events" (the
   site sends its own page views; see production-plan.md §6).
+
+- Run `supabase/migrations/20261027100100_expired_accounts.sql` in staging's SQL editor, then
+  `insert into supabase_migrations.schema_migrations (version, name) values ('20261027100100', 'expired_accounts');`
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,

@@ -958,6 +958,13 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .consent .cbtn{display:flex;gap:8px}
 .consent .btn{padding:12px 16px;min-height:44px;border-radius:var(--r-m)}
 @media (max-width:760px){.consent{left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:calc(100% - 20px);grid-template-columns:34px minmax(0,1fr);column-gap:16px;row-gap:14px;padding:18px}.consent .cbtn{grid-column:1/-1}.consent .cbtn .btn{flex:1}}
+/* a request on Track (27 Oct 2026): listed with the orders until it becomes one, but not a link */
+.ord.req{cursor:default}
+.ord.req:hover{background:none}
+.ord.req:hover::after{opacity:0;transform:scale(0)}
+.ord.req:hover .code{transform:none}
+/* and the way there from a request just sent by email */
+.sent-track{justify-self:start;color:var(--bone);font-size:14px;text-decoration:underline;text-underline-offset:4px}
 /* ===== approved changes (decided by Mazen: site audit part B on 13 Oct 2026, then as dated) =====
    Deliberate departures from the prototype. tests/parity.spec.ts injects this block (between the
    two markers) and the matching markup into the prototype before comparing, so everything else is

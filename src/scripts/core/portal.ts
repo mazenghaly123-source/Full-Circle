@@ -1,5 +1,5 @@
-// The portal's link to Supabase (phase 3): the client's orders, signed links to their photos, and
-// the three things a client can do, as the person signed in (core/auth.ts). No library: a few calls
+// The portal's link to Supabase (phase 3): the client's orders, the person's requests that are not
+// orders yet, signed links to their photos, and the three things a client can do, as the person signed in (core/auth.ts). No library: a few calls
 // to Supabase's REST APIs (the database, Storage), as the Edge Functions make theirs.
 import { BACKEND } from '../../data/backend';
 import { NOTICE, type Problem } from '../../../supabase/functions/_shared/forms';
@@ -22,8 +22,10 @@ export type Order = {
   order_events: LogEntry[];
   photo_requests: { stage: number; answered_at: string | null }[];
 };
+/** A request sent with the person's email that is not an order they can see yet (public.my_requests). */
+export type Request = { code: string; product: string; status: 'new' | 'replied' | 'converted'; created_at: string };
 /** Everything the portal shows for the person signed in. */
-export type Portal = { brand: string; whatsapp: string | null; updates: boolean; orders: Order[]; urls: Record<string, string> };
+export type Portal = { brand: string; whatsapp: string | null; updates: boolean; requests: Request[]; orders: Order[]; urls: Record<string, string> };
 
 // Sign-in and the session (shared with the admin, which keeps its own session)
 const session = authClient('fc-portal-session');
@@ -35,24 +37,26 @@ const ORDER_FIELDS = 'id,code,name,product,summary,qty,stage,status,created_at,o
   + 'order_decisions(id,stage,title,body,status,opened_at,closed_at),stage_photos(id,stage,object_path,caption,created_at),'
   + 'order_events(id,kind,side,actor_id,actor_label,stage,to_stage,decision_id,title,note,created_at),photo_requests(stage,answered_at)';
 
-/** The person's brand, orders (newest first) and signed links to their photos. */
+/** The person's brand, requests and orders (newest first) and signed links to their photos. */
 export async function load(): Promise<Portal> {
   const get = async <T>(path: string): Promise<T> => {
     const res = await call(`/rest/v1/${path}`);
     if (!res.ok) throw new Error(`${path.split('?')[0]}: ${res.status}`);
     return res.json();
   };
-  const [clients, people, orders, consent] = await Promise.all([
+  const [clients, people, orders, consent, requests] = await Promise.all([
     get<{ brand: string }[]>('clients?select=brand&order=brand'),
     get<{ whatsapp: string | null }[]>('client_members?select=whatsapp&order=id'),
     get<Order[]>(`orders?select=${ORDER_FIELDS}&order=created_at.desc`),
     rpcRead<{ channel: string; opted_in: boolean }[]>('my_updates_consent'),
+    rpcRead<Request[]>('my_requests'),
   ]);
   const paths = orders.flatMap((o) => o.stage_photos.map((p) => p.object_path));
   return {
     brand: clients.map((c) => c.brand).join(' / '),
     whatsapp: people.find((p) => p.whatsapp)?.whatsapp ?? null,
     updates: consent.some((c) => c.channel === 'whatsapp' && c.opted_in),
+    requests,
     orders,
     urls: paths.length ? await sign(paths) : {},
   };

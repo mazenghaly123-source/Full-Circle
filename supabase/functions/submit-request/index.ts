@@ -1,11 +1,13 @@
 // Receives the sample request form: checks it, saves the request, records the WhatsApp opt-in, and
 // emails staff. The brand gets a receipt with its code: by email when it gave one, on WhatsApp when it
-// gave a number and asked for updates there. Answers with the code.
+// gave a number and asked for updates there. An email also gets a sign-in account, so the brand can
+// follow the request on the tracking page (public.my_requests). Answers with the code, and whether
+// the request can be followed on Track.
 //
 // POST application/json: RequestData in _shared/forms.ts.
 import { ERRORS, NOTICE, belowMinimum, checkRequest } from '../_shared/forms.ts';
 import { clientReceiptEmail, staffRequestEmail } from '../_shared/emails.ts';
-import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, staffEmails } from '../_shared/server.ts';
+import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, siteUrl, staffEmails } from '../_shared/server.ts';
 import { sendWhatsApp, template } from '../_shared/whatsapp.ts';
 
 /** Requests from one contact in an hour before it is asked to use WhatsApp instead. */
@@ -55,15 +57,27 @@ Deno.serve(async (req) => {
     }
   }
 
-  later(notify(client, saved, r));
-  return reply({ code: saved.code });
+  // made before the answer, so a brand that goes straight to Track finds it there; a failure costs
+  // the request nothing, it just cannot be followed online
+  let track = false;
+  if (email) {
+    try {
+      if (!(await client.rpc<string | null>('user_id_by_email', { p_email: email }))) await client.createUser(email);
+      track = true;
+    } catch (err) {
+      console.error('[account]', err);
+    }
+  }
+
+  later(notify(client, saved, r, track));
+  return reply({ code: saved.code, track });
 });
 
 type Saved = { id: number; code: string; created_at: string };
 type Checked = Extract<ReturnType<typeof checkRequest>, { ok: true }>['value'];
 
 /** Tells staff and the brand, and logs each message. */
-async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked) {
+async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked, track: boolean) {
   const staff = staffEmails();
   const alert = staffRequestEmail({
     code: saved.code, at: new Date(saved.created_at), brand: r.brand,
@@ -74,7 +88,7 @@ async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked) {
   await logNotification(client, { event: 'request_received', audience: 'staff', channel: 'email', recipients: staff, sent: toStaff, request_id: saved.id });
 
   if (r.reach.channel === 'email') {
-    const receipt = clientReceiptEmail({ code: saved.code, brand: r.brand });
+    const receipt = clientReceiptEmail({ code: saved.code, brand: r.brand, track: track ? `${siteUrl()}/track` : undefined });
     const toBrand = await sendEmail({ to: [r.reach.email], ...receipt });
     await logNotification(client, { event: 'request_received', audience: 'client', channel: 'email', recipients: [r.reach.email], sent: toBrand, request_id: saved.id });
   } else {

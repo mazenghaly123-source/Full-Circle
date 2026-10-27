@@ -25,7 +25,8 @@ const FIELD: Record<string, string[]> = { brand: ['fBrand'], contact: ['fContact
 const onWhatsApp = () => readContact(request.contact)?.channel === 'whatsapp';
 
 /**
- * The summary once the request is sent: its code, the sent look, and WhatsApp ready with the code.
+ * The summary once the request is sent: its code, the sent look, WhatsApp ready with the code, and
+ * for an email, the way to follow it on Track.
  * The form goes away (the prototype's .is-sent rule meant to hide it, but the box's inline display
  * won) and the picks can no longer change, so a request is never sent twice.
  */
@@ -33,6 +34,8 @@ function showSent(doc: Document) {
   const g = byId(doc);
   g('sentCode').textContent = request.code; g('reqCode').textContent = request.code; g('summary').classList.add('is-sent');
   (g('sentWa') as HTMLAnchorElement).href = whatsappLink(`Hi Full Circle, I just sent sample request ${request.code} (${request.brand.trim()}).`);
+  // the server opened a sign-in for the email, so it can be followed on Track from today
+  g('sentTrack').hidden = !request.track;
   g('summary').querySelector<HTMLElement>('.form-box')!.hidden = true;
   g('qs').inert = true;
 }
@@ -117,7 +120,7 @@ export const requestFeature: Feature = {
       if (!request.brand.trim()) return fail(ERRORS.brand, ['fBrand']);
       if (!readContact(request.contact)) return fail(ERRORS.contact, ['fContact']);
       request.sending = true; request.err = ''; request.bad = []; $('err').textContent = ''; markInvalid(document, CHECKED, [], 'err'); showSending(document);
-      const out = await submit<{ code: string }>('submit-request', $('rTs'), payload);
+      const out = await submit<{ code: string; track?: boolean }>('submit-request', $('rTs'), payload);
       request.sending = false;
       // the visitor may have gone to another page meanwhile: the state is kept, and shown when they come back
       const here = !!document.getElementById('qs');
@@ -127,7 +130,7 @@ export const requestFeature: Feature = {
         if (here) fail(out.error, bad); else { request.err = out.error; request.bad = bad; }
         return;
       }
-      request.sent = true; request.code = out.code;
+      request.sent = true; request.code = out.code; request.track = out.track === true;
       track('generate_lead', { form: 'sample_request', product: request.sel.product ?? '' });
       toast(out.code + ' / request received'); updGo();
       if (!here) return;

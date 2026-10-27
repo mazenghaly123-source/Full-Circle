@@ -144,7 +144,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
     key: 'track', path: ROUTES.track, name: 'Track order', section: 'core', sources: ['src/pages/track.astro'],
     related: ['how', 'start'],
     body: () => [
-      'Sign in with the email or WhatsApp on your order.',
+      'Sign in with the email or WhatsApp on your order, or the email on your request.',
       h2('Sign in'),
       ordered(['Email or WhatsApp number: Send me a code', '6-digit code: Sign in']),
     ],
@@ -171,7 +171,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       `Questions about your data: ${link(EMAIL, `mailto:${EMAIL}`)}, or WhatsApp ${link(WHATSAPP, WHATSAPP_URL)}.`,
       h2('What we collect'),
       list([
-        `${b('When you request a sample:')} your brand name, your email or WhatsApp number, your picks (product, quantity, what you have) and your notes. We do not take files through the site: sketches and photos come later, on WhatsApp.`,
+        `${b('When you request a sample:')} your brand name, your email or WhatsApp number, your picks (product, quantity, what you have) and your notes. We do not take files through the site: sketches and photos come later, on WhatsApp. With an email, we also open a sign-in for it, so you can follow the request on the tracking page.`,
         `${b('When you send a message:')} your name, your email or WhatsApp number and your message.`,
         `${b('With either:')} the first page you opened on the site and the site or ad that sent you (for example Instagram), so we know which posts bring brands to us.`,
         `${b('If you accept analytics cookies:')} how you use the site (the pages you open, the WhatsApp button, whether a form was sent), your device and your rough location, through Google Analytics. Not your name or contact.`,
@@ -200,7 +200,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       'Mainly in Frankfurt, Germany. Some of the providers above also process it in the United States and elsewhere.',
       h2('How long'),
       list([
-        'Requests and messages that do not lead to an order: one year, then deleted.',
+        'Requests and messages that do not lead to an order, and a sign-in opened only for a request: one year, then deleted.',
         'Orders and their approval records: five years.',
         'Google Analytics’ visit-by-visit data: two months. Its summary reports, which name no one, are kept longer.',
         'The record that you asked for WhatsApp updates, and the words you agreed to: for as long as we send them, and one year after.',
@@ -214,7 +214,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       h2('Security'),
       'Everything travels encrypted, and only Full Circle staff can read what you send us. If a breach affects your data, we tell you and the authorities as the law requires.',
       h2('Changes'),
-      'Last updated 26 October 2026. Every change is dated here.',
+      'Last updated 27 October 2026. Every change is dated here.',
     ],
   },
 ];

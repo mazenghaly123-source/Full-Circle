@@ -88,14 +88,17 @@ export function staffRequestEmail(r: RequestMail) {
 }
 
 /** The receipt a brand gets when it gave an email. */
-export function clientReceiptEmail(r: { code: string; brand: string }) {
+export function clientReceiptEmail(r: { code: string; brand: string; track?: string }) {
+  const rows: Row[] = [
+    ['First call', 'We will message you to book it. We go through the product, the quantity and where you are now.'],
+    ['Price range', 'A sample price and a range for bulk, before you commit to anything.'],
+    ['Your order code', 'Once you approve, your order opens on the tracking page, at the stage where you enter.'],
+  ];
+  // the brand has a sign-in account: it can follow the request from today
+  if (r.track) rows.push(['Follow it at', r.track, r.track], ['Sign in with', 'this email address; we send you a 6-digit code each time']);
   return {
     subject: `Your sample request ${r.code} / Full Circle`,
-    ...render('Received.', `Thank you, ${r.brand}. Your request code is ${r.code}. Keep it: it stays with your order.`, [
-      ['First call', 'We will message you to book it. We go through the product, the quantity and where you are now.'],
-      ['Price range', 'A sample price and a range for bulk, before you commit to anything.'],
-      ['Your order code', 'Once you approve, your order opens on the tracking page, at the stage where you enter.'],
-    ], [`Questions? Reply to this email, or message us on WhatsApp: ${SITE.whatsapp} (${SITE.whatsappUrl}).`]),
+    ...render('Received.', `Thank you, ${r.brand}. Your request code is ${r.code}. Keep it: it stays with your order.`, rows, [`Questions? Reply to this email, or message us on WhatsApp: ${SITE.whatsapp} (${SITE.whatsappUrl}).`]),
     replyTo: SITE.email,
   };
 }

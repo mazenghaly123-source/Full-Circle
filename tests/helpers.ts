@@ -257,7 +257,7 @@ export async function approvePrototype(page: Page) {
       const next3 = pg('start').querySelector('.next3')!;
       next3.className = 'three next3';
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
-      head('track', 'Sign in with the email or WhatsApp on your order.');
+      head('track', 'Sign in with the email or WhatsApp on your order, or the email on your request.');
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }
@@ -298,7 +298,8 @@ export type Sent = { url: string; body: Buffer | null };
 /**
  * Stands in for the forms' backend: Cloudflare's Turnstile script (answers at once with its test
  * token) and the submit-request and submit-contact Edge Functions. `answer` decides each reply;
- * by default a request gets FC-2501 and a message is taken. Returns what was posted.
+ * by default a request gets FC-2501 (followable on Track when sent by email) and a message is taken.
+ * Returns what was posted.
  */
 export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 'submit-contact', n: number) => { status?: number; json?: object; abort?: boolean; delayMs?: number } = () => ({})) {
   const sent: Sent[] = [];
@@ -312,7 +313,9 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
     const a = answer(fn, sent.filter((s) => s.url.endsWith(fn)).length);
     if (a.delayMs) await new Promise((r) => setTimeout(r, a.delayMs));
     if (a.abort) return route.abort('failed');
-    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501' } : { ok: true }) });
+    // like the function, a request sent by email can be followed on Track
+    const track = fn === 'submit-request' && String(postedData(sent.at(-1)!).contact ?? '').includes('@');
+    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501', track } : { ok: true }) });
   });
   return sent;
 }
@@ -355,14 +358,16 @@ const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQ
  * the database functions would (approving closes the decision and logs it; the stage stays).
  * Returns the calls made, as { fn, body }.
  */
-export async function mockPortal(page: Page) {
+export async function mockPortal(page: Page, opts: { requests?: object[] } = {}) {
   const calls: { fn: string; body: any }[] = [];
+  const requests = opts.requests ?? [];
   const orders = portalOrders();
   let updates = false, next = 500;
   const now = () => new Date().toISOString();
   const logRow = (o: PortalOrder, kind: string, extra: object) => o.order_events.push({ id: ++next, kind, side: 'client', actor_id: 'me', actor_label: 'Laila', stage: o.stage, to_stage: null, decision_id: null, title: null, note: null, created_at: now(), ...extra });
   const rpcs: Record<string, (b: any) => { status: number; json?: object }> = {
     my_updates_consent: () => ({ status: 200, json: updates ? [{ channel: 'whatsapp', opted_in: true }] : [] }),
+    my_requests: () => ({ status: 200, json: requests }),
     set_updates_consent: (b) => { updates = b.p_opted_in; return { status: 200 }; },
     approve_decision: (b) => {
       const o = orders.find((x) => x.order_decisions.some((d) => d.id === b.p_decision))!, d = o.order_decisions.find((x) => x.id === b.p_decision);
