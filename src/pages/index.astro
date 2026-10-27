@@ -4,21 +4,20 @@ import Photo from '../components/Photo.astro';
 import BgImg from '../components/BgImg.astro';
 import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
-import { STAGE_ICONS } from '../data/icons';
-import { FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring, sampleLine } from '../data/site';
+import sprite from '../components/sprite.svg?raw';
+import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../data/mark';
+import { ARCS, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring, sampleLine } from '../data/site';
 
-// hero ring: stage labels just outside the ring, between the ticks
-const heroLabels = STAGES.map((g, i) => {
-  const [x, y] = ring(200, 200, 186, i / 8 + 1 / 16);
-  return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : '') + (i < 1 ? ' on' : ''), t: g.s };
+// hero ring: one label per part of the work (Design, Build, Launch), just outside the ring
+const heroLabels = ARCS.map((a, i) => {
+  const [x, y] = ring(200, 200, 186, (i + 0.5) / ARCS.length);
+  return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : '') + (i < 1 ? ' on' : ''), t: a.n };
 });
-// the ring is drawn at its first stage, where the prototype's script put it before the first paint
-const [heroDotX, heroDotY] = ring(200, 200, 150, 1 / 8);
-// how it works ring: one tick per stage
-const howTicks = STAGES.map((_, i) => {
-  const [x1, y1] = ring(200, 200, 160, i / 8), [x2, y2] = ring(200, 200, 180, i / 8);
-  return { x1, y1, x2, y2 };
-});
+// the ring is drawn at its first part before any script runs
+const heroStart = +(100 - 100 / ARCS.length).toFixed(3);
+const [heroDotX, heroDotY] = ring(200, 200, 150, 1 / ARCS.length);
+// how it works: the mark's three arcs, each drawn through a mask that turns with it
+const arcPaths = markArcPaths(sprite);
 ---
 <Base page="home">
 <section class="hero grain"><BgImg img="hero" sizes="100vw" eager />
@@ -27,13 +26,13 @@ const howTicks = STAGES.map((_, i) => {
   <div class="wrap">
     <div>
       <h1 class="camp wide"><span class="l1">Idea to product.</span> <span class="l2">Full circle.</span></h1>
-      <p class="lead">From idea to bulk, under one roof in Cairo. What you approve in sampling is what ships.</p>
+      <p class="lead">From idea to launch, under one roof in Cairo. What you approve in sampling is what ships.</p>
       <div class="cta"><a href={ROUTES.start} class="btn btn-red">Request a sample</a><a href={ROUTES.how} class="btn btn-line">How it works</a></div>
       <p class="mono dim note">Free first call / we reply quickly</p>
     </div>
     <div class="ringwrap">
       <svg viewBox="0 0 400 400" aria-hidden="true">
-        <g transform="rotate(-90 200 200)"><circle class="bg" cx="200" cy="200" r="150"/><circle class="fg" id="heroArc" cx="200" cy="200" r="150" pathLength="100" stroke-dashoffset="100" style="stroke-dashoffset:87.5"/></g>
+        <g transform="rotate(-90 200 200)"><circle class="bg" cx="200" cy="200" r="150"/><circle class="fg" id="heroArc" cx="200" cy="200" r="150" pathLength="100" stroke-dashoffset="100" style={`stroke-dashoffset:${heroStart}`}/></g>
         <g id="heroLabels">{heroLabels.map((l) => <text x={l.x} y={l.y} text-anchor="middle" class={l.cls}>{l.t}</text>)}</g>
         <circle class="reddot" id="heroDot" r="7" cx={heroDotX} cy={heroDotY}/>
       </svg>
@@ -94,23 +93,20 @@ const howTicks = STAGES.map((_, i) => {
 </section>
 
 <section class="wrap sec" id="h-how" style="border-top:1px solid var(--faint)">
-  <div class="sh"><h2 class="camp wide">How it works</h2><p>Eight stages. You approve each one.</p></div>
+  <div class="sh"><h2 class="camp wide">How it works</h2><p>Design, build, launch. One team, one circle.</p></div>
   <div class="howscroll" id="howScroll"><div class="howpin" id="howPin">
-  <div class="hbgs" aria-hidden="true">{STAGES.map((g, i) => <BgImg img={`stage-${pad(i + 1)}`} sizes="100vw" phoneUpTo={860} class={i === 0 ? 'on' : undefined} />)}</div>
+  <div class="hbgs" aria-hidden="true">{ARCS.map((a, i) => <BgImg img={a.photo} sizes="100vw" phoneUpTo={860} class={i === 0 ? 'on' : undefined} />)}</div>
   <div class="how">
-    <div class="howring" aria-hidden="true">
-      <svg viewBox="0 0 400 400">
-        <g transform="rotate(-90 200 200)"><circle class="bg" cx="200" cy="200" r="170"/><circle class="fg" id="howArc" cx="200" cy="200" r="170" pathLength="100" stroke-dashoffset="100"/></g>
-        <g id="howTicks">{howTicks.map((t) => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} class="tk"/>)}</g>
-        <circle class="ping" id="howPing" r="8" cx="200" cy="30"/>
-        <circle class="dot" id="howDot" r="8" cx="200" cy="30"/>
-        <text class="big" id="howNum" x="200" y="232" text-anchor="middle">01</text>
-        <use class="mk" href="#fc-mark" x="150" y="132" width="100" height="102"/>
-        <text class="lbl" id="howLbl" x="200" y="262" text-anchor="middle">Research</text>
+    <div class="howring arcs" aria-hidden="true">
+      <svg viewBox="-6 -6 268.86 274.3">
+        <defs>{MARK_ARCS.map((a, i) => <mask id={`howM${i}`} maskUnits="userSpaceOnUse" x="-20" y="-20" width="300" height="310"><circle cx={MARK_C[0]} cy={MARK_C[1]} r="112" fill="none" stroke="#fff" stroke-width="112" pathLength="360" stroke-dasharray="0 400" transform={`rotate(${a.start - ARC_PAD} ${MARK_C[0]} ${MARK_C[1]})`}/></mask>)}</defs>
+        {arcPaths.map((d) => <path class="trk" d={d}/>)}
+        {arcPaths.map((d, i) => <path class="arc" mask={`url(#howM${i})`} d={d}/>)}
       </svg>
+      <div class="ctr"><span class="num" id="arcNum">01 / 03</span><span class="lbl" id="arcLbl">{ARCS[0].n}</span><span class="sub" id="arcSub">{ARCS[0].sub}</span></div>
     </div>
-    <div><ol class="steps" id="steps">{STAGES.map((g, i) => (
-      <li class="step"><button aria-expanded="false"><span class="n">{pad(i + 1)}</span><span class="t">{g.n}</span><span class="a"><Icon name={STAGE_ICONS[i]} /></span></button><div class="body"><div><p class="ok1"><Icon name="qc" /><span>{g.ok}</span></p></div></div></li>
+    <div><ol class="steps" id="steps">{ARCS.map((a, i) => (
+      <li class="step"><button aria-expanded="false"><span class="n">{pad(i + 1)}</span><span class="t">{a.n}</span><span class="a">{a.steps.length} steps</span></button><div class="body"><div><p>{a.line}</p><ul class="chips">{a.steps.map((st, k) => <li class={k === a.gate ? 'ok' : undefined}>{st}</li>)}</ul></div></div></li>
     ))}</ol><div class="howfoot"><span class="mono dim hownext" id="howNext"></span><a href={ROUTES.how} class="linkline">The full process</a></div></div>
   </div>
   </div></div>

@@ -1,49 +1,57 @@
-// Home "How it works": the section pins and the ring completes stage by stage as you scroll. At
-// 100% the centre becomes the mark ("Full circle"). The stage's photo sits behind the ring and changes with it. On short screens a click jumps the ring instead.
+// Home "How it works": the section pins and the mark draws itself arc by arc as you scroll, one arc
+// per part of the work (Design, Build, Launch). When the third arc ends the arcs have closed into the
+// mark ("Full circle"). The part's photo sits behind the mark and changes with it. On short screens a
+// click jumps to a part instead.
 import type { Feature } from '../core/lifecycle';
-import { $, pad, ring, rm } from '../core/util';
-import { STAGES } from '../../data/site';
+import { $, pad, rm } from '../core/util';
+import { ARCS } from '../../data/site';
+import { ARC_PAD, MARK_ARCS } from '../../data/mark';
+
+const N = ARCS.length;
 
 export const howScrollFeature: Feature = {
   mount(signal) {
     const steps = document.getElementById('steps');
     if (!steps) return;
-    const ticks = $('howTicks'), howSec = $('h-how'), howTrack = $('howScroll'), howPin = $('howPin'), howRingEl = howSec.querySelector('.howring')!;
+    const howSec = $('h-how'), howTrack = $('howScroll'), howPin = $('howPin'), howRingEl = howSec.querySelector('.howring')!;
     const bgs = [...howPin.querySelectorAll('.hbgs .bgimg')];
+    const masks = [...howRingEl.querySelectorAll<SVGCircleElement>('mask circle')];
     const howPinned = () => !!howTrack.offsetParent && getComputedStyle(howPin).position === 'sticky';
     const howRange = () => Math.max(1, howTrack.offsetHeight - howPin.offsetHeight);
     [...steps.children].forEach((li, i) => {
       li.querySelector('button')!.addEventListener('click', () => {
-        if (howPinned()) scrollTo({ top: scrollY + howTrack.getBoundingClientRect().top + ((i + 0.5) / 8) * howRange(), behavior: rm ? 'auto' : 'smooth' });
+        if (howPinned()) scrollTo({ top: scrollY + howTrack.getBoundingClientRect().top + ((i + 0.6) / N) * howRange(), behavior: rm ? 'auto' : 'smooth' });
         else setStep(i);
       }, { signal });
     });
     let howI = -1, howDone = false;
+    function label() {
+      $('arcNum').textContent = howDone ? ARCS.map((_, k) => pad(k + 1)).join(' · ') : `${pad(howI + 1)} / ${pad(N)}`;
+      $('arcLbl').textContent = howDone ? 'Full circle' : ARCS[howI].n;
+      $('arcSub').textContent = howDone ? 'Next drop starts here' : ARCS[howI].sub;
+    }
     function setStage(i: number) {
       if (i === howI) return;
       const first = howI < 0; howI = i;
       [...steps!.children].forEach((li, k) => { li.classList.toggle('on', k === i); li.querySelector('button')!.setAttribute('aria-expanded', String(k === i)); });
       bgs.forEach((b, k) => b.classList.toggle('on', k === i));
-      $('howNum').textContent = pad(i + 1); $('howLbl').textContent = howDone ? 'Full circle' : STAGES[i].n;
-      $('howNext').textContent = i < 7 ? 'Next / ' + pad(i + 2) + ' ' + STAGES[i + 1].n : 'Next run / back to 01';
-      if (!first && !rm) ['howNum', 'howLbl'].forEach((id) => { const el = $(id); el.classList.remove('flip'); void el.getBoundingClientRect(); el.classList.add('flip'); });
+      label();
+      $('howNext').textContent = i < N - 1 ? `Next / ${pad(i + 2)} ${ARCS[i + 1].n}` : `Next drop / back to 01 ${ARCS[0].n}`;
+      if (!first && !rm) ['arcNum', 'arcLbl', 'arcSub'].forEach((id) => { const el = $(id); el.classList.remove('flip'); void el.getBoundingClientRect(); el.classList.add('flip'); });
     }
     function drawRing(f: number, done: boolean) {
-      $('howArc').style.strokeDashoffset = String(100 - f * 100);
-      const [x, y] = ring(200, 200, 170, f);
-      ['howDot', 'howPing'].forEach((id) => { $(id).setAttribute('cx', String(x)); $(id).setAttribute('cy', String(y)); });
-      [...ticks.children].forEach((t, k) => t.classList.toggle('on', f >= k / 8 - 0.0001));
-      if (done !== howDone) { howDone = done; howRingEl.classList.toggle('done', done); howPin.classList.toggle('done', done); $('howLbl').textContent = done ? 'Full circle' : STAGES[Math.max(0, howI)].n; }
+      masks.forEach((m, k) => { m.style.strokeDasharray = `${(MARK_ARCS[k].span + ARC_PAD * 2) * Math.max(0, Math.min(1, f * N - k))} 400`; });
+      if (done !== howDone) { howDone = done; howRingEl.classList.toggle('done', done); howPin.classList.toggle('done', done); if (howI >= 0) label(); }
     }
-    // fallback (short screens): click a stage, the ring jumps to it
-    function setStep(i: number) { setStage(i); drawRing((i + 0.5) / 8, false); }
-    // scroll mode: the section pins and the scroll position fills the ring
+    // fallback (short screens): click a part, the mark draws up to the end of it
+    function setStep(i: number) { setStage(i); drawRing((i + 1) / N, false); }
+    // scroll mode: the section pins and the scroll position draws the mark
     let howT = 0, howC = 0, howRaf = 0, howMode: boolean | null = null;
     function howTick() {
       howRaf = 0;
       howC = rm ? howT : howC + (howT - howC) * 0.2;
       if (Math.abs(howT - howC) < 0.0005) howC = howT;
-      setStage(Math.min(7, Math.floor(howC * 8)));
+      setStage(Math.min(N - 1, Math.floor(howC * N)));
       drawRing(howC, howC > 0.997);
       if (howC !== howT) howRaf = requestAnimationFrame(howTick);
     }

@@ -6,7 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { NOTICE } from '../../supabase/functions/_shared/forms';
 import {
-  EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE, REQUEST_QUESTIONS, ROUTES, SITE, STAGES,
+  ARCS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE, REQUEST_QUESTIONS, ROUTES, SITE, STAGES,
   WHATSAPP, WHATSAPP_URL, pad, sampleLine, type PageKey,
 } from '../data/site';
 import { abs, b, day, h2, h3, link, list, ordered, page, table } from './format';
@@ -42,7 +42,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
     key: 'home', path: ROUTES.home, name: 'Home', section: 'core', sources: ['src/pages/index.astro', ...DATA],
     related: ['how', 'make', 'start', 'contact'],
     body: (site) => [
-      `${b('Idea to product. Full circle.')} From idea to bulk, under one roof in Cairo. What you approve in sampling is what ships.`,
+      `${b('Idea to product. Full circle.')} From idea to launch, under one roof in Cairo. What you approve in sampling is what ships.`,
       list(['From 60 pcs', '7–25 day samples', 'Denim + imports', 'Live tracking', 'Free first call / we reply quickly']),
       h2('Where is your brand?'),
       `${h3('Starting.')}\nAn idea, no factory yet. Design / Tech pack / First samples. ${link('Start a new brand', abs(site, `${ROUTES.start}?path=Starting`))}`,
@@ -52,8 +52,8 @@ const ROUTE_LIST: MarkdownRoute[] = [
       table(['Category', 'Minimum', 'Samples'], MAKE.map((m) => [m.n, m.sub, sampleLine(m.samp)])),
       link('All capabilities', abs(site, ROUTES.make)),
       h2('How it works'),
-      'Eight stages. You approve each one.',
-      ordered(STAGES.map((g) => `${b(g.n)}: ${g.ok}`)),
+      'Design, build, launch. One team, one circle.',
+      ordered(ARCS.map((a) => `${b(a.n)}: ${a.line} ${a.steps.join(' / ')}`)),
       link('The full process', abs(site, ROUTES.how)),
       h2('What you approve is what ships.'),
       'Every bulk piece is checked against your signed sample: chest, length, sleeve, stitch, colour.',

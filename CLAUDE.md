@@ -32,7 +32,8 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   #BC2F29 so their text passes contrast; red is never small text (use Bone with a red dot).
   Atmospheric light only (never UI): Indigo #243E8F, Burnt Orange #C96832, Faded Red #A63F3F.
 - Type: Microgramma D Extended Bold, the logo's own face, for headlines only (23 Oct 2026: the Home
-  hero, section headings, the closing call-to-action band; self-hosted from `src/assets/fonts/`).
+  hero, section headings, the closing call-to-action band, and the part's name inside Home's How it works
+  mark; self-hosted from `src/assets/fonts/`).
   Saira Condensed (stand-in for Eurostile Bold Condensed) for card titles, figures and other
   display text, Geist (for Suisse Intl) for body, IBM Plex Mono (for Suisse Mono) for labels.
   Mazen is buying Microgramma's web licence: don't raise it again.
@@ -41,14 +42,25 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   (`--r-s`, `--r-m`, `--r-l`).
 - Line icons (`src/data/icons.ts`, drawn in-house): 24px, 1.5px stroke, round caps and joins, one
   Signal Red accent each. They stand in for text.
-- Dark only. Grain + slow drifting light blobs. Ring/circle motif = the 8 stages.
+- Dark only. Grain + slow drifting light blobs. Circle motif = the mark's three arcs: Design, Build,
+  Launch (27 Oct 2026). An order still moves through the 8 stages (Track, the admin, the database).
 
 ## Decisions already made
 - Home + inner pages. Clarity first (benchmark: brandsfactory), design moments second.
 - One primary action everywhere: **Request a sample**. WhatsApp is secondary.
+- Full Circle = the whole circle of a clothing brand, not only making it (Mazen, 27 Oct 2026): a brand
+  should need no one else. The work is three parts, one per arc of the mark: **Design** (brand
+  identity, product design, tech pack: stages 01–02), **Build** (fabric + trims, patterns, sample,
+  production, QC: 03–07) and **Launch** (delivery, product photos, ad creatives: 08). Mazen does the
+  branding and the launch content himself. No prices on them yet (maybe later): they are by request.
+  The words differ from Factory 21's design studio on purpose; don't copy its menu.
+- Home "How it works" is scroll-driven: the section pins and the mark draws itself arc by arc (one
+  per part, its photo behind it), and at 100% the arcs have closed into the mark ("Full circle").
+  The hero ring names the three parts. Mazen approved the mock (27 Oct 2026):
+  https://claude.ai/artifact/3pEMxPmiymqqYwmfF9AQ9s. Design and Launch still use stage photos until
+  Mazen makes their own (a branding shot, a product shoot).
 - How it works page = "you are the order" walkthrough (demo order moves through 8 stages,
-  sample approval gate at stage 05). Home "How it works" is scroll-driven: section pins,
-  ring completes stage by stage, at 100% the centre becomes the mark ("Full circle").
+  sample approval gate at stage 05). Next: redo it on the three parts, as a mock for Mazen first.
 - Hero: real 3D extruded logo (three.js, SVGLoader + ExtrudeGeometry, bone ceramic face,
   darker glossy sides, warm key + orange/indigo rim lights). It does NOT rotate: one settle
   on load, then gentle tilt toward the pointer (finger-drag tilt on phones). Flat-mark
