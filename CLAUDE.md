@@ -103,6 +103,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   tailored pants 100, jackets 100, denim jeans 150/colour, denim jackets 150, knitwear by order.
 - Sampling: 7–25 days (cotton fastest, denim longest).
 - Sets apart: denim speciality; imported fabrics not in the local market; imported trims.
+- To add to the site (Mazen, 27 Oct 2026): laser leather work, and distinctive imported fabrics at a
+  competitive price. Waiting on details (real or faux leather, cut / engrave / perforate, which
+  products, minimums) before the words go up.
 - Where they sell: Gulf + Middle East, Turkey, China (made in Cairo).
 - WhatsApp: +20 101 143 5406 (https://wa.me/201011435406), assumed to be the WhatsApp line.
 - Phone: +20 2 2698 7277 · Email: fullcircleworks.co@gmail.com · Instagram: @fullcircle_eg
