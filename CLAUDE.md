@@ -100,12 +100,12 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 
 ## Confirmed content
 - MOQ: tees 60/colour, hoodies 60, tops 60–100, sweatpants 60, shorts 60, shirts 80–100,
-  tailored pants 100, jackets 100, denim jeans 150/colour, denim jackets 150, knitwear by order.
+  tailored pants 100, jackets 100, leather 100, denim jeans 150/colour, denim jackets 150, knitwear by order.
 - Sampling: 7–25 days (cotton fastest, denim longest).
 - Sets apart: denim speciality; imported fabrics not in the local market; imported trims.
-- To add to the site (Mazen, 27 Oct 2026): leather work (no laser), and distinctive imported fabrics
-  at a competitive price. Waiting on details (real or faux leather, which products, minimums and
-  sampling time) before the words go up.
+- Leather and imported fabrics (Mazen, 27 Oct 2026): we have leather for whoever needs it, at the
+  jackets' minimum (100) and sampling time (7–25 days). Never say real or faux, and don't list
+  leather products. Imported fabrics are distinctive and at a competitive price. No laser work.
 - Where they sell: Gulf + Middle East, Turkey, China (made in Cairo).
 - WhatsApp: +20 101 143 5406 (https://wa.me/201011435406), assumed to be the WhatsApp line.
 - Phone: +20 2 2698 7277 · Email: fullcircleworks.co@gmail.com · Instagram: @fullcircle_eg

@@ -104,7 +104,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       table(['Category', 'Minimum', 'Samples', 'Items'], MAKE.map((m) => [m.n, m.sub, sampleLine(m.samp), m.items])),
       list(MAKE.map((m) => `${m.n}: ${link('Request a sample', abs(site, `${ROUTES.start}?product=${encodeURIComponent(m.product)}`))}`)),
       h2('What sets us apart'),
-      list([`${b('Denim speciality')}: Pattern to wash, from 150 pcs / colour.`, `${b('Imported fabrics')}: Denims and fabrics not sold in Cairo.`, `${b('Imported trims')}: Buttons, rivets, zips and labels from abroad.`]),
+      list([`${b('Denim speciality')}: Pattern to wash, from 150 pcs / colour.`, `${b('Imported fabrics + leather')}: Fabrics not sold in Cairo, and leather, at a competitive price.`, `${b('Imported trims')}: Buttons, rivets, zips and labels from abroad.`]),
       h2('Not on the list?'),
       'Tell us. If it is not for us, we say so.',
     ],

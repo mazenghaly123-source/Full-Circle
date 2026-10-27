@@ -125,7 +125,11 @@ site's look.
   amended). WhatsApp-only requests get no sign-in until codes on WhatsApp are on. Other ideas from
   the comparison wait on Mazen: a Book a meeting button (Google Calendar or Cal.com, in person or a
   call), proof figures and client logos, the sample fee credited to bulk, a "how did you hear about
-  us" question.
+  us" question. Our own ideas, proposed to Mazen: a Sample Passport (the five checks measured on the
+  approved sample and again on bulk), a "can we make it?" checker (MOQ and sampling from the
+  picks), a Jeans Builder (fit, imported denim, wash, trims, a leather back patch with the brand's
+  logo), a season planner per market, the Circle Floor (a 3D floor with the 8 stations in a ring,
+  the real order moving on it), export-ready labels, reorder with the approved spec.
 
 0. **SEO, GEO and analytics** (Mazen, 24 Oct: "start SEO and GEO, and connect Google Analytics").
    - **Analytics (26 Oct):** GA4 `G-XNT9FPB5RQ` behind a consent bar (Mazen's choice), with page views,

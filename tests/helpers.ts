@@ -232,7 +232,7 @@ export async function approvePrototype(page: Page) {
       const why = [...make.querySelectorAll('.sh')].find((e) => e.textContent!.trim().startsWith('What sets us apart'))!;
       why.parentElement!.removeAttribute('style'); why.parentElement!.classList.add('why');
       why.querySelector('h2')!.classList.add('wide'); why.querySelector('p')!.remove();
-      why.nextElementSibling!.outerHTML = `<div class="three">${([['denim', 'Denim speciality', 'Pattern to wash, from 150 pcs / colour.'], ['source', 'Imported fabrics', 'Denims and fabrics not sold in Cairo.'], ['trims', 'Imported trims', 'Buttons, rivets, zips and labels from abroad.']] as const).map(([k, b, t]) => `<div>${re.icon[k]}<b>${b}</b><span>${t}</span></div>`).join('')}</div>`;
+      why.nextElementSibling!.outerHTML = `<div class="three">${([['denim', 'Denim speciality', 'Pattern to wash, from 150 pcs / colour.'], ['source', 'Imported fabrics + leather', 'Fabrics not sold in Cairo, and leather, at a competitive price.'], ['trims', 'Imported trims', 'Buttons, rivets, zips and labels from abroad.']] as const).map(([k, b, t]) => `<div>${re.icon[k]}<b>${b}</b><span>${t}</span></div>`).join('')}</div>`;
       $m('.limits').closest('section')!.remove();
       $m('.ctaband p').textContent = 'Tell us. If it is not for us, we say so.';
       // the other inner pages (24 Oct 2026): titles in the logo's face, one-line leads, icons in place of text
