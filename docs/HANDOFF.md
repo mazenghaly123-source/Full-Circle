@@ -1,13 +1,13 @@
-# Handoff (26 Oct 2026)
+# Handoff (27 Oct 2026)
 
 For a new Claude session that has none of the earlier chat history (Mazen may continue from another
 Claude account). Read this first, then [CLAUDE.md](../CLAUDE.md), [production-plan.md](./production-plan.md)
 §2 and §10, [deploy.md](./deploy.md) and [whatsapp.md](./whatsapp.md). Everything below was checked on
-23–26 Oct 2026 against GitHub, the staging Supabase project and the PRs. Where something could not be
+23–27 Oct 2026 against GitHub, the staging Supabase project and the PRs. Where something could not be
 checked from a cloud session, it says so.
 
 **Working with Mazen:** reply in Arabic (Egyptian), very briefly. He wants finished work merged to `main`
-so it goes live: open a PR from `claude/tender-rubin-ahjc3t`, wait for CI (`site`, `backend`, Workers
+so it goes live: open a PR from `claude/tender-rubin-ahjc3t` (start it again from `main` first), wait for CI (`site`, `backend`, Workers
 Builds; about 20 minutes) and CodeRabbit's review, fix what they find, then merge with a merge commit.
 
 ## Branches
@@ -15,7 +15,8 @@ Builds; about 20 minutes) and CodeRabbit's review, fix what they find, then merg
 | Branch | Holds | State |
 |---|---|---|
 | `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, the redesign (see *In progress*) and the designed emails | Live |
-| `claude/tender-rubin-ahjc3t` | The working branch: the redesign, the emails, this handoff | Same as `main` (PRs #12 → #16 merged, the last on 24 Oct); new work goes here |
+| `claude/tender-rubin-ahjc3t` | The working branch | Merged (PR #20, requests on Track, 27 Oct); restart it from `main` for new work |
+| `claude/leather-imports` | Leather with the jackets, imported fabrics at a competitive price (PR #21, 27 Oct) | Merged to `main`, safe to delete |
 | `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
 | `claude/phase-2-requests`, `claude/intelligent-fermi-ddqnas`, `claude/audit-code-cleanup`, `claude/bold-mccarthy-t9fppt`, `claude/trusting-albattani-5sxko8` | Already fully in `main` | Safe to delete |
@@ -129,7 +130,10 @@ site's look.
   approved sample and again on bulk), a "can we make it?" checker (MOQ and sampling from the
   picks), a Jeans Builder (fit, imported denim, wash, trims, a leather back patch with the brand's
   logo), a season planner per market, the Circle Floor (a 3D floor with the 8 stations in a ring,
-  the real order moving on it), export-ready labels, reorder with the approved spec.
+  the real order moving on it), export-ready labels, reorder with the approved spec. **Next:** Mazen
+  picks which to mock first; the Sample Passport and the "can we make it?" checker were suggested
+  (both use data the site already has). Mazen liked Factory 21's 3D factory floor most: ours is
+  the Circle Floor, on Track, not a copy.
 
 0. **SEO, GEO and analytics** (Mazen, 24 Oct: "start SEO and GEO, and connect Google Analytics").
    - **Analytics (26 Oct):** GA4 `G-XNT9FPB5RQ` behind a consent bar (Mazen's choice), with page views,
