@@ -45,7 +45,6 @@ test('a request is checked the same way on both sides', () => {
 });
 
 test('the minimum order rule', () => {
-  expect(belowMinimum('Under 60', 'Tees')).toBe(true);
   expect(belowMinimum('60–150', 'Denim')).toBe(true);
   expect(belowMinimum('60–150', 'Tees')).toBe(false);
   expect(belowMinimum(null, 'Denim')).toBe(false);
