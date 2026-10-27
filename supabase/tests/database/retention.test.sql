@@ -48,7 +48,7 @@ select is((select count(*)::int from public.notifications), 0, 'what was sent ab
 select results_eq($$select source, request_id from public.contact_consents$$, $$values ('request FC-9201', null::bigint)$$,
   'the consent record stays, without its request');
 select is((select count(*)::int from public.orders where code = 'FC-9202' and request_id is not null), 1, 'the order keeps its request');
-select results_eq($$select email from auth.users where id::text like '00000000-0000-0000-0000-0000000000a_' order by email$$,
+select results_eq($$select email::text from auth.users where id::text like '00000000-0000-0000-0000-0000000000a_' order by email$$,
   $$values ('b@b.test'), ('client@x.test'), ('new@x.test'), ('staff@fc.test')$$,
   'an account a year old that nothing needs goes; one with a request, staff, a client or a recent one stays');
 select is((select count(*)::int from public.client_members where email = 'client@x.test'), 1, 'a client''s person keeps their place');
