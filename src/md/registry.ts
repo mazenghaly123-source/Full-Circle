@@ -137,6 +137,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       list(['Brand name', 'Email or WhatsApp', 'Notes (optional)']),
       `${NOTICE.request} ${link('Privacy notice', abs(site, '/privacy'))}`,
       h2('What happens next'),
+      'After you send the request.',
       list([`${b('First call')}: The product, the quantity, where you are now.`, `${b('Price range')}: A sample price and a bulk range, before you commit.`, `${b('Your order code')}: Your order opens on the tracking page.`]),
     ],
   },

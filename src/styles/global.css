@@ -1214,4 +1214,10 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
    dot, an "i" in a ring. It shows for denim under 150; nothing under 60 is offered */
 .warn{border:0;background:rgba(232,226,216,0.06);border-radius:var(--r-s);padding:8px 12px;font-size:13.5px;line-height:1.45;color:var(--dim);gap:9px;width:fit-content;max-width:100%}
 .warn::before{content:"i";display:grid;place-items:center;width:15px;height:15px;margin-top:1px;border:1px solid var(--line);border-radius:50%;background:none;font-family:var(--f-mono);font-size:9.5px;line-height:1;color:var(--cotton)}
+/* 27 Oct 2026 (Mazen): the three cards under the request form get a heading, so a first visit reads them as what
+   happens after sending the request */
+.next-h{margin-top:clamp(48px,6vw,80px);display:grid;gap:8px}
+.next-h h2{font-family:var(--f-wide);font-weight:700;font-size:clamp(22px,2.4vw,34px);line-height:1.08;letter-spacing:0.01em;margin:0}
+.next-h p{margin:0;color:var(--cotton);font-size:16px}
+.next-h+.next3{margin-top:22px}
 /* ===== end approved changes ===== */

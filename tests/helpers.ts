@@ -278,6 +278,8 @@ export async function approvePrototype(page: Page) {
       [...pg('start').querySelectorAll('.q[data-k="qty"] .opt')].find((o) => o.textContent === 'Under 60')!.remove();
       const next3 = pg('start').querySelector('.next3')!;
       next3.className = 'three next3';
+      // with a heading, so a first visit reads the cards as what happens after sending (27 Oct 2026)
+      next3.insertAdjacentHTML('beforebegin', '<div class="next-h"><h2 class="camp">What happens next</h2><p>After you send the request.</p></div>');
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
       head('track', 'Sign in with the email or WhatsApp on your order, or the email on your request.');
     });
