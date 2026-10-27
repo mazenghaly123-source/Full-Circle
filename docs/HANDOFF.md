@@ -57,7 +57,8 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   requests without an order, and messages, a year after they arrived; consent records stay
   (`supabase/tests/database/retention.test.sql`).
 - `20261027071333` requests_in_portal (27 Oct, through the MCP): `my_requests()`, the requests the
-  portal lists. `20261027100100` expired_accounts (the clean-up also deletes the sign-in accounts a
+  portal lists. `20261027074938` my_requests_staff (same day, MCP): staff, who see every order
+  on Track, no longer see a converted request of theirs as well. `20261027100100` expired_accounts (the clean-up also deletes the sign-in accounts a
   request opened, a year on) is **not applied**: it holds a DELETE, so Mazen runs it in the SQL editor
   (*Waiting on Mazen*).
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:

@@ -2,7 +2,7 @@
 -- becomes an order they can see; nobody else's, and nothing for the publishable key.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(7);
+select plan(8);
 
 truncate public.requests, public.messages, public.contact_consents, public.notifications, public.clients cascade;
 insert into auth.users (id, email) values
@@ -45,6 +45,17 @@ reset role;
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000b2", "role": "authenticated"}';
 select results_eq($$select code from public.my_requests()$$, $$values ('FC-9305')$$, 'another person sees only their own');
+reset role;
+
+-- staff see every order on Track, so a converted request of theirs is left out too
+insert into public.staff (user_id, name, role) values ('00000000-0000-0000-0000-0000000000b2', 'Omar', 'staff');
+insert into public.requests (code, path, product, brand, contact, contact_channel, email, status, notice_version) values
+  ('FC-9307', 'Starting', 'Denim', 'Omar', 'omar@other.test', 'email', 'omar@other.test', 'converted', 'v');
+insert into public.orders (code, client_id, request_id, name, product, stage)
+  select 'FC-9307', c.id, r.id, 'Jeans', 'Denim', 1 from public.clients c, public.requests r where r.code = 'FC-9307' and c.brand = 'Lina';
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000b2", "role": "authenticated"}';
+select results_eq($$select code from public.my_requests()$$, $$values ('FC-9305')$$, 'staff do not see a request whose order they can see');
 reset role;
 
 set local role authenticated;
