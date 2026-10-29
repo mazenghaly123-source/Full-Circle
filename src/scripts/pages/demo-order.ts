@@ -7,6 +7,7 @@ import { $, byId, pad, ring, rm, toast, vib } from '../core/util';
 import { yo } from '../core/state';
 import { DEMO_PRODUCTS, ROUTES, STAGES } from '../../data/site';
 import { updBar } from '../shell/mbar';
+import { setGarment } from './garment';
 
 const yoOrder = () => yo.ok ? yo.here : Math.min(yo.here, 4);
 const PATH_LINE = {
@@ -58,6 +59,7 @@ function yoRender(doc: Document) {
   const [x, y] = ring(50, 50, 35.67, (os + 0.5) / 8);
   g('yoYou').style.left = g('yoTag').style.left = x + '%'; g('yoYou').style.top = g('yoTag').style.top = y + '%';
   g('yoTag').textContent = waiting ? yo.code + ' / waiting on you' : yo.code;
+  setGarment(doc, yo.product);
   const gar = g('yoGar'); gar.setAttribute('data-s', String(yo.here + 1)); gar.style.setProperty('--fab', `url(#f-${yo.fab})`);
   gar.classList.toggle('ok', yo.ok && yo.here >= 4); gar.classList.toggle('locked', waiting);
   g('yoStage').textContent = pad(os + 1) + ' / ' + STAGES[os].n;

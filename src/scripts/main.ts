@@ -9,6 +9,7 @@ import { howScrollFeature } from './pages/how-scroll';
 import { portalDemoFeature } from './pages/portal-demo';
 import { faqFeature } from './pages/faq';
 import { demoOrderFeature } from './pages/demo-order';
+import { garmentFeature } from './pages/garment';
 import { makeFeature } from './pages/make';
 import { makeRowFeature } from './pages/make-row';
 import { requestFeature } from './pages/request';
@@ -38,6 +39,7 @@ start([
   portalDemoFeature,
   faqFeature,
   demoOrderFeature,
+  garmentFeature,
   makeFeature,
   makeRowFeature,
   requestFeature,

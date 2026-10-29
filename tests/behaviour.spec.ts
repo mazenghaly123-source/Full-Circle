@@ -323,6 +323,34 @@ test('how it works: the sample gate holds production until you approve', async (
   await expect(page.locator('#yoUnits')).toHaveText('300', { timeout: 5000 });
 });
 
+test('how it works: the garment is the product picked, and it turns toward the pointer (a finger drags it)', async ({ page }, info) => {
+  await page.goto('/how-it-works');
+  const fig = page.locator('#yoFig'), outline = fig.locator('.pcB [data-d]').last();
+  await expect(fig).toHaveAttribute('data-g', 'Shirts');
+  for (const [label, key] of [['Hoodies', 'Hoodies'], ['Denim', 'Denim'], ['Tees', 'Tees']]) {
+    await page.locator('#yoProducts .opt', { hasText: label }).click();
+    await expect(fig).toHaveAttribute('data-g', key);
+  }
+  await page.locator('.yo-inst').scrollIntoViewIfNeeded();
+  if (!isPhone(info)) await page.mouse.move(2, 2); // the pointer off the figure, which then rests
+  // the figure swings in after a change: wait until it holds still
+  const still = async () => { for (;;) { const d = await outline.getAttribute('d'); await page.waitForTimeout(300); if (d === await outline.getAttribute('d')) return d; } };
+  const before = await still();
+  const box = (await page.locator('.yo-inst').boundingBox())!;
+  if (isPhone(info)) {
+    const cdp = await page.context().newCDPSession(page);
+    const at = (x: number) => [{ x, y: box.y + box.height / 2 }];
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at(box.x + box.width * 0.3) });
+    for (let i = 1; i <= 6; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: at(box.x + box.width * (0.3 + i * 0.07)) });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  } else await page.mouse.move(box.x + box.width * 0.95, box.y + box.height * 0.5);
+  await expect.poll(() => outline.getAttribute('d')).not.toBe(before);
+  // the turn sticks after the finger lifts; a mouse leaving lets it settle back
+  if (isPhone(info)) { await page.waitForTimeout(1500); expect(await outline.getAttribute('d')).not.toBe(before); }
+  else { await page.mouse.move(2, 2); await expect.poll(() => outline.getAttribute('d'), { timeout: 4000 }).toBe(before); }
+  expect(before).not.toBeNull();
+});
+
 test('how it works: your demo choices carry over to the sample request', async ({ page }) => {
   await page.goto('/how-it-works');
   await page.locator('[data-yopath="Scaling"]').click();
