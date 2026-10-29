@@ -5,6 +5,7 @@ import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import { PAGES, isPhone, mockBackend, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
+import { REST, figurePaths } from '../src/data/garments';
 
 // Software WebGL in headless Chromium needs seconds to draw the 3D hero mark and blocks the page
 // meanwhile, so tests that are not about it get the flat-mark fallback (three.js refuses to load).
@@ -333,22 +334,22 @@ test('how it works: the garment is the product picked, and it turns toward the p
   }
   await page.locator('.yo-inst').scrollIntoViewIfNeeded();
   if (!isPhone(info)) await page.mouse.move(2, 2); // the pointer off the figure, which then rests
-  // the figure swings in after a change: wait until it holds still
-  const still = async () => { for (;;) { const d = await outline.getAttribute('d'); await page.waitForTimeout(300); if (d === await outline.getAttribute('d')) return d; } };
-  const before = await still();
+  // at rest the outline is exactly the one the page was built with (a slow machine takes a while to settle)
+  const i = await outline.evaluate((el) => [...document.querySelectorAll('#yoFig [data-d]')].indexOf(el));
+  const rest = figurePaths('Tees', REST)[i];
+  await expect.poll(() => outline.getAttribute('d'), { timeout: 10_000 }).toBe(rest);
   const box = (await page.locator('.yo-inst').boundingBox())!;
   if (isPhone(info)) {
     const cdp = await page.context().newCDPSession(page);
     const at = (x: number) => [{ x, y: box.y + box.height / 2 }];
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at(box.x + box.width * 0.3) });
-    for (let i = 1; i <= 6; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: at(box.x + box.width * (0.3 + i * 0.07)) });
+    for (let k = 1; k <= 6; k++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: at(box.x + box.width * (0.3 + k * 0.07)) });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   } else await page.mouse.move(box.x + box.width * 0.95, box.y + box.height * 0.5);
-  await expect.poll(() => outline.getAttribute('d')).not.toBe(before);
+  await expect.poll(() => outline.getAttribute('d')).not.toBe(rest);
   // the turn sticks after the finger lifts; a mouse leaving lets it settle back
-  if (isPhone(info)) { await page.waitForTimeout(1500); expect(await outline.getAttribute('d')).not.toBe(before); }
-  else { await page.mouse.move(2, 2); await expect.poll(() => outline.getAttribute('d'), { timeout: 4000 }).toBe(before); }
-  expect(before).not.toBeNull();
+  if (isPhone(info)) { await page.waitForTimeout(1500); expect(await outline.getAttribute('d')).not.toBe(rest); }
+  else { await page.mouse.move(2, 2); await expect.poll(() => outline.getAttribute('d'), { timeout: 10_000 }).toBe(rest); }
 });
 
 test('how it works: your demo choices carry over to the sample request', async ({ page }) => {
