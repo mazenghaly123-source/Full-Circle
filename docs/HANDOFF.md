@@ -80,8 +80,9 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
     to a brand that gives an email has not been tried yet.
   - Supplied by Supabase automatically: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
     `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_SECRET_KEYS`.
-  - Not set: `TURNSTILE_SECRET_KEY` (staging falls back to Cloudflare's always-pass test key),
-    `STAFF_EMAILS` and `SITE_URL` (the defaults are used), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
+  - `TURNSTILE_SECRET_KEY`: the real widget's secret, for Mazen to set on 29 Oct once the build with its
+    site key is live (until then staging falls back to Cloudflare's always-pass test key).
+  - Not set: `STAFF_EMAILS` and `SITE_URL` (the defaults are used), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
     `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` and `SEND_SMS_HOOK_SECRET`.
 - Data on staging: 1 staff, 1 client, 3 orders, 6 requests (FC-2508 and FC-2509 are 23 Oct tests),
   1 Auth user, and the bucket `stage-photos`.
@@ -106,9 +107,11 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 - **Not done yet:**
   - `"workers_dev": false` (the domain is live, so this can go in with the launch items).
   - Turning off Cloudflare Web Analytics on the zone.
-  - The Turnstile widget.
-  - Production build variables (`PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_KEY`,
-    `PUBLIC_TURNSTILE_SITE_KEY`): none are set, so every build uses staging.
+  - Production build variables (`PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_KEY`): none are set, so every
+    build uses staging.
+- **Turnstile (29 Oct, Mazen's first social post):** an Invisible widget for `fullcircle-co.com`, `www` and
+  `full-circle.mazenghaly123.workers.dev`. Its site key is the default in `src/data/backend.ts`, its
+  secret is staging's `TURNSTILE_SECRET_KEY`. Preview URLs are not on the widget, so their forms are refused.
 - **Vercel is still connected.** Its GitHub app builds a preview of every PR
   (`mazen-s-projects2/full-circle`), although hosting is Cloudflare only (PR #6). Advised to
   disconnect it (24 Oct); Mazen's to do.
@@ -223,10 +226,9 @@ Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
   SMTP through Resend.~~ Done by Mazen on 24 Oct, with the Site URL set to `https://fullcircle-co.com` and the
   email OTP length set to 6 (Supabase's default had become 8). Confirmed: Mazen signed in to `/admin` as owner.
-- **Turnstile:**
-  - Create a widget for fullcircle-co.com (Invisible).
-  - At launch, put its site key in the build and its secret in the functions and Auth's Attack
-    Protection.
+- **Turnstile:** the widget and the forms are done (29 Oct). Left: turn on captcha in staging's Auth →
+  Attack Protection with the same secret (the portal and `/admin` already send a token), and the secret
+  on the live project at launch.
 - **Meta:**
   - A Business portfolio and a WhatsApp app (business verification uses Full Circle's documents).
   - A **new SIM** for the system number.
@@ -242,8 +244,8 @@ Dashboard and account tasks:
   - Since 23 Oct, Track's real sign-in and `/admin` are live against **staging**. The sign-in never creates an account (`create_user: false`).
   - Live forms write to staging too, so the live project should exist before real clients use the
     site.
-- **Don't set `TURNSTILE_SECRET_KEY` on staging** while builds still use the test site key
-  (`src/data/backend.ts`). Every form would then be refused. Change both together.
+- **The Turnstile site key and secret change together.** The site key in `src/data/backend.ts` and
+  staging's `TURNSTILE_SECRET_KEY` belong to one widget; change one without the other and every form is refused.
 - **Supabase MCP and destructive SQL:**
   - DROP, DELETE and TRUNCATE (even inside a transaction that is rolled back) wait for a
     confirmation that never reaches a cloud session, so they time out.

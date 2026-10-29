@@ -59,7 +59,7 @@ messages about orders). Until launch there is one project, **full-circle-staging
 | `RESEND_API_KEY` | Sends the staff alerts and the request receipts | Nothing is emailed; each email is logged as skipped |
 | `STAFF_EMAILS` | Who gets the alerts, comma-separated | fullcircleworks.co@gmail.com |
 | `EMAIL_FROM` | The sender, e.g. `Full Circle <hello@your-domain>` | Resend's test sender, which can only write to the Resend account's own address |
-| `TURNSTILE_SECRET_KEY` | The robot check (Cloudflare Turnstile) | Staging uses Cloudflare's test key, **which lets everything through**; any other project turns every form away |
+| `TURNSTILE_SECRET_KEY` | The robot check (Cloudflare Turnstile): the secret of the fullcircle-co.com widget, whose site key is the default in `src/data/backend.ts` | Staging falls back to Cloudflare's test key, made for test tokens only; any other project turns every form away |
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `SEND_SMS_HOOK_SECRET` | WhatsApp from the system number, once Meta is set up ([whatsapp.md](./whatsapp.md)) | Every WhatsApp message is logged as skipped, and portal sign-in by number is refused |
 | `SITE_URL` | Where the links in the order emails and invitations point. On staging, once the live site uses the live project, set it to a preview that builds against staging, or invited test clients land on the live site | https://fullcircle-co.com |
 
@@ -68,10 +68,11 @@ messages about orders). Until launch there is one project, **full-circle-staging
 2. Deploy the six functions with their JWT check off (the form functions check Turnstile instead;
    `invite` and `notify` check the signed-in caller themselves; `send-sms` and `whatsapp-webhook`
    check Auth's and Meta's signatures), and set the secrets above. Verify the domain at Resend first, so `EMAIL_FROM` can use it.
-3. In Cloudflare, create a Turnstile widget for the domain (Invisible mode) and set the production
-   build's variables `PUBLIC_SUPABASE_URL` (the live project's URL), `PUBLIC_SUPABASE_KEY` (its
-   publishable key, for the portal's sign-in) and `PUBLIC_TURNSTILE_SITE_KEY` (the widget's site key).
-   Previews keep using staging.
+3. Set the production build's variables `PUBLIC_SUPABASE_URL` (the live project's URL) and
+   `PUBLIC_SUPABASE_KEY` (its publishable key, for the portal's sign-in). The Turnstile widget exists
+   (29 Oct 2026, Invisible, for fullcircle-co.com, www and full-circle.mazenghaly123.workers.dev):
+   its site key is already the build's default, so the live project only needs its secret.
+   Previews keep using staging. Their own hostnames are not on the widget, so their forms are refused.
 4. Set up the portal's sign-in on the live project as on staging (production plan §10): no sign-ups,
    the code in the Magic Link email, a 10-minute expiry, Resend as the SMTP sender, and Turnstile
    under Attack Protection. For WhatsApp codes, the phone provider and the Send SMS hook
