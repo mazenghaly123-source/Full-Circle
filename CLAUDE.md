@@ -109,8 +109,10 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   leads, icon cards (`.three`). How it works stays as it is: Mazen approved it unchanged (24 Oct 2026).
 - Interactive line figures (the Hairline skill, 23 Oct 2026): a few, at most one per page, never
   on the hero (the 3D mark stays the hero). On phones they answer a finger (sideways drag, tap),
-  not only a self-running loop. Parked: the first test (a shirt opening into its pattern pieces)
-  did not convince Mazen; wait until he picks figures up again.
+  not only a self-running loop. The first test (a shirt opening into its pattern pieces) did not
+  convince Mazen. In use since 29 Oct 2026 (Mazen, no mock): How it works' demo garment is the product
+  picked (shirt, hoodie, tee, jeans, jacket), a line figure with depth that turns toward the pointer
+  and, on phones, a sideways drag (`src/data/garments.ts`, `scripts/pages/garment.ts`).
 
 ## Confirmed content
 - MOQ: tees 60/colour, hoodies 60, tops 60–100, sweatpants 60, shorts 60, shirts 80–100,

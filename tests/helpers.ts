@@ -6,6 +6,7 @@ import { NOTICE } from '../supabase/functions/_shared/forms';
 import { ARCS, FAQ, MAKE, ring, sampleLine } from '../src/data/site';
 import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../src/data/mark';
 import { ICONS, iconSvg, type IconName } from '../src/data/icons';
+import { figureSvg } from '../src/data/garments';
 
 export const PROTOTYPE = pathToFileURL(resolve('prototype/index.html')).href;
 
@@ -102,6 +103,8 @@ const REDESIGN = {
     const [x, y] = ring(200, 200, 186, (i + 0.5) / ARCS.length);
     return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : '') + (i < 1 ? ' on' : ''), t: a.n };
   }),
+  // How it works' garment as a turning line figure, one per product (29 Oct 2026): the shirt at rest
+  garment: figureSvg('Shirts'),
 };
 
 /**
@@ -282,6 +285,11 @@ export async function approvePrototype(page: Page) {
       next3.insertAdjacentHTML('beforebegin', '<div class="next-h"><h2 class="camp">What happens next</h2><p>After you send the request.</p></div>');
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
       head('track', 'Sign in with the email or WhatsApp on your order, or the email on your request.');
+      // How it works: the garment is a line figure with depth, one per product (29 Oct 2026). The flat shirt's
+      // parts go; the box and the stamp, which the prototype's script writes to, stay.
+      const gar = document.getElementById('yoGar')!;
+      for (const e of [...gar.children]) if (!['defs', 'box', 'stampg'].some((k) => e.tagName === k || e.classList.contains(k))) e.remove();
+      gar.querySelector('defs')!.insertAdjacentHTML('afterend', `<g id="yoFig" data-g="Shirts">${re.garment}</g>`);
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }

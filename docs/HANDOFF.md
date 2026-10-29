@@ -120,6 +120,13 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 
 ## In progress
 
+- **How it works' garment (29 Oct, Mazen, built straight on the site, no mock):** the flat shirt in the demo
+  ring is now a line figure with depth in the Hairline style, one per product (shirt, hoodie, tee, jeans,
+  jacket; `src/data/garments.ts`). It turns toward the pointer, a finger drags it sideways on phones and it
+  stays put, and a new product swings in (`scripts/pages/garment.ts`). The stage styling is the
+  prototype's (`.pc`, `.detail`, `.anno`…). Mirrored in `approvePrototype` (the shirt at rest), so the page
+  is still held to parity.
+
 Done on 23–25 Oct: the WhatsApp-era functions are on staging, the Cloudflare preview build is fixed,
 `EMAIL_FROM` is set with the staff alert confirmed, the Auth settings are done, and every email has the
 site's look.

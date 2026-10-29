@@ -4,6 +4,7 @@ import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
 import StageTerms from '../components/StageTerms.astro';
 import { DEMO_PRODUCTS, ROUTES, STAGES, pad, ring } from '../data/site';
+import { figureSvg, garmentKey } from '../data/garments';
 
 // the demo order's ring: a tick per stage, and a label button between ticks
 const yoTicks = STAGES.map((_, i) => {
@@ -15,6 +16,8 @@ const yoLabels = STAGES.map((g, i) => {
   // the name starts with the visible label ("05 Sample"), so voice control finds the button by it
   return { left, top, n: pad(i + 1), s: g.s, label: `${pad(i + 1)} ${g.s}: go to the ${g.n} stage` };
 });
+/** The demo garment: the first product's, drawn at rest (it turns and changes in scripts/pages/garment.ts). */
+const firstGarment = garmentKey(DEMO_PRODUCTS[0].label);
 /** A station's heading: its number and stage name. */
 const label = (i: number) => `${pad(i + 1)} / ${STAGES[i].n}`;
 ---
@@ -112,18 +115,7 @@ const label = (i: number) => `${pad(i + 1)} / ${STAGES[i].n}`;
             <pattern id="f-jersey" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#cfc6b7"/><line x1="0" y1="2" x2="4" y2="2" stroke="rgba(17,17,15,.15)" stroke-width="0.8"/></pattern>
             <pattern id="f-twill" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-60)"><rect width="5" height="5" fill="#6f705b"/><line x1="0" y1="0" x2="0" y2="5" stroke="rgba(17,17,15,.3)" stroke-width="1"/></pattern>
           </defs>
-          <g class="ghost"><path transform="translate(18,-14)" d="M108 70 L192 70 L232 92 L250 172 L222 178 L206 126 L204 250 L96 250 L94 126 L78 178 L50 172 L68 92 Z"/><path transform="translate(36,-28)" d="M108 70 L192 70 L232 92 L250 172 L222 178 L206 126 L204 250 L96 250 L94 126 L78 178 L50 172 L68 92 Z"/></g>
-          <g>
-            <path class="pc pcL" d="M108 70 L68 92 L50 172 L78 178 L94 126 Z"/>
-            <path class="pc pcR" d="M192 70 L232 92 L250 172 L222 178 L206 126 Z"/>
-            <path class="pc pcB" d="M108 70 L192 70 L206 126 L204 250 L96 250 L94 126 Z"/>
-            <path class="pc pcC" d="M126 70 L150 96 L174 70 L166 62 L150 78 L134 62 Z"/>
-            <g class="detail"><line x1="150" y1="96" x2="150" y2="250"/><rect x="116" y="118" width="24" height="28"/><rect x="160" y="118" width="24" height="28"/><circle cx="150" cy="120" r="1.6"/><circle cx="150" cy="150" r="1.6"/><circle cx="150" cy="180" r="1.6"/><circle cx="150" cy="210" r="1.6"/></g>
-            <g class="stitch"><path d="M101 244 L199 244"/><path d="M73 172 L56 168"/><path d="M227 172 L244 168"/><rect x="119" y="121" width="18" height="22"/><rect x="163" y="121" width="18" height="22"/></g>
-          </g>
-          <g class="anno"><line x1="174" y1="66" x2="246" y2="40" stroke="rgba(232,226,216,.5)"/><text x="248" y="42">Camp collar</text><line x1="116" y1="132" x2="30" y2="232" stroke="rgba(232,226,216,.5)"/><text x="0" y="244">Patch pocket x2</text><line x1="204" y1="246" x2="258" y2="270" stroke="rgba(232,226,216,.5)"/><text x="232" y="282">Straight hem</text></g>
-          <g class="notch"><text x="54" y="210">Sleeve x2</text><text x="128" y="282">Body / cut 2</text><text x="128" y="28">Collar</text></g>
-          <g class="meas"><line x1="94" y1="104" x2="206" y2="104"/><text x="112" y="100">Chest 56.0 ✓</text><line x1="216" y1="70" x2="216" y2="250"/><text x="222" y="160">74.0 ✓</text></g>
+          <g id="yoFig" data-g={firstGarment} set:html={figureSvg(firstGarment)}></g>
           <g class="box"><rect x="30" y="34" width="240" height="236"/><text x="38" y="290" id="yoBox">FC-0000 / 300 units / Cairo</text></g>
           <g class="stampg"><rect x="168" y="196" width="112" height="34"/><text x="178" y="218">APPROVED</text></g>
         </svg>
