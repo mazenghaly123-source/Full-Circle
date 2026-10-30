@@ -199,7 +199,8 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   ClientRouter and no parity check; screens are hash routes (`#/overview`, `#/order/12`) in
   `src/scripts/admin/`. Staff sign in with the same code flow as the portal (`core/auth.ts`, a
   session of its own) and act through the same database functions. Adding people goes through the
-  `invite` function, and every action asks `notify` to send what it queued (email now, WhatsApp
+  `invite` function (owners and developers add staff; a developer, Mazen since 30 Oct 2026, has every right an
+  owner has), and every action asks `notify` to send what it queued (email now, WhatsApp
   after Meta). Its tests are `tests/admin.spec.ts`, on `mockAdmin`.
 - WhatsApp goes from a system number through Meta's Cloud API (`_shared/whatsapp.ts`, templates
   only, to numbers that opted in; [docs/whatsapp.md](./docs/whatsapp.md)): portal codes through Auth's

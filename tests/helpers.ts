@@ -464,16 +464,16 @@ export async function signInPortal(page: Page, id = 'laila@demo.test') {
 
 /**
  * Stands in for Supabase on the admin (/admin): staff sign-in (123456 is the right code; the
- * account is an owner, or not on the team with `{ staff: false }`), the inbox, orders, clients and
+ * account is an owner, a developer with `{ role: 'developer' }`, or not on the team with `{ staff: false }`), the inbox, orders, clients and
  * team, and the staff's database functions, which change the data as the real ones would (the
  * sample gate included). Returns the calls made and the data, which the tests can look into.
  */
-export async function mockAdmin(page: Page, o: { staff?: boolean } = {}) {
+export async function mockAdmin(page: Page, o: { staff?: boolean; role?: 'owner' | 'developer' | 'staff' } = {}) {
   const calls: { fn: string; method: string; body: any }[] = [];
   const now = () => new Date().toISOString();
   const ago = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
   let next = 1000;
-  const staff = o.staff === false ? [] : [{ user_id: 'me', name: 'Mazen', role: 'owner', created_at: ago(400) }];
+  const staff = o.staff === false ? [] : [{ user_id: 'me', name: 'Mazen', role: o.role ?? 'owner', created_at: ago(400) }];
   const requests: any[] = [
     { id: 1, code: 'FC-2510', path: 'Scaling', product: 'Denim', qty: '150–300', have: 'A tech pack', brand: 'Atelier Sahel', contact: 'laila@sahel.test', contact_channel: 'email', email: 'laila@sahel.test', whatsapp: null, note: 'Raw selvedge, two washes', status: 'new', source: { utm_source: 'instagram' }, created_at: ago(5), orders: [] },
     { id: 2, code: 'FC-2511', path: 'Starting', product: 'Tees', qty: '60–150', have: 'A sketch', brand: 'Nile Club', contact: '0101 143 5406', contact_channel: 'whatsapp', email: null, whatsapp: '+201011435406', note: null, status: 'new', source: {}, created_at: ago(30), orders: [] },

@@ -1,5 +1,5 @@
 // Team: Full Circle's own people. Owners add staff (they get an email with the admin link and sign
-// in with a code) and change roles; an owner can do everything, staff run requests and orders.
+// in with a code) and change roles; an owner or a developer can do everything, staff run requests and orders.
 import { readContact } from '../../../../supabase/functions/_shared/forms';
 import * as api from '../api';
 import type { View } from '../app';
@@ -7,14 +7,14 @@ import { day, esc, failed, field, fields, select, toast } from '../ui';
 
 export async function teamView(v: View) {
   let people = await api.team();
-  const owner = v.me.role === 'owner';
+  const owner = api.manages(v.me.role);
 
   function draw() {
     v.main.innerHTML = `<section class="mast"><div style="display:flex;flex-direction:column;gap:6px"><span class="kick">${people.length} on the team</span><h1 class="sc">Team</h1></div>
-<p>Owners can do everything, including adding people. Staff answer requests, open orders, ask for decisions, add photos and move stages.</p></section>
+<p>Owners and developers can do everything, including adding people. Staff answer requests, open orders, ask for decisions, add photos and move stages.</p></section>
 <div class="split">
 <section class="card" aria-labelledby="t-h"><div class="ch"><span><span class="kick">01 — People</span><h2 id="t-h" class="sc ct" style="margin-top:6px">Full Circle</h2></span></div>
-<div class="cb">${people.map((p) => `<div class="row" style="justify-content:space-between"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:500">${esc(p.name)}${p.user_id === v.me.user_id ? ' <span class="t3">(you)</span>' : ''}</span><span class="t3" style="font-size:12.5px">Since ${day(p.created_at)}</span></span><span class="pillS${p.role === 'owner' ? ' ok' : ''}">${p.role === 'owner' ? 'Owner' : 'Staff'}</span></div>`).join('')}</div></section>
+<div class="cb">${people.map((p) => `<div class="row" style="justify-content:space-between"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:500">${esc(p.name)}${p.user_id === v.me.user_id ? ' <span class="t3">(you)</span>' : ''}</span><span class="t3" style="font-size:12.5px">Since ${day(p.created_at)}</span></span><span class="pillS${api.manages(p.role) ? ' ok' : ''}">${api.roleName(p.role)}</span></div>`).join('')}</div></section>
 <section class="card hero" aria-labelledby="a-h"><div class="ch"><span><span class="kick">02 — Add someone</span><h2 id="a-h" class="sc ct" style="margin-top:6px">${owner ? 'A new member of staff' : 'Owners add people'}</h2></span></div>
 <div class="cb">${owner ? `<form id="add" class="stack" style="gap:10px" novalidate><div class="g2">${field('Name', 'name', '')}${field('Work email', 'email', '', { type: 'email' })}</div>
 ${select('Role', 'role', [['staff', 'Staff'], ['owner', 'Owner']], 'staff')}<span class="errline" id="add-err" role="alert"></span>

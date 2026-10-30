@@ -134,6 +134,18 @@ test('admin: add someone to a client, and an owner adds staff', async ({ page })
   expect(staff.map((s) => s.name)).toEqual(['Mazen', 'Salma']);
 });
 
+test('admin: a developer is named so, and can add people as an owner can', async ({ page }) => {
+  const { staff } = await mockAdmin(page, { role: 'developer' });
+  await page.goto('/admin#/team');
+  await signInAdmin(page);
+  await expect(page.locator('#main .row', { hasText: 'Mazen' }).locator('.pillS')).toHaveText('Developer');
+  await page.locator('#add [name=name]').fill('Salma');
+  await page.locator('#add [name=email]').fill('salma@fullcircle.test');
+  await page.getByRole('button', { name: 'Add and email the link' }).click();
+  await expect(page.locator('#main')).toContainText('Salma');
+  expect(staff.map((s) => s.name)).toEqual(['Mazen', 'Salma']);
+});
+
 test('admin: the overview says what needs us, and an approval moves the order on from it', async ({ page }) => {
   const { calls, orders } = await mockAdmin(page);
   await page.goto('/admin');
