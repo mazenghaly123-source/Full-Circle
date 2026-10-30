@@ -1,0 +1,3 @@
+# Short links for places where a long address looks bad, such as the Instagram bio. Each forwards to
+# the site with its source tags, which analytics and a sent request both keep (src/scripts/core/source.ts).
+/ig /?utm_source=instagram&utm_medium=bio 302
