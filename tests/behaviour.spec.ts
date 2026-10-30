@@ -86,7 +86,7 @@ test('client-side navigation runs the ring wipe, keeps the shell and updates the
   expect(t.swap - t.start).toBeGreaterThanOrEqual(470);
   expect(t.swap - t.start).toBeLessThan(1200);
   expect(await page.evaluate(() => (window as any).__sameDocument)).toBe(true);
-  await expect(page).toHaveTitle('How it works / From idea to bulk / Full Circle');
+  await expect(page).toHaveTitle('How it works / Clothing from idea to bulk / Full Circle');
   await expect(page.locator('#hdr')).not.toHaveClass(/open/);
   expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
   if (!isPhone(info)) await expect(page.locator('header .nav a[href="/how-it-works"]')).toHaveClass(/on/);
@@ -925,13 +925,26 @@ test.describe('approved changes', () => {
     // the business, on Home
     await page.goto('/');
     const [org] = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
+    const graph = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
     expect(org).toMatchObject({ '@type': 'Organization', name: 'Full Circle', url: 'https://fullcircle-co.com/', telephone: '+20226987277', address: { addressLocality: 'Cairo', addressCountry: 'EG' } });
+    expect(org.hasOfferCatalog.itemListElement.map((o: any) => o.itemOffered.name)).toEqual(['Design', 'Build', 'Launch']);
+    // the FAQ, as the page shows it
+    const faq = graph.find((n: any) => n['@type'] === 'FAQPage');
+    const shown = await page.locator('#faqList details').evaluateAll((ds) => ds.map((d) => [d.querySelector('h3')!.textContent, d.querySelector('.ans')!.textContent]));
+    expect(faq.mainEntity.map((q: any) => [q.name, q.acceptedAnswer.text])).toEqual(shown);
     expect(await head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/');
     // moving to another page without a reload swaps them too
     await clickStill(page.locator('footer a[href="/about"]').first());
     await page.waitForURL('**/about');
     await expect.poll(() => head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/about');
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    // What we make: the making as a service, one offer per category card, with its minimum
+    await page.goto('/what-we-make');
+    const service = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    expect(service).toMatchObject({ '@type': 'Service', provider: { '@id': 'https://fullcircle-co.com/#organization' } });
+    const offers = service.hasOfferCatalog.itemListElement;
+    expect(offers.map((o: any) => o.itemOffered.name)).toEqual(await page.locator('.mcat h2').allTextContents());
+    expect(offers.map((o: any) => o.eligibleQuantity?.minValue)).toEqual([150, 60, 60, 80, 100, undefined]);
     // a missing page is not indexed
     await page.goto('/no-such-page');
     expect(await head('meta[name=robots]')).toBe('noindex');
