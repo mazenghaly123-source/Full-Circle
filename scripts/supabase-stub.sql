@@ -26,6 +26,17 @@ grant select on storage.buckets to anon, authenticated, service_role;
 create function storage.foldername(name text) returns text[] language plpgsql as $$
 declare _parts text[]; begin select string_to_array(name, '/') into _parts; return _parts[1:array_length(_parts, 1) - 1]; end $$;
 grant execute on function storage.foldername(text) to anon, authenticated, service_role;
+-- as Supabase: deleting from the storage tables in SQL is refused unless storage.allow_delete_query is on
+-- (files are removed through the Storage API)
+create function storage.protect_delete() returns trigger language plpgsql as $$
+begin
+  if coalesce(current_setting('storage.allow_delete_query', true), 'false') <> 'true' then
+    raise exception 'Direct deletion from storage tables is not allowed. Use the Storage API instead.' using errcode = '42501';
+  end if;
+  return old;
+end $$;
+create trigger protect_objects_delete before delete on storage.objects for each row execute function storage.protect_delete();
+create trigger protect_buckets_delete before delete on storage.buckets for each row execute function storage.protect_delete();
 -- pg_cron's job list and the call that adds a job (named jobs are replaced, as pg_cron does)
 create schema cron;
 create table cron.job (jobid bigserial primary key, jobname text unique, schedule text not null, command text not null);

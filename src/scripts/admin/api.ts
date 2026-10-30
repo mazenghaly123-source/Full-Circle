@@ -152,6 +152,15 @@ export function sendQueued() {
   session.call('/functions/v1/notify', { method: 'POST', body: '{}' }).catch(() => { /* sent with the next call */ });
 }
 
+/**
+ * Deletes a cancelled order and everything on it (owners and developers, delete_order), then its photos'
+ * files. A file that can't be removed is only left behind: nothing links to it any more.
+ */
+export async function deleteOrder(orderId: number) {
+  const paths = await rpc<string[]>('delete_order', { p_order: orderId }, false);
+  if (paths?.length) await ask('/storage/v1/object/stage-photos', { method: 'DELETE', body: JSON.stringify({ prefixes: paths }) }).catch(() => null);
+}
+
 /** Signed links to stage photos (private bucket), good for an hour. */
 export async function signed(paths: string[]): Promise<Record<string, string>> {
   if (!paths.length) return {};
