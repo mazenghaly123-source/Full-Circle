@@ -62,7 +62,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   plan. Despite the name it is the live project: Mazen decided on 30 Oct to keep it, on the free plan,
   for the first months, and to upgrade the same project to Pro once orders run on the portal (for the
   backups; the free plan has none). No second project is planned.
-- **Migrations applied** (all 15 in `supabase/migrations/`, and the versions match):
+- **Migrations applied** (15 of the 16 in `supabase/migrations/`, and the versions match; `delete_order` waits on Mazen):
   `20261015103850` requests_and_messages, `20261015103905` consents_request_index,
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
@@ -80,7 +80,12 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 - `20261030153525` developer_role and `20261030153541` developer_is_owner (30 Oct, MCP): a third staff role,
   **developer**, that can do everything an owner can (`private.is_owner()` counts both). Mazen asked to be a
   developer, not the owner, with full rights: his staff row was changed to `developer` the same day.
-  **There is no owner on the team now**; when Mazen names the real owner, add them in `/admin` → Team as Owner.
+  The same day Mazen added Okasha, Fares and Malak as owners.
+- `20261030170000` delete_order (30 Oct): an owner or a developer deletes a **cancelled** order from its page
+  in `/admin` (type its code to confirm), log, photos and messages with it; its request goes back to the inbox.
+  The photos' files go through the Storage API (a new delete policy for owners on `stage-photos`). **Not
+  applied**: it holds a DELETE, so Mazen runs it in the SQL editor (*Waiting on Mazen*). Mazen's first test
+  order (FC-2501, 30 Oct) was cleared by hand in the SQL editor and the code sequence set back to FC-2501.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
   - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
@@ -270,11 +275,12 @@ Decisions:
 
 
 Small, on Mazen:
-- Name the real owner (name and email) when ready, to be added in `/admin` → Team as Owner (30 Oct: he
-  is a developer now, and nobody is the owner).
+- Run `supabase/migrations/20261030170000_delete_order.sql` in the SQL editor, then
+  `insert into supabase_migrations.schema_migrations (version, name) values ('20261030170000', 'delete_order');`
+  (until then the Delete order button answers with an error).
+- Delete the two test photos in Storage → `stage-photos` (`3/…` and `4/…`; their orders are gone).
 - Send one request from his phone (it is real data now, and it shows in `/admin`), to prove the
   Turnstile secret is set (see *Supabase*).
-- Delete the test file in Storage → `stage-photos`.
 - Check where a reply to `hello@fullcircle-co.com` goes (the emails are sent from it). If nowhere,
   Cloudflare Email Routing (free) can forward it to the Gmail inbox.
 - Upgrade the Supabase project to Pro once orders run on the portal.

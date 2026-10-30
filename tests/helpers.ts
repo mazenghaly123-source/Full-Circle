@@ -541,6 +541,16 @@ export async function mockAdmin(page: Page, o: { staff?: boolean; role?: 'owner'
       Object.assign(d, { status: 'withdrawn', closed_at: now(), closed_label: 'Mazen' }); ev(x, 'decision_withdrawn', { decision_id: d.id, title: d.title });
       return { json: null };
     },
+    delete_order: (b) => {
+      // as delete_order: owners and developers, cancelled orders only; the request goes back to the inbox
+      const x = orders.find((y) => y.id === b.p_order);
+      if (staff[0]?.role === 'staff') return { status: 403, json: { code: '42501', message: 'Only an owner or a developer deletes orders' } };
+      if (x.status !== 'cancelled') return fail('Cancel the order first');
+      orders.splice(orders.indexOf(x), 1);
+      const r = requests.find((y) => y.id === x.request_id);
+      if (r && !orders.some((y) => y.request_id === r.id)) { r.status = 'replied'; r.orders = []; }
+      return { json: x.stage_photos.map((p: any) => p.object_path) };
+    },
     add_stage_photo: (b) => {
       const x = orders.find((y) => y.id === b.p_order), p = { id: ++next, stage: b.p_stage, object_path: b.p_object_path, caption: b.p_caption, created_at: now() };
       x.stage_photos.push(p); ev(x, 'photo_added', { stage: b.p_stage, note: b.p_caption });
@@ -608,6 +618,7 @@ export async function mockAdmin(page: Page, o: { staff?: boolean; role?: 'owner'
       const { paths } = req.postDataJSON();
       return route.fulfill({ json: paths.map((p: string) => ({ path: p, signedURL: `/object/sign/stage-photos/${p}?token=t`, error: null })) });
     }
+    if (req.method() === 'DELETE') { calls.push({ fn: 'remove', method: 'DELETE', body: req.postDataJSON() }); return route.fulfill({ json: [] }); }
     calls.push({ fn: 'upload', method: req.method(), body: path });
     return route.fulfill({ json: { Key: path } });
   });

@@ -146,6 +146,37 @@ test('admin: a developer is named so, and can add people as an owner can', async
   expect(staff.map((s) => s.name)).toEqual(['Mazen', 'Salma']);
 });
 
+test('admin: a cancelled order can be deleted by an owner or a developer, once its code is typed', async ({ page }) => {
+  const { calls, orders } = await mockAdmin(page, { role: 'developer' });
+  orders.find((x) => x.id === 3).stage_photos.push({ id: 31, stage: 2, object_path: '3/collar.jpg', caption: null, created_at: new Date().toISOString() });
+  await page.goto('/admin#/order/3');
+  await signInAdmin(page);
+  // still active: cancel it first
+  const del = page.locator('[data-delete]');
+  await expect(del).toBeDisabled();
+  await page.locator('#det [name=status]').selectOption('cancelled');
+  await page.locator('#det button[type=submit]').click();
+  await expect(del).toBeEnabled();
+  await del.click();
+  await page.locator('#del [name=code]').fill('FC-2441');
+  await page.locator('.dlg button[type=submit]').click();
+  await expect(page.locator('#del-err')).toHaveText('Type FC-2440 to delete it');
+  await page.locator('#del [name=code]').fill('fc-2440');
+  await page.locator('.dlg button[type=submit]').click();
+  await expect(page.locator('#toast')).toHaveText('FC-2440 deleted');
+  await page.waitForURL('**/admin#/clients/1');
+  expect(orders.map((x) => x.code)).not.toContain('FC-2440');
+  expect(calls.find((c) => c.fn === 'remove')?.body).toEqual({ prefixes: ['3/collar.jpg'] });
+});
+
+test('admin: staff see no way to delete an order', async ({ page }) => {
+  await mockAdmin(page, { role: 'staff' });
+  await page.goto('/admin#/order/5');
+  await signInAdmin(page);
+  await expect(page.locator('#main h1')).toHaveText('Logo tee');
+  await expect(page.locator('[data-delete]')).toHaveCount(0);
+});
+
 test('admin: the overview says what needs us, and an approval moves the order on from it', async ({ page }) => {
   const { calls, orders } = await mockAdmin(page);
   await page.goto('/admin');

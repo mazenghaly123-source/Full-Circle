@@ -1,6 +1,7 @@
 // An order's page: what needs us now, the stage (and moving it), the decision with the client, stage
 // photos, specs and details, the people who follow it, the approval log and the messages sent. Every
-// change goes through a database function that writes the log; the client is emailed by notify.
+// change goes through a database function that writes the log; the client is emailed by notify. An owner
+// or a developer can delete a cancelled order (delete_order), log and all.
 import * as api from '../api';
 import type { View } from '../app';
 import { day, dialog, esc, failed, field, fields, logLine, pad, sampleApproved, select, stageName, toast, waitingOn, when } from '../ui';
@@ -100,6 +101,9 @@ ${field('Name', 'name', x.name)}${field('Product', 'product', x.product)}${field
 <div class="cb">${people.length ? people.map((p) => `<div style="display:flex;flex-direction:column;gap:2px;font-size:13.5px"><span style="font-weight:500">${esc(p.name)}</span><span class="t3" style="font-size:12.5px">${esc(p.email)}${p.whatsapp ? ` · ${esc(p.whatsapp)}` : ''}</span></div>`).join('') : '<div class="empty">Nobody signs in for this client yet. Add someone on the client\'s page.</div>'}</div></section>
 <section class="card" aria-labelledby="ms-h"><div class="ch"><span><span class="kick">08 — Messages</span><h2 id="ms-h" class="sc ct" style="margin-top:6px">Sent about it</h2></span></div>
 <div class="cb">${x.order_notifications.length ? `<div class="scroll-x"><table class="tbl"><tbody>${[...x.order_notifications].sort((a, b) => b.id - a.id).slice(0, 12).map((n) => `<tr><td class="mono t3" style="white-space:nowrap">${when(n.created_at)}</td><td>${EVENT[n.event] ?? esc(n.event)}<br><span class="t3" style="font-size:12px">${esc(n.recipient)} · ${n.channel}</span></td><td><span class="pillS${n.status === 'sent' ? ' ok' : n.status === 'failed' ? ' us' : ''}" title="${esc(n.detail ?? '')}">${n.status === 'sent' && n.read_at ? 'read' : n.status === 'sent' && n.delivered_at ? 'delivered' : n.status}</span></td></tr>`).join('')}</tbody></table></div>` : '<span class="hint">Nothing sent yet.</span>'}</div></section>
+${api.manages(v.me.role) ? `<section class="card" aria-labelledby="del-h"><div class="ch"><span><span class="kick">Owners and developers</span><h2 id="del-h" class="sc ct" style="margin-top:6px">Delete the order</h2></span></div>
+<div class="cb"><span class="hint">${x.status === 'cancelled' ? 'A test, or an order opened by mistake: it goes with its log, photos and messages, and its request goes back to the inbox. This cannot be undone.' : 'Cancel it first (Status, under Details), then delete it here.'}</span>
+<div class="row"><button type="button" class="pill red" data-delete${x.status === 'cancelled' ? '' : ' disabled'}>Delete order</button></div></div></section>` : ''}
 </div></div>
 <section class="card" aria-labelledby="lg-h"><div class="ch"><span><span class="kick">09 — Approval log</span><h2 id="lg-h" class="sc ct" style="margin-top:6px">Everything, in order</h2></span><span class="cm">Never edited or deleted</span></div>
 <div class="cb scroll-x"><table class="tbl log"><tbody>${events.map((e) => `<tr><td>${when(e.created_at)}</td><td>${esc(logLine(e))}</td><td class="t3" style="white-space:nowrap">${esc(e.side === 'staff' ? e.actor_label : `${e.actor_label} (client)`)}</td></tr>`).join('')}</tbody></table></div></section>`;
@@ -127,6 +131,23 @@ ${x.stage_photos.length ? `<div class="fl"><span class="lab">Photos to show with
     });
   }
 
+  function remove() {
+    const x = o!;
+    const body = `<form id="del" class="stack" novalidate>
+<p class="t2" style="margin:0">${esc(x.code)} goes with its log, photos and messages. This cannot be undone.</p>
+${field(`Type ${x.code} to delete it`, 'code', '', { req: true, attrs: ' autocomplete="off"' })}
+<span class="errline" id="del-err" role="alert"></span></form>`;
+    const { el, close } = dialog(`Delete ${x.code}?`, body, '<span></span><div class="row"><button type="button" class="pill ghost" data-close>Keep it</button><button type="submit" form="del" class="pill red">Delete order</button></div>');
+    const form = el.querySelector<HTMLFormElement>('#del')!;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (fields(form).code.toUpperCase() !== x.code.toUpperCase()) { el.querySelector('#del-err')!.textContent = `Type ${x.code} to delete it`; return; }
+      const btn = el.querySelector<HTMLButtonElement>('button[type=submit]')!; btn.disabled = true;
+      try { await api.deleteOrder(x.id); close(); toast(`${x.code} deleted`); v.counts(); v.go(`#/clients/${x.client_id}`); }
+      catch (err) { btn.disabled = false; if (err instanceof api.SignedOut) { close(); return failed(err); } el.querySelector('#del-err')!.textContent = (err as Error).message; }
+    });
+  }
+
   draw();
   v.main.addEventListener('click', async (e) => {
     const t = e.target as HTMLElement, x = o!;
@@ -134,6 +155,7 @@ ${x.stage_photos.length ? `<div class="fl"><span class="lab">Photos to show with
     if (move) return act(() => api.rpc('move_stage', { p_order: x.id, p_to: Number(move.dataset.move), p_note: null }), `Moved to ${stageName(Number(move.dataset.move))}`, move);
     const dec = t.closest<HTMLElement>('[data-decide]');
     if (dec) return decide(dec.dataset.decide ?? '');
+    if (t.closest('[data-delete]')) return remove();
     const wd = t.closest<HTMLButtonElement>('[data-withdraw]');
     if (wd) {
       const open = x.order_decisions.find((d) => d.status === 'open');
