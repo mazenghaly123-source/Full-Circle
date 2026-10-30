@@ -34,7 +34,7 @@ for (const r of listMarkdownRoutes()) {
   });
 }
 
-test('every page names its markdown and a summary for agents; Home describes the business and the site', async ({ page }) => {
+test('every page names its markdown and a summary for agents; Home describes the business, the site and its FAQ', async ({ page }) => {
   for (const r of listMarkdownRoutes()) {
     await page.goto(r.path);
     await expect(page.locator('head link[rel=alternate][type="text/markdown"]')).toHaveAttribute('href', `https://fullcircle-co.com/${mdFile(r.path)}.md`);
@@ -42,7 +42,7 @@ test('every page names its markdown and a summary for agents; Home describes the
   }
   await page.goto('/');
   const graph = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
-  expect(graph.map((n: { '@type': string }) => n['@type'])).toEqual(['Organization', 'WebSite']);
+  expect(graph.map((n: { '@type': string }) => n['@type'])).toEqual(['Organization', 'WebSite', 'FAQPage']);
   await page.goto('/no-such-page');
   await expect(page.locator('head link[rel=alternate][type="text/markdown"]')).toHaveCount(0);
 });

@@ -157,8 +157,9 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   registered by slot in `src/data/photos.ts`. The request form's questions, the form rules and the
   words shown with the forms live in `supabase/functions/_shared/forms.ts`, which the site and the
   Edge Functions both import (site.ts re-exports the questions).
-- `Base.astro` writes each page's canonical address, share tags and (Home only) the business and the
-  site as structured data; titles, descriptions and the `ai-summary` tag come from `PAGES` in
+- `Base.astro` writes each page's canonical address, share tags and structured data
+  (`src/data/structured-data.ts`, 30 Oct 2026: on Home the business with its three parts as services, the site
+  and the FAQ; on What we make the making as a service with its six categories and minimums); titles, descriptions and the `ai-summary` tag come from `PAGES` in
   `src/data/site.ts`. The share card is `public/og.jpg`, rendered by `scripts/og-image.mjs`. `sitemap.xml`
   is an endpoint in `src/pages/`.
 - Every public page has a markdown version for AI agents (26 Oct 2026): `/about.md`, `/about` with
