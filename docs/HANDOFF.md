@@ -1,21 +1,32 @@
-# Handoff (27 Oct 2026)
+# Handoff (30 Oct 2026)
 
 For a new Claude session that has none of the earlier chat history (Mazen may continue from another
 Claude account). Read this first, then [CLAUDE.md](../CLAUDE.md), [production-plan.md](./production-plan.md)
 §2 and §10, [deploy.md](./deploy.md) and [whatsapp.md](./whatsapp.md). Everything below was checked on
-23–27 Oct 2026 against GitHub, the staging Supabase project and the PRs. Where something could not be
-checked from a cloud session, it says so.
+23–30 Oct 2026 against GitHub, the Supabase project, the live domain and the PRs. Where something could
+not be checked, it says so.
 
 **Working with Mazen:** reply in Arabic (Egyptian), very briefly. He wants finished work merged to `main`
-so it goes live: open a PR from `claude/tender-rubin-ahjc3t` (start it again from `main` first), wait for CI (`site`, `backend`, Workers
-Builds; about 20 minutes) and CodeRabbit's review, fix what they find, then merge with a merge commit.
+so it goes live, and since his first social post (29 Oct) he wants it fast: "build it and put it on the
+site, don't stop to ask me" (29 Oct, for the garment). Still say what you will build in two lines before
+a large job. Open a PR from `claude/practical-gauss-hadquv` (restart it from `main` first), wait for CI
+(`site` about 18 minutes, `backend`, Workers Builds), fix what fails, then merge with a merge commit.
+CodeRabbit no longer reviews (the repo has under 10 stars, and Mazen decided not to pay for it, 30 Oct).
+**The site's data is real now** (see *Supabase*): never send test requests to it.
+
+**In a cloud session:** the repo pins a Playwright that differs from the pre-installed Chromium. Run the
+suites through a local config that is never committed (`pw.local.config.ts`, listed in `.git/info/exclude`):
+`import base from './playwright.config'; export default { ...base, use: { ...base.use, launchOptions: { ...base.use?.launchOptions, executablePath: '/opt/pw-browsers/chromium' } } };`
+then `npx playwright test -c pw.local.config.ts …`. For `scripts/test-db-local.sh`, first run
+`apt-get install -y postgresql-16-pgtap`.
 
 ## Branches
 
 | Branch | Holds | State |
 |---|---|---|
 | `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, the redesign (see *In progress*) and the designed emails | Live |
-| `claude/tender-rubin-ahjc3t` | The working branch: Design, Build, Launch on Home (PR #22), then the request form's quantity (27 Oct) | Restart it from `main` for new work once merged |
+| `claude/practical-gauss-hadquv` | The working branch (29–30 Oct): the Turnstile site key (PR #24), the garment figure (PRs #25, #26), keeping Supabase awake (PR #27) | PR #27 open when this was written; restart it from `main` for new work once merged |
+| `claude/tender-rubin-ahjc3t` | Design, Build, Launch on Home (PR #22), the request form's quantity (PR #23) | Merged to `main`, safe to delete |
 | `claude/leather-imports` | Leather with the jackets, imported fabrics at a competitive price (PR #21, 27 Oct) | Merged to `main`, safe to delete |
 | `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
@@ -35,20 +46,23 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 
 - **Live, from `main` (everything since 23 Oct):**
   - The 7 pages and the 404 at parity with the prototype, with Home redesigned, and `/privacy`.
-  - The request and contact forms, which send to **staging** Supabase (test data).
-  - The real portal on Track and `/admin`. Both sign in against **staging** (codes arrive since the
-    Auth settings of 24 Oct; Mazen signed in to `/admin` as owner).
+  - The request and contact forms, which send to the one Supabase project, real data since 30 Oct,
+    through the real Turnstile widget (29 Oct).
+  - The real portal on Track and `/admin`, signing in against the same project (Mazen is the owner).
+  - How it works' garment figure, one per product (29 Oct).
   - Search and sharing. WhatsApp from the system number is in the code but off until Meta's secrets
     are set.
 - Cloudflare deploys `main` to **fullcircle-co.com** (+ `www`) and
-  **full-circle.mazenghaly123.workers.dev**. A cloud session cannot reach those hosts, so whether the
-  domain answers was not checked here.
+  **full-circle.mazenghaly123.workers.dev**, a few minutes after a merge. The domain answers from a cloud
+  session (checked 29 Oct: every page 200, the share card, the garment live).
 
-## Supabase staging
+## Supabase
 
 - Project **full-circle-staging**, ref **`kmsrzeqxgufrodefclty`**, Frankfurt (eu-central-1), free
-  plan, test data only. The live project does not exist yet; it is created at launch.
-- **Migrations applied** (all 9 in `supabase/migrations/`, and the versions match):
+  plan. Despite the name it is the live project: Mazen decided on 30 Oct to keep it, on the free plan,
+  for the first months, and to upgrade the same project to Pro once orders run on the portal (for the
+  backups; the free plan has none). No second project is planned.
+- **Migrations applied** (all 13 in `supabase/migrations/`, and the versions match):
   `20261015103850` requests_and_messages, `20261015103905` consents_request_index,
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
@@ -60,8 +74,9 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 - `20261027071333` requests_in_portal (27 Oct, through the MCP): `my_requests()`, the requests the
   portal lists. `20261027074938` my_requests_staff (same day, MCP): staff, who see every order
   on Track, no longer see a converted request of theirs as well. `20261027100100` expired_accounts (the clean-up also deletes the sign-in accounts a
-  request opened, a year on) is **not applied**: it holds a DELETE, so Mazen runs it in the SQL editor
-  (*Waiting on Mazen*).
+  request opened, a year on): applied by Mazen in the SQL editor on 30 Oct, with the clean-out of the test data.
+- `20261030151642` keep_awake (30 Oct, MCP): `public.alive()`, which anon may call; the Worker calls it
+  twice a day so the free plan never pauses the project.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
   - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
@@ -80,12 +95,15 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
     to a brand that gives an email has not been tried yet.
   - Supplied by Supabase automatically: `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
     `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_SECRET_KEYS`.
-  - `TURNSTILE_SECRET_KEY`: the real widget's secret, for Mazen to set on 29 Oct once the build with its
-    site key is live (until then staging falls back to Cloudflare's always-pass test key).
+  - `TURNSTILE_SECRET_KEY`: the real widget's secret. Mazen said "done" on 29 Oct, after the build with
+    the site key went live; it was not checked (a check means sending a request, and the data is real).
+    If it is missing, the project falls back to Cloudflare's always-pass test key, which refuses the real
+    widget's tokens: every form would fail. Mazen has not yet sent a request from his phone to prove it.
   - Not set: `STAFF_EMAILS` and `SITE_URL` (the defaults are used), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
     `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` and `SEND_SMS_HOOK_SECRET`.
-- Data on staging: 1 staff, 1 client, 3 orders, 6 requests (FC-2508 and FC-2509 are 23 Oct tests),
-  1 Auth user, and the bucket `stage-photos`.
+- Data (checked 30 Oct, after the clean-out): no requests, orders, clients, messages or consents; one
+  Auth user and staff row, Mazen (owner); the code sequence restarts at FC-2501; one test file left in the
+  bucket `stage-photos`.
 - Auth settings: sign-ups off, OTP expiry, the code template and SMTP are done (24 Oct, see *Waiting
   on Mazen*); captcha and the phone hook wait for Turnstile and Meta.
 
@@ -104,14 +122,16 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   - The domain's nameservers, moved at GoDaddy to `alfred.ns.cloudflare.com` and
     `eve.ns.cloudflare.com`.
   - The custom domains themselves come from `wrangler.jsonc` (`routes`); no DNS was added by hand.
+- **Two cron triggers** (`triggers` in `wrangler.jsonc`, PR #27): the Worker's `scheduled` handler calls
+  Supabase twice a day so the free plan never pauses the project.
 - **Not done yet:**
-  - `"workers_dev": false` (the domain is live, so this can go in with the launch items).
+  - `"workers_dev": false` (the domain is live).
   - Turning off Cloudflare Web Analytics on the zone.
-  - Production build variables (`PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_KEY`): none are set, so every
-    build uses staging.
+  - No build variables are set, and none are needed: the defaults are the one project
+    (`src/data/project.ts`).
 - **Turnstile (29 Oct, Mazen's first social post):** an Invisible widget for `fullcircle-co.com`, `www` and
   `full-circle.mazenghaly123.workers.dev`. Its site key is the default in `src/data/backend.ts`, its
-  secret is staging's `TURNSTILE_SECRET_KEY`. Preview URLs are not on the widget, so their forms are refused.
+  secret is the project's `TURNSTILE_SECRET_KEY`. Preview URLs are not on the widget, so their forms are refused.
 - **Vercel is still connected.** Its GitHub app builds a preview of every PR
   (`mazen-s-projects2/full-circle`), although hosting is Cloudflare only (PR #6). Advised to
   disconnect it (24 Oct); Mazen's to do.
@@ -119,6 +139,24 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   Cloudflare's "Block AI bots" setting is off for the zone.
 
 ## In progress
+
+- **Open:** [PR #27](https://github.com/mazenghaly123-source/Full-Circle/pull/27), keeping Supabase awake
+  (`public.alive()` is already applied to the project; the PR adds the Worker cron, its test and the docs).
+  Merge it once CI is green.
+- **The first social post (29 Oct):** Mazen posted (or was about to). The site was checked for it. The bio
+  link suggested to him, so GA4 shows the post's visitors:
+  `https://fullcircle-co.com/?utm_source=instagram&utm_medium=social&utm_campaign=first_post`. GA counts only
+  visitors who accept the consent bar. Resend's free plan sends 100 emails a day (a request sends 2–3), so
+  watch it if requests pick up. Mazen asked about a countdown page for the bio link; advised against it
+  (the site is live), and no page was built.
+
+- **The one Supabase project holds real data (30 Oct, Mazen):** the free plan for the first months, Pro
+  on the same project once orders run on the portal (for the backups; no move needed). Mazen cleared the
+  test data in the SQL editor (orders, clients, requests, messages, consents, every account but his
+  owner's; codes restart at FC-2501) and applied `20261027100100` expired_accounts with it. **Send no test
+  requests to it.** The Worker calls `public.alive()` twice a day (`20261030151642` keep_awake,
+  `src/keep-awake.ts`, `triggers` in `wrangler.jsonc`) so the free plan never pauses it. One test photo
+  is left in Storage → `stage-photos` for Mazen to delete.
 
 - **How it works' garment (29 Oct, Mazen, built straight on the site, no mock):** the flat shirt in the demo
   ring is now a line figure with depth in the Hairline style, one per product (shirt, hoodie, tee, jeans,
@@ -226,8 +264,14 @@ Decisions:
 - In GA4, turning off Enhanced measurement → "Page changes based on browser history events" (the
   site sends its own page views; see production-plan.md §6).
 
-- Run `supabase/migrations/20261027100100_expired_accounts.sql` in staging's SQL editor, then
-  `insert into supabase_migrations.schema_migrations (version, name) values ('20261027100100', 'expired_accounts');`
+
+Small, on Mazen:
+- Send one request from his phone (it is real data now, and it shows in `/admin`), to prove the
+  Turnstile secret is set (see *Supabase*).
+- Delete the test file in Storage → `stage-photos`.
+- Check where a reply to `hello@fullcircle-co.com` goes (the emails are sent from it). If nowhere,
+  Cloudflare Email Routing (free) can forward it to the Gmail inbox.
+- Upgrade the Supabase project to Pro once orders run on the portal.
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,
@@ -243,14 +287,16 @@ Dashboard and account tasks:
   - Then set the 5 WhatsApp secrets and the Send SMS hook.
 - **A real photo of the floor** for About (`about-floor`). The atelier and team sections were removed
   (24 Oct), and About gets its own pass later.
-- At launch: the live Supabase project (Pro) and the PDPC filings (§7).
+- The PDPC filings (§7).
 
 ## Gotchas
 
-- **The live site runs on staging.**
-  - Since 23 Oct, Track's real sign-in and `/admin` are live against **staging**. The sign-in never creates an account (`create_user: false`).
-  - Live forms write to staging too, so the live project should exist before real clients use the
-    site.
+- **The project named full-circle-staging is the live one** (30 Oct). Its data is real: no test
+  requests, no test orders, and every migration is tested locally first (`scripts/test-db-local.sh`).
+  The sign-in never creates an account (`create_user: false`).
+- **CI's runner is slower than a cloud session.** A test that samples an animation mid-way passes here
+  and fails there (the garment test did, 29 Oct): compare with exact end states, as
+  `tests/behaviour.spec.ts` now does with `figurePaths(…, REST)`.
 - **The Turnstile site key and secret change together.** The site key in `src/data/backend.ts` and
   staging's `TURNSTILE_SECRET_KEY` belong to one widget; change one without the other and every form is refused.
 - **Supabase MCP and destructive SQL:**
@@ -258,7 +304,7 @@ Dashboard and account tasks:
     confirmation that never reaches a cloud session, so they time out.
   - Give Mazen the SQL to run in the dashboard's SQL editor, with an insert into
     `supabase_migrations.schema_migrations`.
-  - Name each local migration file with the version staging records.
+  - Name each local migration file with the version the project records.
   - Never edit an applied migration; add a new one.
 - **Parity is the bar:**
   - `tests/parity.spec.ts` compares every page with `prototype/index.html` at 1440×900, 390×844 and
@@ -285,12 +331,24 @@ Dashboard and account tasks:
   - Don't raise the legal review again.
 - The repo on GitHub is `mazenghaly123-source/Full-Circle`.
 
-## Next 3 steps
+## Next steps
 
-1. **SEO and GEO:** FAQPage and Service structured data, and a pass over titles and descriptions
+1. **Merge PR #27** once CI is green.
+2. **SEO and GEO:** FAQPage and Service structured data, and a pass over titles and descriptions
    (*In progress*, 0).
-2. **Prove phases 2–4 on staging** when Mazen wants the order test: send a test request with an
-   email, convert it to an order in `/admin`, sign in to `/track` as the client, and take the order
-   through all 8 stages from a phone.
-3. **The phase 5 launch items:** the live Supabase project, Turnstile, the production build
-   variables, `workers_dev: false`, and Lighthouse on the domain.
+3. **The How it works page on the three parts** (Design, Build, Launch), the request form offering
+   branding and content, and photo prompts for Design and Launch (*In progress*). Ask Mazen which comes
+   first.
+4. **Before the first real order:** the order test (phases 2–4) can no longer run on the real project.
+   Agree with Mazen how to prove it: a local stack (`supabase start` where Docker exists), or one real
+   request of his own that he deletes afterwards.
+5. **Launch items left:** `workers_dev: false`, Lighthouse on the domain, captcha in Auth → Attack
+   Protection, and Pro when orders start.
+
+## Suggested skills for the next session
+
+- `grilling` before a large build Mazen has not specified (one question at a time).
+- `diagnosing-bugs` when something on the live site breaks.
+- `tdd` for backend changes (database functions, Edge Functions).
+- `artifact-design` (through the Artifact tool) when Mazen does want a mock.
+- `writing-for-agents` when editing CLAUDE.md or this file.

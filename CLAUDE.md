@@ -179,9 +179,11 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   inline, and mirrors the redesigned Home's markup, so Home is still held to parity.
 
 ## Backend
-- Supabase project `full-circle-staging` (Frankfurt, free plan, **test data only**). The live
-  project is created at launch. Every build sends its forms to staging unless
-  `PUBLIC_SUPABASE_URL` says otherwise (`src/data/backend.ts`).
+- One Supabase project, `full-circle-staging` (Frankfurt, free plan), and since 30 Oct 2026 it holds
+  **real data** (Mazen): the test data was cleared, codes restart at FC-2501, and it moves to Pro (same
+  project, no move) once orders run on the portal. Send no test requests to it. A Worker cron calls
+  `public.alive()` twice a day so the free plan never pauses it (`src/keep-awake.ts`). Every build sends to
+  it unless `PUBLIC_SUPABASE_URL` says otherwise (`src/data/project.ts`, `src/data/backend.ts`).
 - Row-level security on every table, and the publishable key reaches none of them: the forms
   write through the `submit-request` and `submit-contact` Edge Functions, which check a Turnstile
   token. `supabase/tests/database/` holds who-can-reach-what tests; run `supabase test db`, or

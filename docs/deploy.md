@@ -49,8 +49,11 @@ The site then answers on `full-circle.<your-subdomain>.workers.dev`.
 The request and contact forms post to two Edge Functions on Supabase (`supabase/functions/`), which
 save to the database and email the team. Two more serve the portal and the admin: `invite` (staff add
 a person to a client or to the team, who is emailed where to sign in) and `notify` (sends the queued
-messages about orders). Until launch there is one project, **full-circle-staging**
-(Frankfurt, free plan), for test data only. Every build of the site sends to it; nothing to set.
+messages about orders). There is one project, **full-circle-staging**
+(Frankfurt, free plan), and since 30 Oct 2026 it holds the real requests (Mazen: the free plan for the
+first months, then Pro on the same project once orders run on the portal). Every build of the site sends
+to it; nothing to set. The Worker calls it twice a day (`triggers` in `wrangler.jsonc`, `src/keep-awake.ts`)
+so the free plan never pauses it for inactivity.
 
 **Settings for the functions** (Supabase dashboard → Edge Functions → Secrets):
 
@@ -63,7 +66,7 @@ messages about orders). Until launch there is one project, **full-circle-staging
 | `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `SEND_SMS_HOOK_SECRET` | WhatsApp from the system number, once Meta is set up ([whatsapp.md](./whatsapp.md)) | Every WhatsApp message is logged as skipped, and portal sign-in by number is refused |
 | `SITE_URL` | Where the links in the order emails and invitations point. On staging, once the live site uses the live project, set it to a preview that builds against staging, or invited test clients land on the live site | https://fullcircle-co.com |
 
-**At launch** (the live project):
+**If a separate live project is ever made** (not the plan since 30 Oct 2026):
 1. Create the live project in Frankfurt (Pro plan) and apply `supabase/migrations/` to it.
 2. Deploy the six functions with their JWT check off (the form functions check Turnstile instead;
    `invite` and `notify` check the signed-in caller themselves; `send-sms` and `whatsapp-webhook`

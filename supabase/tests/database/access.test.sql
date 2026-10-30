@@ -3,7 +3,7 @@
 -- are not staff see nothing; staff read everything and change only a status; owners manage staff.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(29);
+select plan(30);
 
 -- start from empty tables (the transaction is rolled back at the end, so a local stack keeps its rows)
 truncate public.requests, public.messages, public.contact_consents, public.notifications cascade;
@@ -43,8 +43,9 @@ select throws_ok($$insert into public.requests (code, path, product, brand, cont
 select throws_ok($$insert into public.requests (path, product, brand, contact, contact_channel, notice_version) values ('Starting', 'Tees', 'X', 'x@y.test', 'email', 'v')$$,
   '23514', null, 'an email contact must carry its email');
 
--- the publishable key (anon): nothing at all
+-- the publishable key (anon): nothing at all, but the keep-awake call, which reads nothing
 set local role anon;
+select is(public.alive(), true, 'anon can make the keep-awake call');
 select throws_ok('select * from public.requests', '42501', null, 'anon cannot read requests');
 select throws_ok('select * from public.messages', '42501', null, 'anon cannot read messages');
 select throws_ok('select * from public.staff', '42501', null, 'anon cannot read staff');
