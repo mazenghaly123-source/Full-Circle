@@ -68,13 +68,13 @@ const arcPaths = markArcPaths(sprite);
 <section class="wrap sec" id="who">
   <div class="sh"><h2 class="camp wide">Where is your brand?</h2></div>
   <div class="who snap" id="whoRow">
-    <article class="who-card"><BgImg img="path-starting" sizes="(max-width: 760px) 84vw, (max-width: 820px) 100vw, 50vw" />
+    <article class="who-card"><BgImg img="path-starting" sizes="(max-width: 760px) 80vw, (max-width: 820px) 92vw, (max-width: 1300px) 46vw, 600px" />
       <div class="glow" style="background:radial-gradient(40% 40% at 20% 20%,#C96832,transparent 70%)"></div>
       <div class="who-t"><h3 class="camp">Starting.</h3><p>An idea, no factory yet.</p></div>
       <div class="icrow"><span><Icon name="design" />Design</span><span><Icon name="techpack" />Tech pack</span><span><Icon name="sample" />First samples</span></div>
       <div><a class="btn btn-red" href={`${ROUTES.start}?path=Starting`}>Start a new brand</a></div>
     </article>
-    <article class="who-card"><BgImg img="path-scaling" sizes="(max-width: 760px) 84vw, (max-width: 820px) 100vw, 50vw" />
+    <article class="who-card"><BgImg img="path-scaling" sizes="(max-width: 760px) 80vw, (max-width: 820px) 92vw, (max-width: 1300px) 46vw, 600px" />
       <div class="glow" style="background:radial-gradient(40% 40% at 80% 20%,#243E8F,transparent 70%)"></div>
       <div class="who-t"><h3 class="camp">Scaling.</h3><p>Selling already. Bulk must match.</p></div>
       <div class="icrow"><span><Icon name="pattern" />Pattern review</span><span><Icon name="bulk" />Bulk samples</span><span><Icon name="qc" />QC every run</span></div>
@@ -87,7 +87,7 @@ const arcPaths = markArcPaths(sprite);
 <section class="wrap" id="h-make" style="padding-bottom:clamp(88px,10vw,150px)">
   <div class="sh"><h2 class="camp wide">What we make</h2><p>Denim first. Imported fabrics and trims.</p></div>
   <div class="make snap acc" id="makeGrid">{MAKE.map((m, i) => (
-    <a class={i === 0 ? 'cat on' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} sizes="(max-width: 760px) 72vw, 45vw" /><span class="num mono">{i === 0 ? 'Our specialty' : pad(i + 1)}</span><span class="v" aria-hidden="true">{m.n}</span><div class="t"><h3 class="camp">{m.n}</h3><div class="meta"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><span class="go mono">See details</span></div></a>
+    <a class={i === 0 ? 'cat on' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} sizes="(max-width: 760px) 72vw, 480px" /><span class="num mono">{i === 0 ? 'Our specialty' : pad(i + 1)}</span><span class="v" aria-hidden="true">{m.n}</span><div class="t"><h3 class="camp">{m.n}</h3><div class="meta"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><span class="go mono">See details</span></div></a>
   ))}</div><div class="dots" data-for="makeGrid"></div>
   <div class="make-foot"><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
 </section>
@@ -140,7 +140,7 @@ const arcPaths = markArcPaths(sprite);
       <div class="portal">
         <div class="prow"><span class="mono" style="font-size:13px">FC-2418 / Denim jeans</span><span class="chipst mono" id="pChip"><i></i><span id="pChipT">Awaiting approval</span></span></div>
         <div class="pbody">
-          <Photo img="portal-sample" describe caption={['Sample 03', 'Photo']} sizes="(max-width: 760px) 110px, (max-width: 860px) 40vw, 260px" />
+          <Photo img="portal-sample" describe caption={['Sample 03', 'Photo']} sizes="(max-width: 760px) 110px, (max-width: 860px) 34vw, 230px" />
           <div class="kv">
             <div><span>Stage</span><span id="pStage">05 / Sampling</span></div>
             <div><span>Item</span><span>Sample 03 / Fit + fabric</span></div>
