@@ -18,6 +18,8 @@ insert into public.requests (path, product, brand, contact, contact_channel, ema
   values ('Starting', 'Denim', 'Test', 't@brand.test', 'email', 't@brand.test', 'v');
 insert into public.clients (brand) values ('Test');
 insert into storage.buckets (id, name) values ('stage-photos', 'stage-photos') on conflict do nothing;
+-- the Storage API deletes with this on; here it lets the test check the delete policy itself
+set local storage.allow_delete_query = 'true';
 
 -- staff open the order from the request, ask for a decision and add a photo: a log to delete
 set local role authenticated;
