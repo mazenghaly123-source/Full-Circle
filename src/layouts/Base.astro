@@ -5,7 +5,8 @@ import Sprite from '../components/Sprite.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Icon from '../components/Icon.astro';
-import { EMAIL, INSTAGRAM_URL, PAGES, PHONE, SITE, WHATSAPP, WHATSAPP_URL, type PageKey } from '../data/site';
+import { PAGES, WHATSAPP_URL, type PageKey } from '../data/site';
+import { structuredData } from '../data/structured-data';
 import { mdFile } from '../md/registry';
 import '../styles/global.css';
 
@@ -20,23 +21,8 @@ const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/i
 const image = new URL('/og.jpg', Astro.site).href;
 // the same page in markdown, for AI agents (src/md/registry.ts); every page but the 404 has one
 const markdown = page !== 'notfound' && new URL(`/${mdFile(new URL(canonical).pathname)}.md`, Astro.site).href;
-const tel = (n: string) => n.replace(/\s/g, '');
-// who Full Circle is, and the site, for search engines: on Home only, where the business is the
-// page's subject; the same words as llms.txt and ai.txt (SITE)
-const home = new URL('/', Astro.site).href;
-const business = page === 'home' && {
-  '@context': 'https://schema.org',
-  '@graph': [{
-    '@type': 'Organization', '@id': `${home}#organization`, name: SITE.name, url: home,
-    logo: new URL('/favicon.svg', Astro.site).href, image, description: SITE.summary, email: EMAIL, telephone: tel(PHONE),
-    address: { '@type': 'PostalAddress', streetAddress: SITE.address.street, addressLocality: SITE.address.city, addressCountry: SITE.address.country },
-    contactPoint: [{ '@type': 'ContactPoint', contactType: 'sales', telephone: tel(WHATSAPP), email: EMAIL }],
-    sameAs: [INSTAGRAM_URL],
-  }, {
-    '@type': 'WebSite', '@id': `${home}#website`, name: SITE.name, url: home, inLanguage: 'en',
-    publisher: { '@id': `${home}#organization` },
-  }],
-};
+// what the page says about itself to search engines (src/data/structured-data.ts): Home and What we make
+const structured = structuredData(page, Astro.site!);
 ---
 <!doctype html>
 <html lang="en">
@@ -58,7 +44,7 @@ const business = page === 'home' && {
 <meta property="og:image:alt" content="Full Circle: Idea to product. Full circle. Development and manufacturing in Cairo, Egypt.">
 <meta name="twitter:card" content="summary_large_image">
 {markdown && <link rel="alternate" type="text/markdown" href={markdown}>}
-{business && <script type="application/ld+json" set:html={JSON.stringify(business)} />}
+{structured && <script type="application/ld+json" set:html={JSON.stringify(structured)} />}
 <meta name="theme-color" content="#11110F">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style is:inline>[hidden]{display:none!important}body{margin:0}</style>

@@ -199,14 +199,20 @@ site's look.
    - **Analytics (26 Oct):** GA4 `G-XNT9FPB5RQ` behind a consent bar (Mazen's choice), with page views,
      `generate_lead` for a sent request or message, and `whatsapp_click`; the privacy notice now names
      Google (dated 26 Oct). Search Console is verified by DNS; Mazen submits the sitemap there.
-   - Still to do: FAQPage and Service structured data, and a pass over titles and descriptions.
+   - **Structured data and titles (30 Oct, PR #29):** Home's graph adds the three parts (Design, Build, Launch)
+     as services on the Organization, where the brands sell (`areaServed`), and a FAQPage from the FAQ it shows;
+     What we make has a Service with one offer per category and its minimum (`src/data/structured-data.ts`).
+     Titles and descriptions: How it works, What we make, Request a sample and Track were sharpened (all
+     titles under 60 characters, descriptions under 160). Google shows FAQ rich results only for government and
+     health sites since 2023, so the FAQPage is for other search engines and AI answers. Next, when Mazen wants:
+     check them in Google's Rich Results Test and Search Console once the sitemap is submitted.
    - **AI-readable site (26 Oct), live** (PR #18; the GEO checker scores 8/9, the missing one is an MCP
      file, as there is no MCP server). Mazen approved the plan, the Worker
      ([ADR 0006](./adr/0006-a-worker-for-markdown.md)) and allowing every training crawler. Every public
      page has a markdown version (`src/md/registry.ts`; `/about.md`, `Accept: text/markdown`,
      `/api/md/about`, `/api/md/_catalog`), and `llms.txt`, `llms-full.txt`, `ai.txt` and `robots.txt`
      come from `src/md/agents.ts`. Pages carry `ai-summary` and a markdown `alternate` link; Home's
-     structured data is an Organization plus a WebSite. `ai.txt` follows ai-visibility.org.uk's current spec (v1.7.0: an H1 and `##` sections;
+     structured data is an Organization, a WebSite and a FAQPage (see above). `ai.txt` follows ai-visibility.org.uk's current spec (v1.7.0: an H1 and `##` sections;
      the prompt named v1.1.1, whose `[section]` form the spec now calls superseded).
 1. **The redesign** (Mazen, 23 Oct), to set the site apart from a competitor, factory21.co, whose
    Home looks like ours. On `main` since 23 Oct:
@@ -339,9 +345,8 @@ Dashboard and account tasks:
 
 ## Next steps
 
-1. **Merge PR #27** once CI is green.
-2. **SEO and GEO:** FAQPage and Service structured data, and a pass over titles and descriptions
-   (*In progress*, 0).
+1. ~~Merge PR #27~~ (merged 30 Oct, with #28, the developer role).
+2. ~~**SEO and GEO:** FAQPage and Service structured data, titles and descriptions~~ (PR #29, 30 Oct).
 3. **The How it works page on the three parts** (Design, Build, Launch), the request form offering
    branding and content, and photo prompts for Design and Launch (*In progress*). Ask Mazen which comes
    first.
