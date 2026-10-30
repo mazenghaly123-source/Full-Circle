@@ -3,7 +3,7 @@
 -- are not staff see nothing; staff read everything and change only a status; owners manage staff.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(33);
 
 -- start from empty tables (the transaction is rolled back at the end, so a local stack keeps its rows)
 truncate public.requests, public.messages, public.contact_consents, public.notifications cascade;
@@ -90,6 +90,15 @@ set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000a", 
 select lives_ok($$insert into public.staff (user_id, name) values ('00000000-0000-0000-0000-00000000000c', 'New')$$, 'an owner can add staff');
 select is((select count(*)::int from public.staff), 3, 'an owner sees all staff');
 select lives_ok($$delete from public.staff where user_id = '00000000-0000-0000-0000-00000000000c'$$, 'an owner can remove staff');
+reset role;
+
+-- a developer can do everything an owner can
+update public.staff set role = 'developer' where user_id = '00000000-0000-0000-0000-00000000000a';
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-00000000000a", "role": "authenticated"}';
+select lives_ok($$insert into public.staff (user_id, name) values ('00000000-0000-0000-0000-00000000000c', 'New')$$, 'a developer can add staff');
+select lives_ok($$update public.staff set role = 'owner' where user_id = '00000000-0000-0000-0000-00000000000c'$$, 'a developer can change a role');
+select lives_ok($$delete from public.staff where user_id = '00000000-0000-0000-0000-00000000000c'$$, 'a developer can remove staff');
 reset role;
 
 select * from finish();

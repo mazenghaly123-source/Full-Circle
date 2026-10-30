@@ -48,7 +48,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   - The 7 pages and the 404 at parity with the prototype, with Home redesigned, and `/privacy`.
   - The request and contact forms, which send to the one Supabase project, real data since 30 Oct,
     through the real Turnstile widget (29 Oct).
-  - The real portal on Track and `/admin`, signing in against the same project (Mazen is the owner).
+  - The real portal on Track and `/admin`, signing in against the same project (Mazen is on the team as a developer, see *Supabase*).
   - How it works' garment figure, one per product (29 Oct).
   - Search and sharing. WhatsApp from the system number is in the code but off until Meta's secrets
     are set.
@@ -62,7 +62,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   plan. Despite the name it is the live project: Mazen decided on 30 Oct to keep it, on the free plan,
   for the first months, and to upgrade the same project to Pro once orders run on the portal (for the
   backups; the free plan has none). No second project is planned.
-- **Migrations applied** (all 13 in `supabase/migrations/`, and the versions match):
+- **Migrations applied** (all 15 in `supabase/migrations/`, and the versions match):
   `20261015103850` requests_and_messages, `20261015103905` consents_request_index,
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
@@ -77,8 +77,12 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   request opened, a year on): applied by Mazen in the SQL editor on 30 Oct, with the clean-out of the test data.
 - `20261030151642` keep_awake (30 Oct, MCP): `public.alive()`, which anon may call; the Worker calls it
   twice a day so the free plan never pauses the project.
+- `20261030153525` developer_role and `20261030153541` developer_is_owner (30 Oct, MCP): a third staff role,
+  **developer**, that can do everything an owner can (`private.is_owner()` counts both). Mazen asked to be a
+  developer, not the owner, with full rights: his staff row was changed to `developer` the same day.
+  **There is no owner on the team now**; when Mazen names the real owner, add them in `/admin` → Team as Owner.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
-  - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
+  - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
     `whatsapp-webhook` v1.
   - The form rules changed on 27 Oct (no "Under 60"; `belowMinimum` is denim at 60–150 only) without a redeploy:
@@ -102,7 +106,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   - Not set: `STAFF_EMAILS` and `SITE_URL` (the defaults are used), `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`,
     `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` and `SEND_SMS_HOOK_SECRET`.
 - Data (checked 30 Oct, after the clean-out): no requests, orders, clients, messages or consents; one
-  Auth user and staff row, Mazen (owner); the code sequence restarts at FC-2501; one test file left in the
+  Auth user and staff row, Mazen (developer since 30 Oct); the code sequence restarts at FC-2501; one test file left in the
   bucket `stage-photos`.
 - Auth settings: sign-ups off, OTP expiry, the code template and SMTP are done (24 Oct, see *Waiting
   on Mazen*); captcha and the phone hook wait for Turnstile and Meta.
@@ -266,6 +270,8 @@ Decisions:
 
 
 Small, on Mazen:
+- Name the real owner (name and email) when ready, to be added in `/admin` → Team as Owner (30 Oct: he
+  is a developer now, and nobody is the owner).
 - Send one request from his phone (it is real data now, and it shows in `/admin`), to prove the
   Turnstile secret is set (see *Supabase*).
 - Delete the test file in Storage → `stage-photos`.

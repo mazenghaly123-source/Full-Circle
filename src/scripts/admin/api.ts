@@ -10,7 +10,10 @@ import type { LogEntry } from '../core/portal';
 export const session = authClient('fc-admin-session');
 export { SignedOut };
 
-export type Role = 'owner' | 'staff';
+export type Role = 'owner' | 'developer' | 'staff';
+/** Owners and developers can do everything, adding people included (private.is_owner). */
+export const manages = (role: Role) => role !== 'staff';
+export const roleName = (role: Role) => ({ owner: 'Owner', developer: 'Developer', staff: 'Staff' })[role];
 export type Staff = { user_id: string; name: string; role: Role; created_at: string };
 export type Request = {
   id: number; code: string; path: string; product: string; qty: string | null; have: string | null; brand: string;

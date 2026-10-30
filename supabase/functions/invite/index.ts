@@ -5,7 +5,7 @@
 //
 // POST application/json, signed in as staff:
 //   { kind: 'client', client_id, name, email, whatsapp? }   any member of staff
-//   { kind: 'staff', name, email, role: 'owner' | 'staff' }  owners only
+//   { kind: 'staff', name, email, role: 'owner' | 'staff' }  owners and developers only
 import { readContact, toInternational } from '../_shared/forms.ts';
 import { inviteEmail } from '../_shared/emails.ts';
 import { caller, crash, db, preflight, refuse, reply, sendEmail, siteUrl } from '../_shared/server.ts';
@@ -19,14 +19,14 @@ Deno.serve(async (req) => {
   try { me = await caller(req); } catch (err) { return crash('caller', err, 'Could not check who you are. Try again'); }
   if (!me) return refuse('Sign in again', 401);
   const client = db();
-  let staff: { role: 'owner' | 'staff'; name: string }[];
+  let staff: { role: 'owner' | 'developer' | 'staff'; name: string }[];
   try { staff = await client.select('staff', 'role,name', { user_id: `eq.${me}` }); } catch (err) { return crash('staff', err, 'Could not check who you are. Try again'); }
   if (!staff.length) return refuse('Only Full Circle staff can add people', 403);
 
   let b: Record<string, unknown>;
   try { b = await req.json(); } catch { return refuse('Could not read that. Try again'); }
   if (b.kind !== 'client' && b.kind !== 'staff') return refuse('Say whether they are a client or staff');
-  if (b.kind === 'staff' && staff[0].role !== 'owner') return refuse('Only an owner adds staff', 403);
+  if (b.kind === 'staff' && staff[0].role === 'staff') return refuse('Only an owner or a developer adds staff', 403);
   const name = typeof b.name === 'string' ? b.name.trim() : '';
   if (!name || name.length > 120) return refuse('Add their name', 400, 'name');
   const reach = readContact(typeof b.email === 'string' ? b.email : '');

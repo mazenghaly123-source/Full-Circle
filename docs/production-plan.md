@@ -286,7 +286,7 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
 
 | Table | Purpose | Access |
 |---|---|---|
-| `staff` | user, role (`owner` / `staff`) | owners manage; staff read |
+| `staff` | user, role (`owner` / `developer` / `staff`) | owners and developers manage; staff read |
 | `clients` | brand, notes | staff; members read their own |
 | `client_members` | user ↔ client (a brand can have several people) | staff; user reads own rows |
 | `requests` | code, path, product, qty, have, brand, contact, contact type, note, status, UTM/referrer | insert **only through the Edge Function**; staff read and update |
@@ -313,7 +313,8 @@ Cloudflare Workers (static assets)                   Supabase (EU, Frankfurt)
   prototype's demo moves the stage itself; the demo stays as it is until the real portal replaces it.)
 - **Staff roles** (open access, Mazen 24 Oct: no fixed list; the owner adds whoever he chooses): **owner** can do everything, including adding and
   removing staff and exporting or deleting someone's data when asked; **staff** answer requests,
-  create orders, open decisions, upload photos and move stages. Staff sign in by email code.
+  create orders, open decisions, upload photos and move stages. Staff sign in by email code. A
+  **developer** (Mazen, 30 Oct) can do everything an owner can, under its own name.
 - **Housekeeping:** a nightly job (pg_cron, `private.delete_expired`) deletes requests that did not
   lead to an order, and messages, a year after they arrived; consent records stay. Orders (five
   years) are not deleted automatically yet: none is that old.

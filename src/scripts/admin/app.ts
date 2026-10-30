@@ -90,7 +90,7 @@ function moreSheet() {
   paintCounts(items);
   const box = document.createElement('div'); box.append(items);
   const { el, close } = dialog('More', `<nav class="morel" aria-label="More screens">${box.innerHTML}</nav>`,
-    `<span class="t3" style="font-size:13px">${esc(me?.name ?? '')} · ${me?.role === 'owner' ? 'Owner' : 'Staff'}</span><button type="button" class="pill ghost" data-out>Sign out</button>`);
+    `<span class="t3" style="font-size:13px">${esc(me?.name ?? '')} · ${me ? api.roleName(me.role) : ''}</span><button type="button" class="pill ghost" data-out>Sign out</button>`);
   el.addEventListener('click', (e) => {
     const t = e.target as HTMLElement, a = t.closest<HTMLAnchorElement>('a[href]');
     if (a) { e.preventDefault(); close(); location.hash = a.getAttribute('href')!; }
@@ -159,7 +159,7 @@ async function start() {
     return signIn('That email is not on the Full Circle team. An owner can add you under Team.');
   }
   $('signin').hidden = true; $('app').hidden = false; $('tabbar').hidden = false;
-  $('who-name').textContent = me.name; $('who-role').textContent = me.role === 'owner' ? 'Owner' : 'Staff';
+  $('who-name').textContent = me.name; $('who-role').textContent = api.roleName(me.role);
   route(); counts();
 }
 
