@@ -19,25 +19,24 @@ document.addEventListener('mouseenter', () => { cR.style.opacity = cD.style.opac
 
 let lights: { el: HTMLElement; x: number; y: number }[] = [];
 
+// Runs only with a mouse and motion allowed: on a touch screen, or with reduced motion, nothing here
+// moves (the lights lean only toward a mouse), so no frame is spent on it.
 function frame() {
   requestAnimationFrame(frame);
   const vh = innerHeight;
-  if (cursorOn) {
-    rx += (pointer.mx - rx) * 0.2; ry += (pointer.my - ry) * 0.2;
-    const sz = hot ? 64 : 34;
-    cR.style.width = cR.style.height = sz + 'px';
-    cR.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
-    cD.style.transform = `translate(${pointer.mx}px,${pointer.my}px) translate(-50%,-50%)`;
-  }
-  if (rm) return;
+  rx += (pointer.mx - rx) * 0.2; ry += (pointer.my - ry) * 0.2;
+  const sz = hot ? 64 : 34;
+  cR.style.width = cR.style.height = sz + 'px';
+  cR.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+  cD.style.transform = `translate(${pointer.mx}px,${pointer.my}px) translate(-50%,-50%)`;
   lights.forEach((L) => {
     const sec = L.el.parentElement; if (!sec || !sec.offsetParent) return;
     const r = sec.getBoundingClientRect(); if (r.bottom < 0 || r.top > vh) return;
-    const tx = fine ? ((pointer.mx - (r.left + r.width / 2)) / r.width) * 90 : 0, ty = fine ? ((pointer.my - (r.top + r.height / 2)) / r.height) * 70 : 0;
+    const tx = ((pointer.mx - (r.left + r.width / 2)) / r.width) * 90, ty = ((pointer.my - (r.top + r.height / 2)) / r.height) * 70;
     L.x += (tx - L.x) * 0.04; L.y += (ty - L.y) * 0.04; L.el.style.translate = `${L.x.toFixed(1)}px ${L.y.toFixed(1)}px`;
   });
 }
-requestAnimationFrame(frame);
+if (cursorOn) requestAnimationFrame(frame);
 
 export const pointerFeature: Feature = {
   mount() {

@@ -11,7 +11,7 @@ import { MAKE, ROUTES, pad, sampleLine } from '../data/site';
     <div class="catnav" id="catNav">{MAKE.map((m, i) => <button class="opt" data-cat={m.id}><b>{pad(i + 1)}</b>{m.n}</button>)}</div>
 </PageHero>
 <section class="wrap mcats" id="catPanels">{MAKE.map((m, i) => (
-  <article class="mcat" id={`cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[i === 0 ? 'Our specialty' : pad(i + 1), 'Photo']} sizes="(max-width: 860px) 96vw, (max-width: 1440px) 48vw, 690px" eager={i === 0} describe /><div class="body"><h2 class="camp">{m.n}</h2><div class="mfacts"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><p class="items">{m.items}</p><div class="mfoot"><a class="btn btn-red" href={`${ROUTES.start}?product=${encodeURIComponent(m.product)}`}>Request a sample</a></div></div></article>
+  <article class="mcat" id={`cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} caption={[i === 0 ? 'Our specialty' : pad(i + 1), 'Photo']} sizes="(max-width: 760px) calc(100vw - 38px), (max-width: 860px) 91vw, (max-width: 1320px) 45vw, 590px" eager={i === 0} describe /><div class="body"><h2 class="camp">{m.n}</h2><div class="mfacts"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><p class="items">{m.items}</p><div class="mfoot"><a class="btn btn-red" href={`${ROUTES.start}?product=${encodeURIComponent(m.product)}`}>Request a sample</a></div></div></article>
 ))}</section>
 <section class="wrap why">
   <div class="sh"><h2 class="camp wide">What sets us apart</h2></div>
