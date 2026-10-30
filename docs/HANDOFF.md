@@ -60,8 +60,9 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 - `20261027071333` requests_in_portal (27 Oct, through the MCP): `my_requests()`, the requests the
   portal lists. `20261027074938` my_requests_staff (same day, MCP): staff, who see every order
   on Track, no longer see a converted request of theirs as well. `20261027100100` expired_accounts (the clean-up also deletes the sign-in accounts a
-  request opened, a year on) is **not applied**: it holds a DELETE, so Mazen runs it in the SQL editor
-  (*Waiting on Mazen*).
+  request opened, a year on): applied by Mazen in the SQL editor on 30 Oct, with the clean-out of the test data.
+- `20261030151642` keep_awake (30 Oct, MCP): `public.alive()`, which anon may call; the Worker calls it
+  twice a day so the free plan never pauses the project.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
   - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v6, `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
@@ -119,6 +120,14 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   Cloudflare's "Block AI bots" setting is off for the zone.
 
 ## In progress
+
+- **The one Supabase project holds real data (30 Oct, Mazen):** the free plan for the first months, Pro
+  on the same project once orders run on the portal (for the backups; no move needed). Mazen cleared the
+  test data in the SQL editor (orders, clients, requests, messages, consents, every account but his
+  owner's; codes restart at FC-2501) and applied `20261027100100` expired_accounts with it. **Send no test
+  requests to it.** The Worker calls `public.alive()` twice a day (`20261030151642` keep_awake,
+  `src/keep-awake.ts`, `triggers` in `wrangler.jsonc`) so the free plan never pauses it. One test photo
+  is left in Storage → `stage-photos` for Mazen to delete.
 
 - **How it works' garment (29 Oct, Mazen, built straight on the site, no mock):** the flat shirt in the demo
   ring is now a line figure with depth in the Hairline style, one per product (shirt, hoodie, tee, jeans,
@@ -226,8 +235,6 @@ Decisions:
 - In GA4, turning off Enhanced measurement → "Page changes based on browser history events" (the
   site sends its own page views; see production-plan.md §6).
 
-- Run `supabase/migrations/20261027100100_expired_accounts.sql` in staging's SQL editor, then
-  `insert into supabase_migrations.schema_migrations (version, name) values ('20261027100100', 'expired_accounts');`
 
 Dashboard and account tasks:
 - ~~**Supabase Auth (staging):** sign-ups off, OTP expiry 600 s, `{{ .Token }}` in the Magic Link template,

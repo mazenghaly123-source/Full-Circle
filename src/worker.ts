@@ -5,6 +5,9 @@
 //   /about.md                      → the markdown of /about (/index.md for Home)
 //   /about, Accept: text/markdown  → the same, when markdown is preferred over HTML
 //   /api/md/about                  → the same, always; /api/md/_catalog lists them all
+// Twice a day (`triggers` in wrangler.jsonc) it also makes one call to the Supabase project, so the free
+// plan never pauses it for inactivity (supabase/migrations/20261030151642_keep_awake.sql).
+import { keepAwake } from './keep-awake';
 import { CORS, canonicalOf, describedByLink, lastModifiedOf, markdownHeaders, notFoundMarkdown, prefersMarkdown } from './md/http';
 
 interface Env {
@@ -54,5 +57,9 @@ export default {
     // the asset's own headers from public/_headers (the security ones) stay, under the markdown ones
     for (const k of SECURITY) { const v = res.headers.get(k); if (v) headers.set(k, v); }
     return new Response(request.method === 'HEAD' ? null : body, { status: found ? 200 : 404, headers });
+  },
+
+  async scheduled(_event: unknown, _env: Env, ctx: { waitUntil(p: Promise<unknown>): void }) {
+    ctx.waitUntil(keepAwake());
   },
 };
