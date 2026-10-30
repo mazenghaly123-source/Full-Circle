@@ -14,7 +14,7 @@ interface Props {
 
 const { crumb, title, lead, light, titleId, leadId, wide = false } = Astro.props;
 ---
-<section class="phero grain"><slot name="bg" /><div class="light" style={`background:${light}`}></div>
+<section class="phero grain"><slot name="bg" /><div class="light" style={`--glow:${light}`}></div>
   <div class="wrap"><div class="crumb mono"><a href="/">Home</a><span>/</span><span>{crumb}</span></div>
     <h1 class:list={['camp', { wide }]} id={titleId}>{title}</h1>
     <p class="lead" id={leadId}>{lead}</p>

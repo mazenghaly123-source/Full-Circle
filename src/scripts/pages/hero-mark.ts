@@ -111,8 +111,11 @@ async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<M
     const moving = intro || Math.abs(tx - cx) > 0.0005 || Math.abs(ty - cy) > 0.0005;
     if (moving || dirty) { dirty = false; raf = requestAnimationFrame(tick); }
   }
-  renderer.compile(scene, camera);
+  // compiled without holding the main thread where the browser can (KHR_parallel_shader_compile, most
+  // phones): otherwise the first render waits for the shaders and the page stops answering meanwhile
+  const compiled = renderer.compileAsync(scene, camera);
   const data = await extruded;
+  await compiled;
   for (const [name, itemSize] of ATTRIBUTES) geo.setAttribute(name, new THREE.BufferAttribute(data[name], itemSize));
   for (const g of data.groups) geo.addGroup(g.start, g.count, g.materialIndex);
   size();
