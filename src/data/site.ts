@@ -1,4 +1,5 @@
 import type { OptionOf } from '../../supabase/functions/_shared/forms';
+import type { GarmentKey } from './garments';
 
 // Site content, copied from prototype/index.html. Pages render it at build time; the browser
 // scripts import the same data, so there is one copy of every stage, category and question.
@@ -50,9 +51,9 @@ export const PAGES: Record<PageKey, { title: string; description: string; summar
     summary: 'Home page of Full Circle, a clothing development and manufacturing partner in Cairo, Egypt: what it makes and from how many pieces, how it works in three parts (design, build, launch), the client tracking page, and answers to common questions.',
   },
   how: {
-    title: 'How it works / Clothing from idea to bulk / Full Circle',
-    description: 'Eight stages, one partner. Every stage ends with something you can see and a decision you make. Follow a demo order from research to delivery.',
-    summary: 'Full Circle’s eight stages (research, design support, sourcing, development, sampling, production, QC, delivery), with what the client receives and approves at each, shown as a demo order.',
+    title: 'How it works / Design, build, launch / Full Circle',
+    description: 'One partner for the whole circle: design, build, launch. Follow a demo order from brand identity to product photos, with the sample gate in the middle.',
+    summary: 'How Full Circle works, in three parts: design (brand identity, product design, tech pack), build (fabric and trims, patterns, sample, production, QC) and launch (delivery, product photos, ad creatives), with what the client receives and approves at each step, shown as a demo order.',
   },
   make: {
     title: 'Denim, tees, hoodies and more, made in Cairo / Full Circle',
@@ -146,15 +147,50 @@ export const FAQ: [string, string][] = [
 export { REQUEST_QUESTIONS, belowMinimum, type RequestKey } from '../../supabase/functions/_shared/forms';
 type ProductOption = OptionOf<'product'>;
 
-/** The products in the How it works demo (the first is picked to begin with), and the sample request's name for each. */
+/**
+ * How it works: the demo order's steps, the three parts' steps as the page walks them (Mazen approved the mock,
+ * 7 Nov 2026). Launch's photos and ads are one step there. `s` is the garment's look at the step (the
+ * .yo-gar[data-s] rules); the page's last station, "Full circle", is not a step.
+ */
+export type DemoStep = { part: number; n: string; get: string; ok: string; time?: string; s: number };
+
+export const DEMO_STEPS: DemoStep[] = [
+  { part: 0, n: 'Brand identity', get: 'Brand board', ok: 'Brand identity', s: 1 },
+  { part: 0, n: 'Product design', get: 'Sketches', ok: 'Product design', s: 1 },
+  { part: 0, n: 'Tech pack', get: 'Tech pack', ok: 'Tech pack sign-off', s: 2 },
+  { part: 1, n: 'Fabric + trims', get: 'Swatches + trim cards', ok: 'Fabric selection', s: 3 },
+  { part: 1, n: 'Patterns', get: 'Base-size pattern + fit notes', ok: 'Pattern sign-off', s: 4 },
+  { part: 1, n: 'Sample', get: 'A physical sample, fitted', ok: 'Sample approval', time: '7–25 days, denim longest', s: 5 },
+  { part: 1, n: 'Production', get: 'Progress at each checkpoint', ok: 'Quantity + delivery date', s: 6 },
+  { part: 1, n: 'QC', get: 'Inspection record', ok: 'QC result', s: 7 },
+  { part: 2, n: 'Delivery', get: 'Goods + documents', ok: 'Receipt', s: 8 },
+  { part: 2, n: 'Photos + ads', get: 'Photos + ad creatives', ok: 'The final set', s: 9 },
+];
+/** The station of the sample: production waits there until the sample is approved. */
+export const DEMO_GATE = DEMO_STEPS.findIndex((d) => d.n === 'Sample');
+
+/**
+ * The products in the How it works demo, denim first (the first is picked to begin with): the sample
+ * request's name for each, the garment drawn (data/garments.ts) and the fabric it starts on.
+ */
 export const DEMO_PRODUCTS = [
-  { label: 'Shirts', product: 'Shirts' },
-  { label: 'Hoodies', product: 'Hoodies' },
-  { label: 'Tees', product: 'Tees' },
-  { label: 'Denim', product: 'Denim' },
-  // the request form calls outerwear "Jackets" (the prototype passed "Outerwear", which matched no option)
-  { label: 'Outerwear', product: 'Jackets' },
-] as const satisfies readonly { label: string; product: ProductOption }[];
+  { label: 'Denim', product: 'Denim', garment: 'Denim', fab: 'denim' },
+  { label: 'Hoodies', product: 'Hoodies', garment: 'Hoodies', fab: 'fleece' },
+  { label: 'Tees', product: 'Tees', garment: 'Tees', fab: 'jersey' },
+  { label: 'Jackets', product: 'Jackets', garment: 'Outerwear', fab: 'twill' },
+  { label: 'Shirts', product: 'Shirts', garment: 'Shirts', fab: 'twill' },
+] as const satisfies readonly { label: string; product: ProductOption; garment: GarmentKey; fab: string }[];
+
+/** The demo's fabrics; the ones marked imported say so on the swatch. */
+export const DEMO_FABRICS = [
+  { fab: 'denim', name: 'Denim 12 oz', short: 'Denim 12 oz', imported: true },
+  { fab: 'fleece', name: 'Fleece 380 gsm', short: 'Fleece 380' },
+  { fab: 'jersey', name: 'Jersey 220 gsm', short: 'Jersey 220' },
+  { fab: 'twill', name: 'Cotton twill', short: 'Twill', imported: true },
+] as const;
+
+/** What the demo offers at launch, both picked to begin with. */
+export const DEMO_LAUNCH = ['Product photos', 'Ad creatives'] as const;
 
 export const pad = (n: number) => String(n).padStart(2, '0');
 

@@ -239,7 +239,6 @@ const JACKET: Garment = {
 
 export const GARMENTS = { Shirts: SHIRT, Hoodies: HOODIE, Tees: TEE, Denim: DENIM, Outerwear: JACKET } as const;
 export type GarmentKey = keyof typeof GARMENTS;
-export const garmentKey = (label: string): GarmentKey => (label in GARMENTS ? label : 'Shirts') as GarmentKey;
 
 // ----- drawing -----
 

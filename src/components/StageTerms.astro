@@ -1,10 +1,10 @@
 ---
-// A stage's "You receive / You approve / Typical time" on How it works, from STAGES (the time only
-// where it is known). Rows passed in the slot come first (the development stage lists its base size
-// and grade).
-import { STAGES } from '../data/site';
+// A step's "You receive / You approve / Typical time" on How it works, from DEMO_STEPS (the time only
+// where it is known). Rows passed in the slot come first (the tech pack lists its base size, the
+// patterns their grade).
+import { DEMO_STEPS } from '../data/site';
 
 interface Props { i: number }
-const g = STAGES[Astro.props.i];
+const g = DEMO_STEPS[Astro.props.i];
 ---
-<dl class="kv2"><slot /><dt>You receive</dt><dd>{g.demo?.get ?? g.get}</dd><dt>You approve</dt><dd class="ap">{g.demo?.ok ?? g.ok}</dd>{g.time && <Fragment><dt>Typical time</dt><dd>{g.time}</dd></Fragment>}</dl>
+<dl class="kv2"><slot /><dt>You receive</dt><dd>{g.get}</dd><dt>You approve</dt><dd class="ap">{g.ok}</dd>{g.time && <Fragment><dt>Typical time</dt><dd>{g.time}</dd></Fragment>}</dl>

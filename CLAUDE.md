@@ -59,8 +59,13 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   The hero ring names the three parts. Mazen approved the mock (27 Oct 2026):
   https://claude.ai/artifact/3pEMxPmiymqqYwmfF9AQ9s. Design and Launch still use stage photos until
   Mazen makes their own (a branding shot, a product shoot).
-- How it works page = "you are the order" walkthrough (demo order moves through 8 stages,
-  sample approval gate at stage 05). Next: redo it on the three parts, as a mock for Mazen first.
+- How it works page = "you are the order" on the three parts (Mazen approved the mock, 7 Nov 2026:
+  https://claude.ai/artifact/NtY8B87hniCt7qBFrF2BnZ): a demo order walks Design (brand identity, product
+  design, tech pack), Build (fabric + trims, patterns, sample, production, QC) and Launch (delivery,
+  photos + ads) on the mark's own arcs, whole, never cut into segments (the steps show in the rail under
+  it). Production waits at the sample gate until it is approved; at the end the arcs close into the mark.
+  Steps in `DEMO_STEPS` (`site.ts`), script `scripts/pages/demo-order.ts`. It is out of the parity suite
+  (`REBUILT` in `tests/helpers.ts`); its behaviour tests hold it.
 - Hero: real 3D extruded logo (three.js, SVGLoader + ExtrudeGeometry, bone ceramic face,
   darker glossy sides, warm key + orange/indigo rim lights). It does NOT rotate: one settle
   on load, then gentle tilt toward the pointer (finger-drag tilt on phones). Flat-mark
@@ -106,7 +111,7 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   same treatment, one page at a time, each as a mock for Mazen first (24 Oct 2026). Done: What we make
   (equal category cards with icon facts, three icon cards, no limits block), then About, Contact, Request
   a sample and Track straight on the preview without mocks (Mazen): titles in the logo's face, one-line
-  leads, icon cards (`.three`). How it works stays as it is: Mazen approved it unchanged (24 Oct 2026).
+  leads, icon cards (`.three`). How it works was rebuilt on the three parts (7 Nov 2026, above).
 - Interactive line figures (the Hairline skill, 23 Oct 2026): a few, at most one per page, never
   on the hero (the 3D mark stays the hero). On phones they answer a finger (sideways drag, tap),
   not only a self-running loop. The first test (a shirt opening into its pattern pieces) did not
@@ -140,6 +145,7 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
 ## Site code
 - **Parity is the bar.** `tests/parity.spec.ts` screenshots each page next to the prototype at
   1440×900, 390×844 and 375×667; a change that moves pixels the prototype did not is a regression.
+  Pages rebuilt past the prototype with Mazen's approval are left out (`REBUILT`: How it works).
   Run the parity, behaviour and CSS suites (`package.json` scripts) after any visual or script change.
 - An approved visual departure from the prototype goes in the marked *approved changes* block at
   the end of `src/styles/global.css`, with any markup it needs mirrored in `approvePrototype`
