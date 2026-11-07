@@ -1,5 +1,5 @@
 // State that outlives a page swap (the prototype kept it in one document). It resets on a full reload.
-import { DEMO_PRODUCTS, type RequestKey } from '../../data/site';
+import { DEMO_FABRICS, DEMO_LAUNCH, DEMO_PRODUCTS, type RequestKey } from '../../data/site';
 import { demoCode } from './util';
 
 export const request = {
@@ -28,14 +28,14 @@ export const yo = {
   code: demoCode(),
   path: null as string | null,
   product: DEMO_PRODUCTS[0].label as string,
-  fab: 'denim',
-  fabName: 'Denim 12 oz',
+  fab: DEMO_FABRICS[0].fab as string,
+  fabName: DEMO_FABRICS[0].name as string,
+  launch: [...DEMO_LAUNCH] as string[],
   ok: false,
   at: '',
+  /** the station on screen (the steps, then "Full circle") */
   here: 0,
   units: 0,
   checked: false,
   visible: false,
-  photoAsked: false,
-  photoPending: false,
 };

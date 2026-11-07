@@ -86,7 +86,7 @@ test('client-side navigation runs the ring wipe, keeps the shell and updates the
   expect(t.swap - t.start).toBeGreaterThanOrEqual(470);
   expect(t.swap - t.start).toBeLessThan(1200);
   expect(await page.evaluate(() => (window as any).__sameDocument)).toBe(true);
-  await expect(page).toHaveTitle('How it works / Clothing from idea to bulk / Full Circle');
+  await expect(page).toHaveTitle('How it works / Design, build, launch / Full Circle');
   await expect(page.locator('#hdr')).not.toHaveClass(/open/);
   expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
   if (!isPhone(info)) await expect(page.locator('header .nav a[href="/how-it-works"]')).toHaveClass(/on/);
@@ -309,28 +309,58 @@ test('home: portal demo approves and resets', async ({ page }) => {
 
 test('how it works: the sample gate holds production until you approve', async ({ page }, info) => {
   await page.goto('/how-it-works');
-  // stage 06 sits a little above the line that picks the current stage (the count-up runs only
-  // there); aligned to the top, a short stage 06 on a phone could hand over to stage 07
-  await page.locator('.yo-st[data-i="5"]').evaluate((el) => scrollTo({ top: scrollY + el.getBoundingClientRect().top - innerHeight * 0.4, behavior: 'instant' }));
+  // production sits a little above the line that picks the current station (the count-up runs only
+  // there); aligned to the top, a short station on a phone could hand over to QC
+  await page.locator('.yo-st[data-i="6"]').evaluate((el) => scrollTo({ top: scrollY + el.getBoundingClientRect().top - innerHeight * 0.4, behavior: 'instant' }));
   await scrollBy(page, 60, 2);
-  await expect(page.locator('#yoLabels > *').nth(5)).toHaveClass(/here/);
   await expect(page.locator('#toast')).toHaveText('Production is waiting on your approval');
+  // the order waits at the sample: Build is the part it is in, and the sample its current step
+  await expect(page.locator('#yoRail > button').nth(1)).toHaveClass(/here/);
+  await expect(page.locator('#yoSegs i').nth(5)).toHaveClass('cur');
+  await expect(page.locator('#yoStage')).toHaveText('Build / Sample (waiting)');
+  await expect(page.locator('#yoGar')).toHaveClass(/locked/);
   await expect(page.locator('#yoGate')).toBeVisible();
   await expect(page.locator('#yoNext')).toHaveText('Approve sample 03');
   await expect(page.locator('#yoTicket')).toHaveClass(/show/);
   if (isPhone(info)) await expect(page.locator('#mbar')).not.toHaveClass(/show/);
   await page.locator('[data-yoapprove]').click();
   await expect(page.locator('#yoGate')).toBeHidden();
+  await expect(page.locator('#yoStage')).toHaveText('Build / Production');
+  await expect(page.locator('#yoSegs i').nth(6)).toHaveClass('cur');
   await expect(page.locator('#yoUnits')).toHaveText('300', { timeout: 5000 });
+});
+
+test('how it works: the order goes full circle and the arcs close into the mark', async ({ page }) => {
+  await page.goto('/how-it-works');
+  await page.locator('[data-yopath="Starting"]').click();
+  await expect(page.locator('#yoKit')).not.toHaveClass(/off/);
+  // the order rides the arcs: some of Design is drawn at the start, none of Build or Launch
+  const drawn = () => page.locator('#yoMark mask circle').evaluateAll((cs) => cs.map((c) => parseFloat(c.getAttribute('stroke-dasharray')!)));
+  await expect.poll(async () => (await drawn()).map((d) => d > 0)).toEqual([true, false, false]);
+  await page.locator('#yoLaunch .opt', { hasText: 'Ad creatives' }).click();
+  // past the gate without approving, the circle does not close
+  await page.locator('.yo-st[data-i="10"]').scrollIntoViewIfNeeded();
+  await expect(page.locator('#yoStage')).toHaveText('Build / Sample (waiting)');
+  await expect(page.locator('#yoMark')).not.toHaveClass(/done/);
+  await page.locator('#yoReal').evaluate(() => document.querySelector<HTMLElement>('[data-yoapprove]')!.click());
+  await expect(page.locator('#yoMark')).toHaveClass(/done/);
+  await expect(page.locator('#yoStage')).toHaveText('Full circle');
+  await expect(page.locator('#yoNext')).toHaveText('Send the request');
+  await expect.poll(drawn, { timeout: 10_000 }).toEqual([219, 273, 265]);
+  await expect(page.locator('#yoReceipt')).toContainText('Designed with us');
+  await expect(page.locator('#yoReceipt')).toContainText('Product photos');
+  await expect(page.locator('#yoReceipt')).not.toContainText('Ad creatives');
 });
 
 test('how it works: the garment is the product picked, and it turns toward the pointer (a finger drags it)', async ({ page }, info) => {
   await page.goto('/how-it-works');
   const fig = page.locator('#yoFig'), outline = fig.locator('.pcB [data-d]').last();
-  await expect(fig).toHaveAttribute('data-g', 'Shirts');
-  for (const [label, key] of [['Hoodies', 'Hoodies'], ['Denim', 'Denim'], ['Tees', 'Tees']]) {
+  await expect(fig).toHaveAttribute('data-g', 'Denim');
+  for (const [label, key, fab] of [['Hoodies', 'Hoodies', 'fleece'], ['Jackets', 'Outerwear', 'twill'], ['Tees', 'Tees', 'jersey']]) {
     await page.locator('#yoProducts .opt', { hasText: label }).click();
     await expect(fig).toHaveAttribute('data-g', key);
+    // a product starts on its own fabric
+    await expect(page.locator(`#yoFabrics [data-fab="${fab}"]`)).toHaveAttribute('aria-pressed', 'true');
   }
   await page.locator('.yo-inst').scrollIntoViewIfNeeded();
   if (!isPhone(info)) await page.mouse.move(2, 2); // the pointer off the figure, which then rests
@@ -355,7 +385,7 @@ test('how it works: the garment is the product picked, and it turns toward the p
 test('how it works: your demo choices carry over to the sample request', async ({ page }) => {
   await page.goto('/how-it-works');
   await page.locator('[data-yopath="Scaling"]').click();
-  await page.locator('#yoProducts .opt', { hasText: 'Outerwear' }).click();
+  await page.locator('#yoProducts .opt', { hasText: 'Jackets' }).click();
   // get there first (passing the gate shows its own toast), then ask for the real request
   await page.locator('#yoReal').scrollIntoViewIfNeeded();
   await page.waitForTimeout(600);
@@ -630,9 +660,9 @@ test.describe('pages you come back to (the prototype was one document)', () => {
     await page.goto('/how-it-works');
     await page.locator('#yoApprove').click();
     // stage 06 is current when its top is above the middle of the screen and stage 07's is not
-    await page.locator('.yo-st[data-i="5"]').evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - innerHeight * 0.45, behavior: 'instant' }));
+    await page.locator('.yo-st[data-i="6"]').evaluate((el) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - innerHeight * 0.45, behavior: 'instant' }));
     await scrollBy(page, 20, 2);
-    await expect(page.locator('#yoStage')).toHaveText('06 / Production');
+    await expect(page.locator('#yoStage')).toHaveText('Build / Production');
     await expect(page.locator('#yoUnits')).not.toHaveText('000');
     await openNav(page, '/about', isPhone(info));
     await page.waitForURL('**/about');

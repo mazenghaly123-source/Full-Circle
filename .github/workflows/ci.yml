@@ -13,7 +13,8 @@ concurrency:
 
 jobs:
   site:
-    runs-on: ubuntu-latest
+    # pinned: ubuntu-latest moved to 26.04 (Nov 2026), which Playwright 1.56 cannot install Chromium on
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     # actions are pinned to the commit of the release named in the comment, so a moved tag cannot
     # change what runs; update the hash and the comment together

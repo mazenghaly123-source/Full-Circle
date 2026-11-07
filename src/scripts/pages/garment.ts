@@ -3,12 +3,11 @@
 // it and it stays where the finger leaves it (29 Oct 2026). The shapes are in data/garments.ts.
 import type { Feature } from '../core/lifecycle';
 import { rm } from '../core/util';
-import { REACH, REST, figurePaths, figureSvg, garmentKey, type GarmentKey } from '../../data/garments';
+import { REACH, REST, figurePaths, figureSvg, type GarmentKey } from '../../data/garments';
 
-/** Draws the garment for a product into a page (the live one or one coming in), if it is not there yet. */
-export function setGarment(doc: Document, product: string) {
+/** Draws a garment into a page (the live one or one coming in), if it is not there yet. */
+export function setGarment(doc: Document, key: GarmentKey) {
   const fig = doc.getElementById('yoFig');
-  const key = garmentKey(product);
   if (!fig || fig.dataset.g === key) return;
   fig.dataset.g = key;
   fig.innerHTML = figureSvg(key, REST);

@@ -6,8 +6,8 @@
 import { execFileSync } from 'node:child_process';
 import { NOTICE } from '../../supabase/functions/_shared/forms';
 import {
-  ARCS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE, REQUEST_QUESTIONS, ROUTES, SITE, STAGES,
-  WHATSAPP, WHATSAPP_URL, pad, sampleLine, type PageKey,
+  ARCS, DEMO_GATE, DEMO_LAUNCH, DEMO_PRODUCTS, DEMO_STEPS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE,
+  REQUEST_QUESTIONS, ROUTES, SITE, WHATSAPP, WHATSAPP_URL, sampleLine, type PageKey,
 } from '../data/site';
 import { abs, b, day, h2, h3, link, list, ordered, page, table } from './format';
 
@@ -71,26 +71,33 @@ const ROUTE_LIST: MarkdownRoute[] = [
     key: 'how', path: ROUTES.how, name: 'How it works', section: 'core', sources: ['src/pages/how-it-works.astro', 'src/components/StageTerms.astro', ...DATA],
     related: ['start', 'track', 'make'],
     body: (site) => {
-      const terms = (i: number) => {
-        const g = STAGES[i];
-        return list([`You receive: ${g.demo?.get ?? g.get}`, `You approve: ${g.demo?.ok ?? g.ok}`, ...(g.time ? [`Typical time: ${g.time}`] : [])]);
+      const terms = (i: number, extra: string[] = []) => {
+        const g = DEMO_STEPS[i];
+        return list([...extra, `You receive: ${g.get}`, `You approve: ${g.ok}`, ...(g.time ? [`Typical time: ${g.time}`] : [])]);
       };
-      const stage = (i: number, text: string[]) => [`${h3(`${pad(i + 1)} / ${STAGES[i].n}`)}\n${text.join(' ')}`, ...(i < 6 ? [terms(i)] : [])].join('\n\n');
+      const step = (i: number, text: string[], extra: string[] = []) => `${h3(`${ARCS[DEMO_STEPS[i].part].n} / ${DEMO_STEPS[i].n}`)}\n${text.join(' ')}\n\n${terms(i, extra)}`;
       return [
-        `${b('Eight stages. One partner.')} Every stage ends with something you can see and a decision you make.`,
-        h2('The eight stages'),
-        stage(0, ['You have an idea.', 'We start by studying the brand, the customer and the market the product is going into.']),
-        stage(1, ['Where is the brand?', 'Starting: an idea or a sketch, no factory yet.', 'Scaling: already selling. The last run did not match the sample.', 'Sketches then become technical drawings with measurements, trims and construction notes.']),
-        stage(2, ['Fabric and trims are sourced against the brief. You approve the swatches before anything is cut.']),
-        stage(3, ['Paper first. Every piece is drawn, cut in paper and graded before fabric is touched. Scaling brands enter here.']),
-        stage(4, ['The gate. Bulk waits for this.', 'The sample you sign becomes the contract. Bulk is measured against it, piece by piece. Production does not move until you approve.']),
-        stage(5, ['Then it repeats.']),
-        stage(6, ['Checked before packed.\n\n' + list(['Measurements against the sample: ±0.5 cm', 'Seams and stitch density', 'Colour against the approved swatch', 'Labels and care', 'Packing count'])]),
-        stage(7, ['Circle closed.']),
+        `${b('Design. Build. Launch.')} One partner for the whole circle. Below, a demo order goes all the way round.`,
+        h2('Design'),
+        'Your brand and your product, drawn before anything is cut.',
+        step(0, ['Where is the brand?', 'Starting: an idea. No name, no logo yet.', 'Scaling: already selling. You have the brand.', 'We start from wherever the brand is.\n\n' + list(['Name + logo', 'Labels + tags', 'Packaging'])]),
+        step(1, ['Pick the product: ' + DEMO_PRODUCTS.map((p) => p.label).join(', ') + '.', 'We sketch it first, so you see the product before anything is cut.']),
+        step(2, ['On paper.', 'Measurements, trims and construction notes. The tech pack is what the factory builds from.'], ['Base size: M']),
+        h2('Build'),
+        'Made in our Cairo factory. Scaling brands enter here.',
+        step(3, ['Including imported fabrics you will not find in the local market. You approve the swatches before anything is cut.']),
+        step(4, ['Paper first.', 'Every piece is drawn, cut in paper and graded before fabric is touched.'], ['Grade: XS / S / M / L / XL']),
+        step(DEMO_GATE, ['Approve the sample. Bulk waits for this.', 'The sample you sign is the reference. Bulk is measured against it, piece by piece. Production does not move until you approve.']),
+        step(6, ['Then it repeats.']),
+        step(7, ['Checked before packed.\n\n' + list(['Chest: ±0.5 cm', 'Length: ±1 cm', 'Sleeve: ±0.5 cm', 'Stitch: Pass', 'Colour: Match'])]),
+        h2('Launch'),
+        'It reaches you packed, shot and ready to sell.',
+        step(8, ['Packed and shipped.', 'Counted, packed and documented, then shipped to you.', 'In Egypt, the Gulf and the Middle East, Turkey or China.']),
+        step(9, ['Ready to sell.', 'Your product shot, and the ads made from it, so the drop is ready to post. Take both, one, or neither.\n\n' + list([...DEMO_LAUNCH])]),
         h2('Where you enter'),
-        'You do not have to start at stage 01. We start from wherever the product is.',
-        `${h3('Starting a brand: stage 01')}\nFrom an idea or a mood board. We do the research and design support, and build the tech pack with you. ${link('Start a new brand', abs(site, `${ROUTES.start}?path=Starting`))}`,
-        `${h3('Scaling a brand: stage 04')}\nFrom a garment you already sell. We rebuild the pattern, lock the sample and move to bulk. ${link('Move production to us', abs(site, `${ROUTES.start}?path=Scaling`))}`,
+        'You do not have to start at the beginning. We start from wherever the brand is.',
+        `${h3('Starting a brand: from Design')}\nFrom an idea or a mood board. We build the brand, the product and the tech pack with you. ${link('Start a new brand', abs(site, `${ROUTES.start}?path=Starting`))}`,
+        `${h3('Scaling a brand: from Build')}\nFrom a garment you already sell. We rebuild the pattern, lock the sample and move to bulk. ${link('Move production to us', abs(site, `${ROUTES.start}?path=Scaling`))}`,
         h2('See it on your order.'),
         'Every client gets a tracking page with the stage, the next decision and photos on request.',
       ];

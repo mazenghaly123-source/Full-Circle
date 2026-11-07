@@ -1,6 +1,7 @@
 // Parity: every page of the build is screenshotted next to the same page of the prototype and the
 // two are compared pixel by pixel. The prototype first gets the approved changes (site audit part B,
-// see approvePrototype), so it is the prototype as approved that the build must match.
+// see approvePrototype), so it is the prototype as approved that the build must match. Pages rebuilt
+// past the prototype (REBUILT: How it works since 7 Nov 2026) are left out.
 // - "layout": photos and the 3D canvas are hidden, so only type, spacing, colour and shapes count.
 // - "visual": everything, photos and the 3D mark included, compared at 1/8 scale. Photos are
 //   re-encoded from the originals, so fine pixel noise is expected and averaged out; a wrong or
@@ -12,13 +13,13 @@ import { expect, test } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import sharp from 'sharp';
-import { PAGES, PROTOTYPE, approvePrototype, contextFor, freeze, serveThreeLocally, settle } from './helpers';
+import { PAGES, PROTOTYPE, REBUILT, approvePrototype, contextFor, freeze, serveThreeLocally, settle } from './helpers';
 
 const LIMITS = { layout: 0.002, visual: 0.005 };
 const SCALE = { layout: 1, visual: 8 };
 const HIDE_MEDIA = 'img,picture,canvas{visibility:hidden!important}';
 
-for (const { key, route } of PAGES) {
+for (const { key, route } of PAGES.filter((p) => !REBUILT.has(p.key))) {
   test(`parity: ${key}`, async ({ browser }, info) => {
     test.setTimeout(300_000);
     const shots: Record<string, { layout: Buffer; visual: Buffer }> = {};

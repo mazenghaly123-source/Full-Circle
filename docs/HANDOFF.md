@@ -1,4 +1,4 @@
-# Handoff (30 Oct 2026)
+# Handoff (30 Oct 2026, How it works and delete_order updated 7 Nov)
 
 For a new Claude session that has none of the earlier chat history (Mazen may continue from another
 Claude account). Read this first, then [CLAUDE.md](../CLAUDE.md), [production-plan.md](./production-plan.md)
@@ -62,7 +62,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   plan. Despite the name it is the live project: Mazen decided on 30 Oct to keep it, on the free plan,
   for the first months, and to upgrade the same project to Pro once orders run on the portal (for the
   backups; the free plan has none). No second project is planned.
-- **Migrations applied** (15 of the 16 in `supabase/migrations/`, and the versions match; `delete_order` waits on Mazen):
+- **Migrations applied** (all 16 in `supabase/migrations/`, and the versions match; checked 7 Nov):
   `20261015103850` requests_and_messages, `20261015103905` consents_request_index,
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
@@ -83,8 +83,8 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   The same day Mazen added Okasha, Fares and Malak as owners.
 - `20261030170000` delete_order (30 Oct): an owner or a developer deletes a **cancelled** order from its page
   in `/admin` (type its code to confirm), log, photos and messages with it; its request goes back to the inbox.
-  The photos' files go through the Storage API (a new delete policy for owners on `stage-photos`). **Not
-  applied**: it holds a DELETE, so Mazen runs it in the SQL editor (*Waiting on Mazen*). Mazen's first test
+  The photos' files go through the Storage API (a new delete policy for owners on `stage-photos`). Applied
+  by Mazen in the SQL editor on 7 Nov (it holds a DELETE); the project lists it. Mazen's first test
   order (FC-2501, 30 Oct) was cleared by hand in the SQL editor and the code sequence set back to FC-2501.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
   - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
@@ -182,8 +182,10 @@ site's look.
   launch content included (Mazen does those himself, no prices yet). Home's How it works is now three
   parts, one per arc of the mark (`ARCS` in `site.ts`, `src/data/mark.ts`, `how-scroll.ts`), and the hero
   ring names them; mirrored in `approvePrototype`. Mock: https://claude.ai/artifact/3pEMxPmiymqqYwmfF9AQ9s.
-  **Next:** the How it works page on the three parts (mock first), the request form offering branding
-  and content, and photos for Design and Launch (give Mazen prompts).
+  **Done (7 Nov):** the How it works page on the three parts (mock
+  https://claude.ai/artifact/NtY8B87hniCt7qBFrF2BnZ, approved; the step cuts across the arcs were taken out
+  at Mazen's word, the logo stays whole). It left the parity suite (`REBUILT`). **Next:** the request form
+  offering branding and content, and photos for Design and Launch (give Mazen prompts).
 - **Requests on Track (27 Oct, Mazen, after comparing the site with Factory 21):** a request sent with
   an email opens a sign-in for that email (`submit-request`), the portal lists the person's requests
   until each becomes an order they can see (`my_requests`), the sent box links to Track, and the
@@ -281,9 +283,6 @@ Decisions:
 
 
 Small, on Mazen:
-- Run `supabase/migrations/20261030170000_delete_order.sql` in the SQL editor, then
-  `insert into supabase_migrations.schema_migrations (version, name) values ('20261030170000', 'delete_order');`
-  (until then the Delete order button answers with an error).
 - Delete the two test photos in Storage → `stage-photos` (`3/…` and `4/…`; their orders are gone).
 - Send one request from his phone (it is real data now, and it shows in `/admin`), to prove the
   Turnstile secret is set (see *Supabase*).
@@ -353,9 +352,8 @@ Dashboard and account tasks:
 
 1. ~~Merge PR #27~~ (merged 30 Oct, with #28, the developer role).
 2. ~~**SEO and GEO:** FAQPage and Service structured data, titles and descriptions~~ (PR #29, 30 Oct).
-3. **The How it works page on the three parts** (Design, Build, Launch), the request form offering
-   branding and content, and photo prompts for Design and Launch (*In progress*). Ask Mazen which comes
-   first.
+3. ~~**The How it works page on the three parts**~~ (7 Nov). Left: the request form offering branding and
+   content, and photo prompts for Design and Launch (*In progress*). Ask Mazen which comes first.
 4. **Before the first real order:** the order test (phases 2–4) can no longer run on the real project.
    Agree with Mazen how to prove it: a local stack (`supabase start` where Docker exists), or one real
    request of his own that he deletes afterwards.
