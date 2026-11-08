@@ -283,6 +283,10 @@ Decisions:
 
 
 Small, on Mazen:
+- **Book a call's calendar** (8 Nov): the page is live with WhatsApp booking. For real time slots, a free
+  Cal.com account on fullcircleworks.co@gmail.com, connected to its Google Calendar, Sunday – Thursday
+  9:00 – 17:00 Cairo, with three 30-minute event types: a visit at the floor (Gisr El Suez), a phone call
+  (ask for the number), an online meeting (Google Meet). Their three links go in `BOOKING[].url` (`site.ts`).
 - Delete the two test photos in Storage → `stage-photos` (`3/…` and `4/…`; their orders are gone).
 - Send one request from his phone (it is real data now, and it shows in `/admin`), to prove the
   Turnstile secret is set (see *Supabase*).

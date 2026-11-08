@@ -1,0 +1,30 @@
+---
+// Book a call (Mazen, 8 Nov 2026): 30 minutes in person at the floor, on the phone or online. Each kind
+// opens its booking page once there is one (BOOKING in data/site.ts); until then WhatsApp, ready to send.
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import { BOOKING, BOOKING_LENGTH, ROUTES, SITE, WHATSAPP_URL, bookingHref } from '../data/site';
+
+const calendar = BOOKING.every((b) => b.url);
+---
+<Base page="book">
+<PageHero crumb="Book a call" title="Book a call." lead="Thirty minutes with us, at the floor, on the phone or online. The first call is free." light="radial-gradient(40% 50% at 80% 25%,#C96832,transparent 70%),radial-gradient(45% 55% at 20% 90%,#243E8F,transparent 72%)" wide />
+<section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
+  <div class="book3" id="bookKinds">{BOOKING.map((b) => (
+    <div data-kind={b.kind}>
+      <Icon name={b.icon} />
+      <h2 class="camp">{b.n}</h2>
+      <p>{b.line}</p>
+      <a class="btn btn-red" href={bookingHref(b)} target="_blank" rel="noopener" data-book={b.kind}>{b.go}</a>
+    </div>
+  ))}</div>
+  <p class="mono dim book-how">{calendar ? 'You pick the time in our calendar.' : 'You pick the time with us on WhatsApp.'}</p>
+  <dl class="kv2 book-kv">
+    <dt>Length</dt><dd>{BOOKING_LENGTH}</dd>
+    <dt>Hours</dt><dd>{SITE.hours}, Cairo time</dd>
+    <dt>Bring</dt><dd>Sketches, references or a garment you sell</dd>
+  </dl>
+  <p class="book-alt">Rather write? <a href={ROUTES.start}>Request a sample</a> or <a href={WHATSAPP_URL} target="_blank" rel="noopener">message us on WhatsApp</a>.</p>
+</section>
+</Base>

@@ -14,7 +14,7 @@ export const EMAIL = 'fullcircleworks.co@gmail.com';
 export const INSTAGRAM = '@fullcircle_eg';
 export const INSTAGRAM_URL = 'https://www.instagram.com/fullcircle_eg/';
 
-export type PageKey = 'home' | 'how' | 'make' | 'about' | 'start' | 'track' | 'contact' | 'privacy' | 'notfound';
+export type PageKey = 'home' | 'how' | 'make' | 'about' | 'start' | 'track' | 'contact' | 'book' | 'privacy' | 'notfound';
 
 /** Real URLs for the prototype's hash pages (#how → /how-it-works). */
 export const ROUTES = {
@@ -25,6 +25,7 @@ export const ROUTES = {
   start: '/request-a-sample',
   track: '/track',
   contact: '/contact',
+  book: '/book-a-call',
 } as const;
 
 /** Who Full Circle is, said once for the structured data (structured-data.ts), llms.txt and ai.txt. */
@@ -36,6 +37,21 @@ export const SITE = {
   address: { street: 'Gisr El Suez', city: 'Cairo', country: 'EG' },
   hours: 'Sunday – Thursday, 9:00 – 17:00',
 };
+
+/**
+ * Booking a call (Mazen, 8 Nov 2026): in person at the floor, a phone call or an online meeting, 30 minutes
+ * in working hours. `url` is the kind's booking page (a calendar such as Cal.com) once there is one; until
+ * then the button opens WhatsApp with the request ready to send.
+ */
+export const BOOKING = [
+  { kind: 'visit', n: 'At the floor', icon: 'pin', line: 'Come to Gisr El Suez, Cairo. See the cutting room, the fabrics and real samples.', go: 'Book a visit', url: '', ask: 'a visit to the floor' },
+  { kind: 'phone', n: 'Phone call', icon: 'phone', line: 'We call you at the time you pick.', go: 'Book a call', url: '', ask: 'a phone call' },
+  { kind: 'online', n: 'Online meeting', icon: 'video', line: 'A video call, wherever you are. The link comes with your booking.', go: 'Book a meeting', url: '', ask: 'an online meeting' },
+] as const;
+export const BOOKING_LENGTH = '30 minutes';
+
+/** Where a booking button goes: the kind's calendar, or WhatsApp with the request ready. */
+export const bookingHref = (b: (typeof BOOKING)[number]) => b.url || whatsappLink(`Hi Full Circle, I'd like to book ${b.ask} (${BOOKING_LENGTH}). My brand: `);
 
 /** Paths kept out of search and AI crawlers: robots.txt disallows them and ai.txt excludes them. */
 export const PRIVATE_PATHS = ['/admin'];
@@ -75,6 +91,10 @@ export const PAGES: Record<PageKey, { title: string; description: string; summar
   contact: {
     title: 'Contact / Clothing manufacturer in Cairo / Full Circle',
     description: 'WhatsApp is the fastest way to reach Full Circle in Cairo. Phone, email and Instagram are here too. To start production, request a sample.',
+  },
+  book: {
+    title: 'Book a call / In person, phone or online / Full Circle',
+    description: 'Book 30 minutes with Full Circle: at our floor in Cairo, a phone call or an online meeting. The first call is free, with no commitment.',
   },
   privacy: {
     title: 'Privacy notice / Full Circle',

@@ -19,6 +19,7 @@ const MENU = [
   { key: 'about', label: 'About' },
   { key: 'track', label: 'Track order' },
   { key: 'contact', label: 'Contact' },
+  { key: 'book', label: 'Book a call' },
 ] as const;
 const on = (key: string) => (key === current ? 'on' : undefined);
 const here = (key: string) => (key === current ? 'page' : undefined);
@@ -30,6 +31,7 @@ const here = (key: string) => (key === current ? 'page' : undefined);
       {NAV.map((n) => <a href={ROUTES[n.key]} data-nav={n.key} class={on(n.key)} aria-current={here(n.key)}>{n.label}</a>)}
     </nav>
     <div class="hdr-r">
+      <a href={ROUTES.book} class:list={['mono track-link book-link', on('book')]} data-nav="book" aria-current={here('book')}>Book a call</a>
       <a href={ROUTES.track} class:list={['mono track-link', on('track')]} data-nav="track" aria-current={here('track')}>Track order</a>
       <a href={ROUTES.start} class="btn btn-red" style="padding:10px 14px">Request a sample</a>
       <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>

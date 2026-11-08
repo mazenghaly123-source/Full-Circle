@@ -16,7 +16,7 @@
     // the pages with a markdown version (src/md/registry.ts; tests/unit/md.spec.ts keeps the two
     // lists the same), their .md files, and /api/md/
     "run_worker_first": [
-      "/", "/how-it-works", "/what-we-make", "/about", "/request-a-sample", "/track", "/contact", "/privacy",
+      "/", "/how-it-works", "/what-we-make", "/about", "/request-a-sample", "/track", "/contact", "/book-a-call", "/privacy",
       "/*.md", "/api/md", "/api/md/*"
     ]
   },

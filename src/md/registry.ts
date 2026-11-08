@@ -6,8 +6,8 @@
 import { execFileSync } from 'node:child_process';
 import { NOTICE } from '../../supabase/functions/_shared/forms';
 import {
-  ARCS, DEMO_GATE, DEMO_LAUNCH, DEMO_PRODUCTS, DEMO_STEPS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE,
-  REQUEST_QUESTIONS, ROUTES, SITE, WHATSAPP, WHATSAPP_URL, sampleLine, type PageKey,
+  ARCS, BOOKING, BOOKING_LENGTH, DEMO_GATE, DEMO_LAUNCH, DEMO_PRODUCTS, DEMO_STEPS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE,
+  REQUEST_QUESTIONS, ROUTES, SITE, WHATSAPP, WHATSAPP_URL, bookingHref, sampleLine, type PageKey,
 } from '../data/site';
 import { abs, b, day, h2, h3, link, list, ordered, page, table } from './format';
 
@@ -28,7 +28,7 @@ export type MarkdownRoute = {
 const DATA = ['src/data/site.ts'];
 const NAMES: Partial<Record<PageKey, string>> = {
   home: 'Home', how: 'How it works', make: 'What we make', about: 'About', start: 'Request a sample',
-  track: 'Track order', contact: 'Contact', privacy: 'Privacy notice',
+  track: 'Track order', contact: 'Contact', book: 'Book a call', privacy: 'Privacy notice',
 };
 const contacts = (): [string, string][] => [
   ['WhatsApp', link(WHATSAPP, WHATSAPP_URL)],
@@ -162,11 +162,21 @@ const ROUTE_LIST: MarkdownRoute[] = [
     related: ['start', 'about'],
     body: (site) => [
       'WhatsApp is the fastest way to reach us.',
-      list([...contacts(), ['Where', 'Cairo, Egypt / visits by appointment'], ['Hours', 'Sunday – Thursday / 9:00 – 17:00'], ['Markets', 'Gulf + Middle East / Turkey / China'], ['Other', 'Press, partnerships and careers: email us.']].map(([k, v]) => `${k}: ${v}`)),
+      list([['Book a call', link('At the floor, by phone or online', abs(site, ROUTES.book))], ...contacts(), ['Where', 'Cairo, Egypt / visits by appointment'], ['Hours', 'Sunday – Thursday / 9:00 – 17:00'], ['Markets', 'Gulf + Middle East / Turkey / China'], ['Other', 'Press, partnerships and careers: email us.']].map(([k, v]) => `${k}: ${v}`)),
       h2('Send a message'),
       list(['Your name', 'Email or WhatsApp', 'Message']),
       `${NOTICE.contact} ${link('Privacy notice', abs(site, '/privacy'))}`,
       `Production enquiry? ${link('Request a sample', abs(site, ROUTES.start))}`,
+    ],
+  },
+  {
+    key: 'book', path: ROUTES.book, name: 'Book a call', section: 'core', sources: ['src/pages/book-a-call.astro', ...DATA],
+    related: ['start', 'contact'],
+    body: (site) => [
+      'Thirty minutes with us, at the floor, on the phone or online. The first call is free.',
+      ...BOOKING.map((k) => `${h2(k.n)}\n${k.line} ${link(k.go, bookingHref(k))}`),
+      list([`Length: ${BOOKING_LENGTH}`, `Hours: ${SITE.hours}, Cairo time`, 'Bring: Sketches, references or a garment you sell']),
+      `Rather write? ${link('Request a sample', abs(site, ROUTES.start))} or ${link('message us on WhatsApp', WHATSAPP_URL)}.`,
     ],
   },
   {
