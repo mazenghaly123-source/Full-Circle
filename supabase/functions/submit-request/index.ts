@@ -1,11 +1,12 @@
 // Receives the sample request form: checks it, saves the request, records the WhatsApp opt-in, and
 // emails staff. The brand gets a receipt with its code: by email when it gave one, on WhatsApp when it
 // gave a number and asked for updates there. An email also gets a sign-in account, so the brand can
-// follow the request on the tracking page (public.my_requests). Answers with the code, and whether
-// the request can be followed on Track.
+// follow the request on the tracking page (public.my_requests). Answers with the code, whether the
+// request can be followed on Track, and the key that lets the sender answer the questions after sending.
 //
-// POST application/json: RequestData in _shared/forms.ts.
-import { ERRORS, NOTICE, belowMinimum, checkRequest } from '../_shared/forms.ts';
+// POST application/json: RequestData in _shared/forms.ts; or { followUp: FollowUpData }, the answers
+// on the screen after sending (how they heard of us, where they sell), with the code and that key.
+import { ERRORS, FOLLOW_UP, NOTICE, belowMinimum, checkFollowUp, checkRequest } from '../_shared/forms.ts';
 import { clientReceiptEmail, staffRequestEmail } from '../_shared/emails.ts';
 import { crash, db, human, later, logNotification, preflight, refuse, reply, sameContact, sendEmail, siteUrl, staffEmails } from '../_shared/server.ts';
 import { sendWhatsApp, template } from '../_shared/whatsapp.ts';
@@ -19,6 +20,7 @@ Deno.serve(async (req) => {
 
   let raw: unknown;
   try { raw = await req.json(); } catch { return refuse(ERRORS.failed); }
+  if (raw && typeof raw === 'object' && 'followUp' in raw) return followUp((raw as { followUp: unknown }).followUp);
   const checked = checkRequest(raw as never);
   if (!checked.ok) return refuse(checked.error, 400, checked.field);
   const r = checked.value;
@@ -38,9 +40,9 @@ Deno.serve(async (req) => {
   try {
     if (await client.count('requests', { ...sameContact(r.reach, r.contact), created_at: `gte.${since}` }) >= PER_HOUR) return refuse(ERRORS.tooMany, 429);
     [saved] = await client.insert<Saved>('requests', {
-      path: r.path, product: r.product, qty: r.qty, have: r.have, brand: r.brand, contact: r.contact,
+      path: r.path, product: r.product, qty: r.qty, have: r.have, also: r.also, brand: r.brand, contact: r.contact,
       contact_channel: r.reach.channel, email, whatsapp, note: r.note || null, source: r.source, notice_version: r.notice,
-    }, 'id,code,created_at');
+    }, 'id,code,created_at,follow_up');
   } catch (err) { return crash('insert request', err, ERRORS.failed); }
 
   // the opt-in goes with the request; if it cannot be recorded, the request is taken back so the
@@ -70,10 +72,24 @@ Deno.serve(async (req) => {
   }
 
   later(notify(client, saved, r, track));
-  return reply({ code: saved.code, track });
+  return reply({ code: saved.code, track, followUp: saved.follow_up });
 });
 
-type Saved = { id: number; code: string; created_at: string };
+type Saved = { id: number; code: string; created_at: string; follow_up: string };
+
+/** Saves the answers after sending on the request whose code and key they came with. */
+async function followUp(raw: unknown) {
+  const checked = checkFollowUp((raw ?? {}) as never);
+  if (!checked.ok) return refuse(checked.error);
+  const f = checked.value;
+  try {
+    const client = db();
+    const [row] = await client.select<{ id: number }>('requests', 'id', { code: `eq.${f.code}`, follow_up: `eq.${f.key}` });
+    if (!row) return refuse(ERRORS.failed, 404);
+    await client.update('requests', { id: `eq.${row.id}` }, Object.fromEntries(FOLLOW_UP.filter((q) => f[q.k]).map((q) => [q.k, f[q.k]])));
+  } catch (err) { return crash('follow up', err, ERRORS.failed); }
+  return reply({ ok: true });
+}
 type Checked = Extract<ReturnType<typeof checkRequest>, { ok: true }>['value'];
 
 /** Tells staff and the brand, and logs each message. */
@@ -81,7 +97,7 @@ async function notify(client: ReturnType<typeof db>, saved: Saved, r: Checked, t
   const staff = staffEmails();
   const alert = staffRequestEmail({
     code: saved.code, at: new Date(saved.created_at), brand: r.brand,
-    picks: { path: r.path, product: r.product, qty: r.qty, have: r.have }, belowMinimum: belowMinimum(r.qty, r.product),
+    picks: { path: r.path, product: r.product, qty: r.qty, have: r.have }, also: r.also ?? [], belowMinimum: belowMinimum(r.qty, r.product),
     typed: r.contact, reach: r.reach, whatsappUpdates: r.whatsappUpdates, note: r.note, source: r.source,
   });
   const toStaff = await sendEmail({ to: staff, ...alert, replyTo: r.reach.channel === 'email' ? r.reach.email : undefined });

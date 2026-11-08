@@ -1,6 +1,6 @@
 // The forms' rules and emails (supabase/functions/_shared), which the site and the Edge Functions share.
 import { expect, test } from '@playwright/test';
-import { ERRORS, belowMinimum, checkMessage, checkRequest, readContact, toInternational } from '../../supabase/functions/_shared/forms';
+import { ERRORS, belowMinimum, checkFollowUp, checkMessage, checkRequest, readContact, toInternational } from '../../supabase/functions/_shared/forms';
 import { clientReceiptEmail, staffMessageEmail, staffRequestEmail } from '../../supabase/functions/_shared/emails';
 
 test('a contact is read as an email or a WhatsApp number', () => {
@@ -44,6 +44,20 @@ test('a request is checked the same way on both sides', () => {
   expect(checkMessage({ name: 'Sara', contact: 'sara@x.co', text: ' ', notice: 'v', source: {}, turnstile: 't' })).toMatchObject({ ok: false, error: ERRORS.message });
 });
 
+test('question 05 keeps known extras in order, and the answers after sending need the code and its key', () => {
+  const ok = { path: 'Starting', product: 'Hoodies', qty: null, have: null, brand: 'Acme', contact: 'a@b.co', note: '', notice: 'v', source: {}, turnstile: 't' };
+  const none = checkRequest(ok);
+  expect(none.ok && none.value.also).toEqual([]);
+  const some = checkRequest({ ...ok, also: ['Ad creatives', 'Logo', 'Branding', 'Branding'] });
+  expect(some.ok && some.value.also).toEqual(['Branding', 'Ad creatives']);
+  const key = '0e1a8f2c-5b7d-4c3e-9a61-2f4b8d0c7e15';
+  expect(checkFollowUp({ code: 'FC-2501', key, heard: 'Instagram' })).toEqual({ ok: true, value: { code: 'FC-2501', key, heard: 'Instagram' } });
+  expect(checkFollowUp({ code: 'FC-2501', key, sells: 'Mars' })).toMatchObject({ ok: false });
+  expect(checkFollowUp({ code: 'FC-2501', key })).toMatchObject({ ok: false });
+  expect(checkFollowUp({ code: 'FC-2501', key: 'guess', heard: 'Google' })).toMatchObject({ ok: false });
+  expect(checkFollowUp({ code: '1; drop', key, heard: 'Google' })).toMatchObject({ ok: false });
+});
+
 test('the minimum order rule', () => {
   expect(belowMinimum('60–150', 'Denim')).toBe(true);
   expect(belowMinimum('60–150', 'Tees')).toBe(false);
@@ -53,12 +67,13 @@ test('the minimum order rule', () => {
 test('emails escape what brands type, and link back to them', () => {
   const at = new Date('2026-10-15T09:30:00Z');
   const mail = staffRequestEmail({
-    code: 'FC-2501', at, brand: 'Acme <script>', picks: { path: 'Scaling', product: 'Denim', qty: '60–150', have: null }, belowMinimum: true,
+    code: 'FC-2501', at, brand: 'Acme <script>', picks: { path: 'Scaling', product: 'Denim', qty: '60–150', have: null }, also: ['Branding', 'Product photos'], belowMinimum: true,
     typed: '0101 143 5406', reach: { channel: 'whatsapp', whatsapp: '+201011435406' }, whatsappUpdates: true, note: 'Line one\nLine "two"',
     source: { utm_source: 'instagram', landing: '/what-we-make' },
   });
   expect(mail.subject).toBe('FC-2501 / New sample request: Acme <script> (Denim, Scaling)');
   expect(mail.html).not.toContain('<script>');
+  expect(mail.text).toContain('Branding, Product photos');
   expect(mail.html).toContain('Acme &lt;script&gt;');
   expect(mail.html).toContain('Line one<br>Line &quot;two&quot;');
   expect(mail.html).toContain('href="https://wa.me/201011435406"');

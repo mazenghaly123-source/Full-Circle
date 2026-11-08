@@ -1,18 +1,20 @@
-// Request a sample: four picks, a live summary and contact details. Other pages send picks along in
-// the URL (/request-a-sample?path=Scaling&product=Denim).
+// Request a sample: four picks, an optional fifth (the rest of the circle: branding, photos, ads), a live
+// summary and contact details. Other pages send picks along in the URL
+// (/request-a-sample?path=Scaling&product=Denim&also=Branding,Product%20photos).
 //
 // Sending posts the request to the submit-request Edge Function, which saves it, issues its code
 // (FC-####) and tells the team. The form checks the same rules first (supabase/functions/_shared/forms.ts).
-// Once sent, a button opens WhatsApp with the code, as the conversation carries on there.
+// Once sent, a button opens WhatsApp with the code, as the conversation carries on there, and two
+// optional questions (how they heard of us, where they sell) are sent on their own as they are tapped.
 import type { Feature } from '../core/lifecycle';
 import { $, byId, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
 import { picked, request } from '../core/state';
 import { arrival } from '../core/nav';
 import { source } from '../core/source';
 import { track } from '../shell/analytics';
-import { isProblem, submit } from '../core/send';
+import { isProblem, sendFollowUp, submit } from '../core/send';
 import { REQUEST_QUESTIONS, belowMinimum, whatsappLink, type RequestKey } from '../../data/site';
-import { ERRORS, NOTICE, isOption, readContact, type RequestData } from '../../../supabase/functions/_shared/forms';
+import { ERRORS, NOTICE, REQUEST_ALSO, cleanAlso, isOption, readContact, type RequestData } from '../../../supabase/functions/_shared/forms';
 import { updGo } from '../shell/mbar';
 
 const SEND = 'Request a sample', SENDING = 'Sending…';
@@ -36,14 +38,18 @@ function showSent(doc: Document) {
   (g('sentWa') as HTMLAnchorElement).href = whatsappLink(`Hi Full Circle, I just sent sample request ${request.code} (${request.brand.trim()}).`);
   // the server opened a sign-in for the email, so it can be followed on Track from today
   g('sentTrack').hidden = !request.track;
+  // the questions after sending, once the server has given the key that goes with them
+  g('after').hidden = !request.followUp;
+  doc.querySelectorAll<HTMLElement>('#after .aq').forEach((q) => q.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', String(o.textContent === request.after[q.dataset.f!]))));
+  g('afterThanks').hidden = !Object.keys(request.after).length;
   g('summary').querySelector<HTMLElement>('.form-box')!.hidden = true;
   g('qs').inert = true;
 }
 
 function renderSummary(doc: Document) {
-  const rows = REQUEST_QUESTIONS.map((q) => {
-    const v = request.sel[q.k], row = doc.createElement('div'), label = doc.createElement('span'), value = doc.createElement('span');
-    row.className = 'srow'; label.className = 'dim'; label.textContent = q.summary;
+  const rows = [...REQUEST_QUESTIONS.map((q) => [q.summary, request.sel[q.k]] as const), [REQUEST_ALSO.summary, request.also.join(' + ') || null] as const].map(([summary, v]) => {
+    const row = doc.createElement('div'), label = doc.createElement('span'), value = doc.createElement('span');
+    row.className = 'srow'; label.className = 'dim'; label.textContent = summary;
     value.className = v ? '' : 'empty'; value.textContent = v || '—';
     row.append(label, value);
     return row;
@@ -62,7 +68,8 @@ function showSending(doc: Document) {
 
 function restore(doc: Document) {
   if (!doc.getElementById('qs')) return;
-  doc.querySelectorAll<HTMLElement>('.q').forEach((q) => q.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', String(o.textContent === request.sel[q.dataset.k as RequestKey]))));
+  doc.querySelectorAll<HTMLElement>('.q[data-k]').forEach((q) => q.querySelectorAll('.opt').forEach((o) => o.setAttribute('aria-pressed', String(o.textContent === request.sel[q.dataset.k as RequestKey]))));
+  doc.querySelectorAll('#opts-also .opt').forEach((o) => o.setAttribute('aria-pressed', String(request.also.includes(o.textContent!))));
   (doc.getElementById('fBrand') as HTMLInputElement).value = request.brand;
   (doc.getElementById('fContact') as HTMLInputElement).value = request.contact;
   (doc.getElementById('fNote') as HTMLTextAreaElement).value = request.note;
@@ -80,9 +87,16 @@ function choose(k: RequestKey, v: string) {
   renderSummary(document); updGo();
 }
 
+/** Question 05: any number of the extras, kept in the form's order. */
+function toggleAlso(v: string) {
+  request.also = cleanAlso(request.also.includes(v) ? request.also.filter((x) => x !== v) : [...request.also, v]);
+  document.querySelectorAll('#opts-also .opt').forEach((o) => o.setAttribute('aria-pressed', String(request.also.includes(o.textContent!))));
+  renderSummary(document);
+}
+
 /** The request as the server takes it. */
 const payload = (turnstile: string): string => JSON.stringify({
-  path: request.sel.path!, product: request.sel.product!, qty: request.sel.qty, have: request.sel.have,
+  path: request.sel.path!, product: request.sel.product!, qty: request.sel.qty, have: request.sel.have, also: request.also,
   brand: request.brand, contact: request.contact, note: request.note,
   whatsappUpdates: onWhatsApp() ? request.waUpdates : undefined,
   notice: NOTICE.version, source, turnstile,
@@ -96,9 +110,21 @@ export const requestFeature: Feature = {
     if (arrival !== 'traverse' && !request.sent) {
       const params = new URLSearchParams(location.search);
       for (const k of ['path', 'product'] as const) { const v = params.get(k); if (v && isOption(k, v)) request.sel[k] = v; }
+      const also = params.get('also'); if (also) request.also = cleanAlso(also.split(','));
     }
     restore(document);
-    document.querySelectorAll<HTMLElement>('.q').forEach((q) => q.addEventListener('click', (e) => { const o = (e.target as Element).closest('.opt'); if (o) { vib(); choose(q.dataset.k as RequestKey, o.textContent!); } }, { signal }));
+    document.querySelectorAll<HTMLElement>('.q[data-k]').forEach((q) => q.addEventListener('click', (e) => { const o = (e.target as Element).closest('.opt'); if (o) { vib(); choose(q.dataset.k as RequestKey, o.textContent!); } }, { signal }));
+    $('opts-also').addEventListener('click', (e) => { const o = (e.target as Element).closest('.opt'); if (o) { vib(); toggleAlso(o.textContent!); } }, { signal });
+    // the questions after sending: each tap is saved on its own; an answer that cannot be saved is
+    // simply not thanked for, as they are optional
+    $('after').addEventListener('click', async (e) => {
+      const o = (e.target as Element).closest('.opt'), q = o?.closest<HTMLElement>('.aq');
+      if (!o || !q || !request.followUp) return;
+      vib(); request.after[q.dataset.f!] = o.textContent!;
+      q.querySelectorAll('.opt').forEach((x) => x.setAttribute('aria-pressed', String(x === o)));
+      const saved = await sendFollowUp({ code: request.code, key: request.followUp, ...request.after });
+      const t = document.getElementById('afterThanks'); if (t) t.hidden = !saved;
+    }, { signal });
     $('fBrand').addEventListener('input', (e) => { request.brand = (e.target as HTMLInputElement).value; }, { signal });
     $('fContact').addEventListener('input', (e) => { request.contact = (e.target as HTMLInputElement).value; $('waOpt').hidden = !onWhatsApp(); }, { signal });
     $('fWaUpdates').addEventListener('change', (e) => { request.waUpdates = (e.target as HTMLInputElement).checked; }, { signal });
@@ -120,7 +146,7 @@ export const requestFeature: Feature = {
       if (!request.brand.trim()) return fail(ERRORS.brand, ['fBrand']);
       if (!readContact(request.contact)) return fail(ERRORS.contact, ['fContact']);
       request.sending = true; request.err = ''; request.bad = []; $('err').textContent = ''; markInvalid(document, CHECKED, [], 'err'); showSending(document);
-      const out = await submit<{ code: string; track?: boolean }>('submit-request', $('rTs'), payload);
+      const out = await submit<{ code: string; track?: boolean; followUp?: string }>('submit-request', $('rTs'), payload);
       request.sending = false;
       // the visitor may have gone to another page meanwhile: the state is kept, and shown when they come back
       const here = !!document.getElementById('qs');
@@ -130,7 +156,7 @@ export const requestFeature: Feature = {
         if (here) fail(out.error, bad); else { request.err = out.error; request.bad = bad; }
         return;
       }
-      request.sent = true; request.code = out.code; request.track = out.track === true;
+      request.sent = true; request.code = out.code; request.track = out.track === true; request.followUp = out.followUp ?? '';
       track('generate_lead', { form: 'sample_request', product: request.sel.product ?? '' });
       toast(out.code + ' / request received'); updGo();
       if (!here) return;

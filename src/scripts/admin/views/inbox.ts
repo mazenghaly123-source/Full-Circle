@@ -62,7 +62,9 @@ export async function inboxView(v: View) {
     const mail = c.email ? `mailto:${c.email}?subject=${encodeURIComponent(i.kind === 'r' ? `Your sample request ${i.r.code} / Full Circle` : 'Your message to Full Circle')}` : '';
     const rows: [string, string][] = i.kind === 'r'
       ? [...REQUEST_QUESTIONS.map((qq): [string, string] => [qq.k === 'path' ? 'The brand is' : qq.summary, (i.r as unknown as Record<string, string | null>)[qq.k] ?? '—']),
+        ...(i.r.also?.length ? [['Also wants', i.r.also.join(', ')] as [string, string]] : []),
         ['Contact', c.whatsapp ? `${c.whatsapp} on WhatsApp` : c.email ?? c.typed], ...(i.r.note ? [['Notes', i.r.note] as [string, string]] : []),
+        ...(i.r.heard ? [['Heard of us on', i.r.heard] as [string, string]] : []), ...(i.r.sells ? [['Sells in', i.r.sells] as [string, string]] : []),
         ...(Object.keys(i.r.source ?? {}).length ? [['Came from', Object.entries(i.r.source).map(([k, x]) => `${k.replace('utm_', '')}: ${x}`).join(', ')] as [string, string]] : []),
         ['Received', when(i.r.created_at)]]
       : [['Contact', c.whatsapp ? `${c.whatsapp} on WhatsApp` : c.email ?? c.typed], ['Message', i.m.text], ['Received', when(i.m.created_at)]];

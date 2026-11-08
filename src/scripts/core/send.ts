@@ -20,4 +20,17 @@ export async function submit<T extends object>(fn: 'submit-request' | 'submit-co
   }
 }
 
+/**
+ * Sends the answers after a request (supabase/functions/submit-request, followUp). No Turnstile: the
+ * request's own key proves the sender. True when they were saved.
+ */
+export async function sendFollowUp(body: object): Promise<boolean> {
+  try {
+    const res = await fetch(`${BACKEND.functions}/submit-request`, { method: 'POST', body: JSON.stringify({ followUp: body }) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export const isProblem = (r: object): r is Problem => 'error' in r;

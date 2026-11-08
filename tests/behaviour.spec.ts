@@ -3,7 +3,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
-import { PAGES, isPhone, mockBackend, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
+import { FOLLOW_UP_KEY, PAGES, isPhone, mockBackend, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
 import { REST, figurePaths } from '../src/data/garments';
 
@@ -393,6 +393,8 @@ test('how it works: your demo choices carry over to the sample request', async (
   await page.waitForURL((u) => u.pathname === '/request-a-sample');
   await expect(page.locator('.q[data-k="path"] .opt', { hasText: 'Scaling' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.q[data-k="product"] .opt', { hasText: 'Jackets' })).toHaveAttribute('aria-pressed', 'true');
+  // the demo's launch picks become question 05 (a Scaling brand brings its own branding)
+  await expect(page.locator('#opts-also .opt[aria-pressed="true"]')).toHaveText(['Product photos', 'Ad creatives']);
   await expect(page.locator('#toast')).toHaveText('Your choices are carried over');
 });
 
@@ -459,14 +461,16 @@ test('request a sample: checks, counts picks, and confirms with a code', async (
 test('request a sample: only real options are taken from the link', async ({ page }) => {
   let dialog = false;
   page.on('dialog', (d) => { dialog = true; d.dismiss(); });
-  await page.goto('/request-a-sample?product=%3Cimg%20src%3Dx%20onerror%3D%22alert(1)%22%3E&path=Martian');
+  await page.goto('/request-a-sample?product=%3Cimg%20src%3Dx%20onerror%3D%22alert(1)%22%3E&path=Martian&also=%3Cb%3Ex%3C%2Fb%3E');
   await page.waitForTimeout(800);
   expect(dialog).toBe(false);
-  await expect(page.locator('#srows .srow .empty')).toHaveCount(4);
+  // the four picks and question 05 stay empty
+  await expect(page.locator('#srows .srow .empty')).toHaveCount(5);
   await expect(page.locator('#srows img')).toHaveCount(0);
-  await page.goto('/request-a-sample?path=Scaling&product=Knitwear');
+  await page.goto('/request-a-sample?path=Scaling&product=Knitwear&also=Ad%20creatives,Logo,Branding');
   await expect(page.locator('#srows')).toContainText('Scaling');
   await expect(page.locator('#srows')).toContainText('Knitwear');
+  await expect(page.locator('#srows')).toContainText('Branding + Ad creatives');
 });
 
 test('request a sample: picks and typing survive a trip to another page', async ({ page }, info) => {
@@ -1059,6 +1063,30 @@ test.describe('the forms send to the backend', () => {
     // once sent, the picks cannot change and the request is not sent twice
     expect(await page.locator('#qs').evaluate((e) => (e as HTMLElement).inert)).toBe(true);
     await expect(page.locator('#send')).toBeHidden();
+  });
+
+  test('request: question 05 goes with the request, and the two questions after sending are saved with its key', async ({ page }) => {
+    const sent = await mockBackend(page);
+    await page.goto('/request-a-sample');
+    await fillRequest(page, 'hello@acme.test');
+    // any number of extras, kept in the form's order
+    await clickStill(page.locator('#opts-also .opt', { hasText: 'Product photos' }));
+    await clickStill(page.locator('#opts-also .opt', { hasText: 'Branding' }));
+    await expect(page.locator('#opts-also .opt', { hasText: 'Branding' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#srows .srow').last()).toHaveText(/Also\s*Branding \+ Product photos/);
+    await clickStill(page.locator('#send'));
+    await expect(page.locator('#sentCode')).toHaveText('FC-2501');
+    expect(postedData(sent[0]).also).toEqual(['Branding', 'Product photos']);
+    // after sending: two optional questions, each saved as it is tapped, with the request's code and key
+    await expect(page.locator('#after')).toBeVisible();
+    await expect(page.locator('#afterThanks')).toBeHidden();
+    await page.locator('#after .aq[data-f="heard"] .opt', { hasText: 'Instagram' }).click();
+    await expect(page.locator('#afterThanks')).toBeVisible();
+    await page.locator('#after .aq[data-f="sells"] .opt', { hasText: 'Gulf' }).click();
+    await expect.poll(() => sent.length).toBe(3);
+    expect(postedData(sent[1])).toEqual({ followUp: { code: 'FC-2501', key: FOLLOW_UP_KEY, heard: 'Instagram' } });
+    expect(postedData(sent[2])).toEqual({ followUp: { code: 'FC-2501', key: FOLLOW_UP_KEY, heard: 'Instagram', sells: 'Gulf' } });
+    await expect(page.locator('#after .aq[data-f="sells"] .opt', { hasText: 'Gulf' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('request: ad tags from the first page travel with the request', async ({ page }, info) => {

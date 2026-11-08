@@ -62,7 +62,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   plan. Despite the name it is the live project: Mazen decided on 30 Oct to keep it, on the free plan,
   for the first months, and to upgrade the same project to Pro once orders run on the portal (for the
   backups; the free plan has none). No second project is planned.
-- **Migrations applied** (all 16 in `supabase/migrations/`, and the versions match; checked 7 Nov):
+- **Migrations applied** (all 17 in `supabase/migrations/`, and the versions match; checked 8 Nov):
   `20261015103850` requests_and_messages, `20261015103905` consents_request_index,
   `20261015140000` requests_without_files, `20261020221044` clients_orders_and_portal,
   `20261021002550` order_code_suffix, `20261021003118` admin_functions_support,
@@ -75,6 +75,8 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   portal lists. `20261027074938` my_requests_staff (same day, MCP): staff, who see every order
   on Track, no longer see a converted request of theirs as well. `20261027100100` expired_accounts (the clean-up also deletes the sign-in accounts a
   request opened, a year on): applied by Mazen in the SQL editor on 30 Oct, with the clean-out of the test data.
+- `20261108095056` request_also (8 Nov, MCP, adds only): requests' `also` (question 05), `heard` and `sells` (the
+  answers after sending) and `follow_up`, the key `submit-request` returns so the sender can send those answers.
 - `20261030151642` keep_awake (30 Oct, MCP): `public.alive()`, which anon may call; the Worker calls it
   twice a day so the free plan never pauses the project.
 - `20261030153525` developer_role and `20261030153541` developer_is_owner (30 Oct, MCP): a third staff role,

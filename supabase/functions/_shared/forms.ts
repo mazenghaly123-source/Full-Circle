@@ -11,6 +11,28 @@ export const REQUEST_QUESTIONS = [
 ] as const;
 
 export type RequestKey = (typeof REQUEST_QUESTIONS)[number]['k'];
+
+/**
+ * Question 05 (Mazen, 8 Nov 2026): the rest of the circle, optional and any number of them. Branding is the
+ * Design arc's brand identity; the photos and the ads are the Launch arc's. By request, no prices.
+ */
+export const REQUEST_ALSO = { label: '05 / Also want', hint: 'Optional, pick any', summary: 'Also', options: ['Branding', 'Product photos', 'Ad creatives'] } as const;
+export type AlsoOption = (typeof REQUEST_ALSO.options)[number];
+
+/** Keeps the known extras, once each, in the form's order. */
+export const cleanAlso = (raw: unknown): AlsoOption[] =>
+  Array.isArray(raw) ? REQUEST_ALSO.options.filter((o) => raw.includes(o)) : [];
+
+/**
+ * Two quick questions on the screen after a request is sent (Mazen, 8 Nov 2026), so the form itself stays short.
+ * Optional: one tap each, sent on their own with the request's code and the follow-up key it was given.
+ */
+export const FOLLOW_UP = [
+  { k: 'heard', label: 'How did you hear about us?', options: ['Instagram', 'TikTok', 'Facebook', 'A friend', 'Google', 'Other'] },
+  { k: 'sells', label: 'Where do you sell?', options: ['Egypt', 'Gulf', 'Turkey', 'China', 'Elsewhere', 'Not yet'] },
+] as const;
+export type FollowUpKey = (typeof FOLLOW_UP)[number]['k'];
+
 /** The options of one question, e.g. OptionOf<'qty'>. */
 export type OptionOf<K extends RequestKey> = Extract<(typeof REQUEST_QUESTIONS)[number], { k: K }>['options'][number];
 
@@ -85,6 +107,8 @@ export function cleanSource(raw: unknown): Source {
 /** What the request form sends. Files are not taken: they come later, on WhatsApp. */
 export type RequestData = {
   path: string; product: string; qty: string | null; have: string | null;
+  /** question 05: what else the brand wants (absent from forms sent before it existed) */
+  also?: string[];
   brand: string; contact: string; note: string;
   /** the opt-in box under a WhatsApp number (absent when it was not shown) */
   whatsappUpdates?: boolean;
@@ -123,11 +147,29 @@ export function checkRequest(d: Partial<RequestData>): Checked<RequestData & { r
   return {
     ok: true,
     value: {
-      path: d.path, product: d.product, qty: d.qty ?? null, have: d.have ?? null, brand, contact: d.contact!.trim(), note, reach,
+      path: d.path, product: d.product, qty: d.qty ?? null, have: d.have ?? null, also: cleanAlso(d.also), brand, contact: d.contact!.trim(), note, reach,
       whatsappUpdates: reach.channel === 'whatsapp' && typeof d.whatsappUpdates === 'boolean' ? d.whatsappUpdates : undefined,
       notice: String(d.notice ?? ''), source: cleanSource(d.source), turnstile: String(d.turnstile ?? ''),
     },
   };
+}
+
+/** The answers to the questions after sending, with what proves the sender: the code and its key. */
+export type FollowUpData = { code: string; key: string } & Partial<Record<FollowUpKey, string>>;
+
+/** Checks the answers after sending. At least one answer, each one of its question's options. */
+export function checkFollowUp(d: Partial<FollowUpData>): Checked<FollowUpData> {
+  const code = typeof d.code === 'string' ? d.code.trim() : '', key = typeof d.key === 'string' ? d.key.trim() : '';
+  if (!/^FC-\d{4,}$/.test(code) || !/^[0-9a-f-]{36}$/.test(key)) return { ok: false, error: ERRORS.failed };
+  const value: FollowUpData = { code, key };
+  for (const q of FOLLOW_UP) {
+    const v = d[q.k];
+    if (v == null) continue;
+    if (!(q.options as readonly string[]).includes(v)) return { ok: false, error: ERRORS.failed };
+    value[q.k] = v;
+  }
+  if (!FOLLOW_UP.some((q) => value[q.k])) return { ok: false, error: ERRORS.failed };
+  return { ok: true, value };
 }
 
 /** Checks a contact message. */
