@@ -89,11 +89,10 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   by Mazen in the SQL editor on 7 Nov (it holds a DELETE); the project lists it. Mazen's first test
   order (FC-2501, 30 Oct) was cleared by hand in the SQL editor and the code sequence set back to FC-2501.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
-  - `submit-request` v9 (27 Oct: the sign-in for a request by email, PR #20), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
+  - `submit-request` v11 (8 Nov: question 05 and the answers after sending, PR #35; the files deployed were compared with the repo's), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
     `whatsapp-webhook` v1.
-  - The form rules changed on 27 Oct (no "Under 60"; `belowMinimum` is denim at 60–150 only) without a redeploy:
-    staging's `submit-request` still accepts "Under 60". Redeploy it with the next function change.
+  - The form rules of 27 Oct (no "Under 60") reached the project with v11 on 8 Nov.
   - Deploying through the MCP needs every file a function imports (`<slug>/index.ts` and all four
     `_shared/*.ts`), passed with `verify_jwt: false`.
   - Checked: test request FC-2509 (23 Oct) was saved and logged with the WhatsApp version's wording.
