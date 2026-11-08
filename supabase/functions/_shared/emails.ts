@@ -62,7 +62,7 @@ ${outro.map((p) => `<tr><td style="font-family:${L.sans};font-size:13px;line-hei
 const sourceLine = (s: Source) => Object.entries(s).filter(([k]) => k !== 'landing').map(([k, v]) => `${k.replace('utm_', '')}: ${v}`).join(', ');
 
 export type RequestMail = {
-  code: string; at: Date; brand: string; picks: Record<string, string | null>; belowMinimum: boolean;
+  code: string; at: Date; brand: string; picks: Record<string, string | null>; also?: string[]; belowMinimum: boolean;
   typed: string; reach: Contact; whatsappUpdates?: boolean; note: string; source: Source;
 };
 
@@ -72,6 +72,7 @@ export function staffRequestEmail(r: RequestMail) {
   const rows: Row[] = [
     ['Brand', r.brand],
     ...REQUEST_QUESTIONS.map((q): Row => [q.k === 'path' ? 'The brand is' : q.summary, (r.picks[q.k] ?? '—') + (q.k === 'qty' && r.belowMinimum ? ' (below the minimum)' : '')]),
+    ...(r.also?.length ? [['Also wants', r.also.join(', ')] as Row] : []),
     ['Contact', reach.label, reach.href],
   ];
   if (r.whatsappUpdates !== undefined) rows.push(['Order updates on WhatsApp', r.whatsappUpdates ? 'Yes, opted in' : 'No']);

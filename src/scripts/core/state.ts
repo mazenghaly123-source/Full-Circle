@@ -4,6 +4,12 @@ import { demoCode } from './util';
 
 export const request = {
   sel: { path: null, product: null, qty: null, have: null } as Record<RequestKey, string | null>,
+  /** question 05: the rest of the circle, any number */
+  also: [] as string[],
+  /** the key the server gave with the code, for the answers after sending */
+  followUp: '',
+  /** the answers after sending, by question */
+  after: {} as Record<string, string>,
   sent: false,
   /** waiting for the server's answer (the button reads "Sending…") */
   sending: false,

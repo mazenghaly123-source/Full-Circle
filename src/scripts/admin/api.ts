@@ -17,6 +17,8 @@ export const roleName = (role: Role) => ({ owner: 'Owner', developer: 'Developer
 export type Staff = { user_id: string; name: string; role: Role; created_at: string };
 export type Request = {
   id: number; code: string; path: string; product: string; qty: string | null; have: string | null; brand: string;
+  /** question 05, and the answers after sending (8 Nov 2026); absent on rows read before then */
+  also?: string[]; heard?: string | null; sells?: string | null;
   contact: string; contact_channel: 'email' | 'whatsapp'; email: string | null; whatsapp: string | null; note: string | null;
   status: 'new' | 'replied' | 'converted' | 'closed'; source: Record<string, string>; created_at: string;
   orders: { id: number; code: string }[];

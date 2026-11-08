@@ -84,6 +84,11 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   online (`BOOKING` in `site.ts`). In the header beside Track order, the phone menu, the footer, first on
   Contact, as the Home hero's second button, and after a request is sent. Each kind opens its calendar page
   once Mazen has one (its `url`); until then WhatsApp with the request ready. Secondary to Request a sample.
+- The request form's question 05, "Also want" (Mazen, 8 Nov 2026): optional, any of Branding, Product photos, Ad
+  creatives (`REQUEST_ALSO` in `_shared/forms.ts`); How it works carries its picks over (`?also=`). After sending, two
+  optional one-tap questions, "How did you hear about us?" and "Where do you sell?" (`FOLLOW_UP`), saved through
+  `submit-request` with the request's code and the `follow_up` key it returned (requests' `also`, `heard`, `sells`).
+  The Brand + launch page (mock https://claude.ai/artifact/DwvxCoqgJerDn6XAk2knSM) is on hold: Mazen parked it.
 - The request form starts at 60–150 pieces (Mazen, 27 Oct 2026): no "Under 60" option. The minimum line under the
   quantity shows only for denim at 60–150, as a small quiet note (no red, it must not look like an error).
 - The site takes no files (Mazen, 15 Oct 2026): the request form has no upload, and sketches,

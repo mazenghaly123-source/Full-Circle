@@ -3,8 +3,8 @@ import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { REQUEST_QUESTIONS, ROUTES, WHATSAPP_URL } from '../data/site';
+import { FOLLOW_UP, NOTICE, REQUEST_ALSO } from '../../supabase/functions/_shared/forms';
 import { PRIVACY } from '../data/backend';
-import { NOTICE } from '../../supabase/functions/_shared/forms';
 ---
 <Base page="start">
 <PageHero crumb="Request a sample" title="Request a sample." lead="Four picks and your contact. No commitment." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%)" wide />
@@ -17,11 +17,14 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
           {q.k === 'qty' && <div class="warn" id="qtyWarn">Our minimum is 60 pieces per colour for most products and 150 for denim. Send the request anyway: we will suggest the closest option on the call.</div>}
         </div>
       ))}
+      <div class="q q-also"><div class="q-h"><span class="mono" id="q-also">{REQUEST_ALSO.label}</span><span class="mono dim">{REQUEST_ALSO.hint}</span></div>
+        <div class="opts" id="opts-also" role="group" aria-labelledby="q-also">{REQUEST_ALSO.options.map((o) => <button class="opt" aria-pressed="false"><span class="tk"></span>{o}</button>)}</div>
+      </div>
     </div>
     <aside class="summary" id="summary">
       <div style="display:flex;justify-content:space-between;align-items:center"><span class="mono">Your request</span><span class="mono dim" id="reqCode">FC-NEW</span></div>
       <div class="meter" id="meter"><i></i><i></i><i></i><i></i></div>
-      <div id="srows">{REQUEST_QUESTIONS.map((q) => <div class="srow"><span class="dim">{q.summary}</span><span class="empty">—</span></div>)}</div>
+      <div id="srows">{[...REQUEST_QUESTIONS, REQUEST_ALSO].map((q) => <div class="srow"><span class="dim">{q.summary}</span><span class="empty">—</span></div>)}</div>
       <div class="form-box" style="display:grid;gap:12px">
         <label class="mono dim flabel" for="fBrand">Brand name</label>
         <input class="field" id="fBrand" placeholder="Brand name" autocomplete="organization">
@@ -35,7 +38,11 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
         <span class="mono errline" id="err" role="alert"></span>
         <p class="notice">{NOTICE.request} <a href={PRIVACY}>Privacy notice</a></p>
       </div>
-      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a><a class="btn btn-line" id="sentBook" href={ROUTES.book}>Book a call</a><a class="sent-track" id="sentTrack" href={ROUTES.track} hidden>Follow it on Track: sign in with this email</a></div>
+      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a><a class="btn btn-line" id="sentBook" href={ROUTES.book}>Book a call</a><a class="sent-track" id="sentTrack" href={ROUTES.track} hidden>Follow it on Track: sign in with this email</a>
+        <div class="after" id="after"><span class="mono dim">Two quick questions, if you like</span>{FOLLOW_UP.map((q) => (
+          <div class="aq" data-f={q.k}><span id={`af-${q.k}`}>{q.label}</span><div class="opts" role="group" aria-labelledby={`af-${q.k}`}>{q.options.map((o) => <button class="opt" aria-pressed="false">{o}</button>)}</div></div>
+        ))}<span class="mono dim" id="afterThanks" hidden>Thank you.</span></div>
+      </div>
     </aside>
   </div>
   <div class="next-h"><h2 class="camp">What happens next</h2><p>After you send the request.</p></div>

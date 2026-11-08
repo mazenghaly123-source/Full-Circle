@@ -4,7 +4,7 @@
 // llms.txt, llms-full.txt and the catalog all come from this list, so a new page needs one entry
 // here and nothing else. Pages left out on purpose are in MARKDOWN_SKIPPED.
 import { execFileSync } from 'node:child_process';
-import { NOTICE } from '../../supabase/functions/_shared/forms';
+import { NOTICE, REQUEST_ALSO } from '../../supabase/functions/_shared/forms';
 import {
   ARCS, BOOKING, BOOKING_LENGTH, DEMO_GATE, DEMO_LAUNCH, DEMO_PRODUCTS, DEMO_STEPS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE,
   REQUEST_QUESTIONS, ROUTES, SITE, WHATSAPP, WHATSAPP_URL, bookingHref, sampleLine, type PageKey,
@@ -140,6 +140,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       'Four picks and your contact. No commitment.',
       h2('The four picks'),
       REQUEST_QUESTIONS.map((q) => `${h3(`${q.label} (${q.hint})`)}\n${list([...q.options])}${q.k === 'qty' ? '\n\nOur minimum is 60 pieces per colour for most products and 150 for denim. Send the request anyway: we will suggest the closest option on the call.' : ''}`).join('\n\n'),
+      `${h3(`${REQUEST_ALSO.label} (${REQUEST_ALSO.hint})`)}\n${list([...REQUEST_ALSO.options])}`,
       h2('Your contact'),
       list(['Brand name', 'Email or WhatsApp', 'Notes (optional)']),
       `${NOTICE.request} ${link('Privacy notice', abs(site, '/privacy'))}`,
@@ -189,7 +190,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       `Questions about your data: ${link(EMAIL, `mailto:${EMAIL}`)}, or WhatsApp ${link(WHATSAPP, WHATSAPP_URL)}.`,
       h2('What we collect'),
       list([
-        `${b('When you request a sample:')} your brand name, your email or WhatsApp number, your picks (product, quantity, what you have) and your notes. We do not take files through the site: sketches and photos come later, on WhatsApp. With an email, we also open a sign-in for it, so you can follow the request on the tracking page.`,
+        `${b('When you request a sample:')} your brand name, your email or WhatsApp number, your picks (product, quantity, what you have, and anything else you want from us, such as branding or photos) and your notes; and, if you answer them after sending, how you heard of us and where you sell. We do not take files through the site: sketches and photos come later, on WhatsApp. With an email, we also open a sign-in for it, so you can follow the request on the tracking page.`,
         `${b('When you send a message:')} your name, your email or WhatsApp number and your message.`,
         `${b('With either:')} the first page you opened on the site and the site or ad that sent you (for example Instagram), so we know which posts bring brands to us.`,
         `${b('If you accept analytics cookies:')} how you use the site (the pages you open, the WhatsApp button, whether a form was sent), your device and your rough location, through Google Analytics. Not your name or contact.`,
@@ -232,7 +233,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       h2('Security'),
       'Everything travels encrypted, and only Full Circle staff can read what you send us. If a breach affects your data, we tell you and the authorities as the law requires.',
       h2('Changes'),
-      'Last updated 27 October 2026. Every change is dated here.',
+      'Last updated 8 November 2026. Every change is dated here.',
     ],
   },
 ];

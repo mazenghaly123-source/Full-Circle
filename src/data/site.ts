@@ -1,4 +1,4 @@
-import type { OptionOf } from '../../supabase/functions/_shared/forms';
+import type { AlsoOption, OptionOf } from '../../supabase/functions/_shared/forms';
 import type { GarmentKey } from './garments';
 
 // Site content, copied from prototype/index.html. Pages render it at build time; the browser
@@ -210,7 +210,7 @@ export const DEMO_FABRICS = [
 ] as const;
 
 /** What the demo offers at launch, both picked to begin with. */
-export const DEMO_LAUNCH = ['Product photos', 'Ad creatives'] as const;
+export const DEMO_LAUNCH = ['Product photos', 'Ad creatives'] as const satisfies readonly AlsoOption[];
 
 export const pad = (n: number) => String(n).padStart(2, '0');
 

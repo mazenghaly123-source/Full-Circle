@@ -101,6 +101,24 @@ test('a request with a WhatsApp number lands, and staff are emailed', async () =
   ]);
 });
 
+test('question 05 is saved, and the answers after sending land only with the request\'s own key', async () => {
+  const res = await post('submit-request', requestForm({ contact: `also-${run}@acme.test`, also: ['Ad creatives', 'Branding', 'Logo'] }));
+  expect(res.status).toBe(200);
+  const { code, followUp } = await res.json();
+  expect(followUp).toMatch(/^[0-9a-f-]{36}$/);
+  const read = async () => (await rows<Record<string, unknown>>('requests', `code=eq.${code}&select=also,heard,sells`))[0];
+  expect(await read()).toEqual({ also: ['Branding', 'Ad creatives'], heard: null, sells: null });
+  const [alert] = (await mailsTo('staff@fullcircle.test', 1)).filter((m) => m.subject.startsWith(code));
+  expect(alert.text).toContain('Also wants: Branding, Ad creatives');
+  // a wrong key changes nothing; the right one saves each answer as it comes
+  const other = '00000000-0000-4000-8000-000000000000';
+  expect((await post('submit-request', JSON.stringify({ followUp: { code, key: other, heard: 'Google' } }))).status).toBe(404);
+  expect((await post('submit-request', JSON.stringify({ followUp: { code, key: followUp, heard: 'Instagram' } }))).status).toBe(200);
+  expect((await post('submit-request', JSON.stringify({ followUp: { code, key: followUp, heard: 'Instagram', sells: 'Gulf' } }))).status).toBe(200);
+  expect((await post('submit-request', JSON.stringify({ followUp: { code, key: followUp, sells: 'Mars' } }))).status).toBe(400);
+  expect(await read()).toEqual({ also: ['Branding', 'Ad creatives'], heard: 'Instagram', sells: 'Gulf' });
+});
+
 test('a number that did not ask for WhatsApp updates gets no message: staff reply by hand', async () => {
   const contact = `010 ${String(Date.now()).slice(-8)}`;
   const { code } = await (await post('submit-request', requestForm({ contact, whatsappUpdates: false }))).json();

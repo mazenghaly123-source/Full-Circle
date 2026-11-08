@@ -1304,4 +1304,13 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .sent-box .btn+.btn{margin-top:0}
 @media (max-width:860px){.book3{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.book3>div:hover{transform:none}}
+/* 8 Nov 2026 (Mazen): the request form's question 05, "Also want" (any of branding, product photos, ad creatives,
+   with a tick each), and two optional questions after sending, one tap each */
+.q-also .opt{display:inline-flex;align-items:center}
+.after{display:grid;gap:16px;margin-top:10px;padding-top:16px;border-top:1px solid var(--faint)}
+.after[hidden]{display:none}
+.aq{display:grid;gap:8px}
+.aq>span{color:var(--cotton);font-size:15px}
+.aq .opts{gap:6px}
+.aq .opt{padding:8px 12px;font-size:12px}
 /* ===== end approved changes ===== */

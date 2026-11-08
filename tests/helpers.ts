@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
-import { NOTICE } from '../supabase/functions/_shared/forms';
+import { NOTICE, REQUEST_ALSO } from '../supabase/functions/_shared/forms';
 import { ARCS, FAQ, MAKE, ring, sampleLine } from '../src/data/site';
 import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../src/data/mark';
 import { ICONS, iconSvg, type IconName } from '../src/data/icons';
@@ -104,6 +104,8 @@ const REDESIGN = {
   arcPaths: markArcPaths(readFileSync(resolve('src/components/sprite.svg'), 'utf8')),
   arcTurns: MARK_ARCS.map((a) => a.start - ARC_PAD),
   markC: MARK_C,
+  // the request form's question 05 (8 Nov 2026)
+  also: REQUEST_ALSO,
   heroLabels: ARCS.map((a, i) => {
     const [x, y] = ring(200, 200, 186, (i + 0.5) / ARCS.length);
     return { x, y, cls: 'st' + (x > 300 ? ' sr' : x < 100 ? ' sl' : '') + (i < 1 ? ' on' : ''), t: a.n };
@@ -295,6 +297,9 @@ export async function approvePrototype(page: Page) {
       document.querySelector('.foot-grid a[href="#start"]')!.parentElement!.insertAdjacentHTML('afterend', '<li><a href="#book">Book a call</a></li>');
       pg('contact').querySelector('.ccards')!.insertAdjacentHTML('afterbegin', `<div><span class="mono dim">${re.icon.video}Book a call</span><span><a class="cv" href="#book"><b>At the floor, by phone or online</b></a><a class="copy" href="#book">Pick <span aria-hidden="true">→</span></a></span></div>`);
       const heroLine = $h('.hero .cta .btn-line'); heroLine.textContent = 'Book a call'; heroLine.setAttribute('href', '#book');
+      // the request form's question 05, "Also want", and its row in the summary (8 Nov 2026)
+      pg('start').querySelector('#qs')!.insertAdjacentHTML('beforeend', `<div class="q q-also"><div class="q-h"><span class="mono" id="q-also">${re.also.label}</span><span class="mono dim">${re.also.hint}</span></div><div class="opts" id="opts-also" role="group" aria-labelledby="q-also">${re.also.options.map((o) => `<button class="opt" aria-pressed="false"><span class="tk"></span>${o}</button>`).join('')}</div></div>`);
+      pg('start').querySelector('#srows')!.insertAdjacentHTML('beforeend', `<div class="srow"><span class="dim">${re.also.summary}</span><span class="empty">—</span></div>`);
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }
@@ -347,15 +352,20 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
   await page.route(/\/functions\/v1\/submit-(request|contact)$/, async (route) => {
     const req = route.request(), fn = req.url().endsWith('submit-request') ? 'submit-request' : 'submit-contact';
     sent.push({ url: req.url(), body: req.postDataBuffer() });
-    const a = answer(fn, sent.filter((s) => s.url.endsWith(fn)).length);
+    // the answers after sending go to the same function, keyed by the request's code
+    if ('followUp' in postedData(sent.at(-1)!)) return route.fulfill({ contentType: 'application/json', json: { ok: true } });
+    const a = answer(fn, sent.filter((s) => s.url.endsWith(fn) && !('followUp' in postedData(s))).length);
     if (a.delayMs) await new Promise((r) => setTimeout(r, a.delayMs));
     if (a.abort) return route.abort('failed');
     // like the function, a request sent by email can be followed on Track
     const track = fn === 'submit-request' && String(postedData(sent.at(-1)!).contact ?? '').includes('@');
-    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501', track } : { ok: true }) });
+    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? (fn === 'submit-request' ? { code: 'FC-2501', track, followUp: FOLLOW_UP_KEY } : { ok: true }) });
   });
   return sent;
 }
+
+/** The key the stand-in gives a sent request, for the answers after sending. */
+export const FOLLOW_UP_KEY = '0e1a8f2c-5b7d-4c3e-9a61-2f4b8d0c7e15';
 
 /** The JSON a mocked form function received. */
 export const postedData = (s: Sent): Record<string, unknown> => JSON.parse(s.body?.toString('utf8') ?? '');

@@ -167,7 +167,9 @@ export const demoOrderFeature: Feature = {
     const yoApprove = () => { if (yo.ok) return; vib(); yo.ok = true; const d = new Date(); yo.at = pad(d.getHours()) + ':' + pad(d.getMinutes()); showApproved(document); toast(yo.code + ' / sample 03 approved'); render(); };
     $('yoApprove').addEventListener('click', yoApprove, { signal }); document.querySelectorAll('[data-yoapprove]').forEach((b) => b.addEventListener('click', yoApprove, { signal }));
     $('yoReal').addEventListener('click', () => {
-      const q = new URLSearchParams({ ...(yo.path ? { path: yo.path } : {}), product: product().product });
+      // question 05: a Starting brand gets its branding, and the launch picks come along (photos, ads)
+      const also = [...(yo.path === 'Starting' ? ['Branding'] : []), ...yo.launch];
+      const q = new URLSearchParams({ ...(yo.path ? { path: yo.path } : {}), product: product().product, ...(also.length ? { also: also.join(',') } : {}) });
       navigate(`${ROUTES.start}?${q}`); toast('Your choices are carried over');
     }, { signal });
     [...$('yoRail').children].forEach((b, p) => b.addEventListener('click', () => $(`yoPart${p}`).scrollIntoView({ behavior: rm ? 'auto' : 'smooth', block: 'start' }), { signal }));
