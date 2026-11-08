@@ -11,6 +11,7 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
 <section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
   <div class="cgrid">
     <div class="ccards">
+      <div><span class="mono dim"><Icon name="video" />Book a call</span><span><a class="cv" href={ROUTES.book}><b>At the floor, by phone or online</b></a><a class="copy" href={ROUTES.book}>Pick <span aria-hidden="true">→</span></a></span></div>
       <div><span class="mono dim"><Icon name="chat" />WhatsApp</span><span><a class="cv" href={WHATSAPP_URL} target="_blank" rel="noopener"><b id="cWa">{WHATSAPP}</b></a><button class="copy" data-copy="cWa">Copy</button><a class="copy" href={WHATSAPP_URL} target="_blank" rel="noopener">Open chat <span aria-hidden="true">↗</span></a></span></div>
       <div><span class="mono dim"><Icon name="phone" />Phone</span><span><a class="cv" href={PHONE_URL}><b id="cTel">{PHONE}</b></a><button class="copy" data-copy="cTel">Copy</button></span></div>
       <div><span class="mono dim"><Icon name="camera" />Instagram</span><span><a class="cv" href={INSTAGRAM_URL} target="_blank" rel="noopener"><b>{INSTAGRAM}</b></a><a class="copy" href={INSTAGRAM_URL} target="_blank" rel="noopener">Open <span aria-hidden="true">↗</span></a></span></div>

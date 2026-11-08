@@ -288,6 +288,13 @@ export async function approvePrototype(page: Page) {
       next3.insertAdjacentHTML('beforebegin', '<div class="next-h"><h2 class="camp">What happens next</h2><p>After you send the request.</p></div>');
       next3.innerHTML = cards([['phone', 'First call', 'The product, the quantity, where you are now.'], ['tag', 'Price range', 'A sample price and a bulk range, before you commit.'], ['log', 'Your order code', 'Your order opens on the tracking page.']]);
       head('track', 'Sign in with the email or WhatsApp on your order, or the email on your request.');
+      // Book a call (8 Nov 2026): beside Track order, in the phone menu and the footer, first on Contact, and the
+      // Home hero's second button
+      document.querySelector('.hdr-r a.track-link')!.insertAdjacentHTML('beforebegin', '<a href="#book" class="mono track-link book-link">Book a call</a>');
+      document.querySelector('.mmenu .mfoot')!.insertAdjacentHTML('beforebegin', '<a href="#book">Book a call<span class="mono dim">06</span></a>');
+      document.querySelector('.foot-grid a[href="#start"]')!.parentElement!.insertAdjacentHTML('afterend', '<li><a href="#book">Book a call</a></li>');
+      pg('contact').querySelector('.ccards')!.insertAdjacentHTML('afterbegin', `<div><span class="mono dim">${re.icon.video}Book a call</span><span><a class="cv" href="#book"><b>At the floor, by phone or online</b></a><a class="copy" href="#book">Pick <span aria-hidden="true">→</span></a></span></div>`);
+      const heroLine = $h('.hero .cta .btn-line'); heroLine.textContent = 'Book a call'; heroLine.setAttribute('href', '#book');
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }

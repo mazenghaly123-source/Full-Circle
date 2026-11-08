@@ -35,7 +35,7 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
         <span class="mono errline" id="err" role="alert"></span>
         <p class="notice">{NOTICE.request} <a href={PRIVACY}>Privacy notice</a></p>
       </div>
-      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a><a class="sent-track" id="sentTrack" href={ROUTES.track} hidden>Follow it on Track: sign in with this email</a></div>
+      <div class="sent-box"><h2 class="camp" id="sentH" tabindex="-1">Received.</h2><p style="margin:0;color:var(--cotton)">We will message you to book the first call. Your request code is <b id="sentCode"></b>.</p><a class="btn btn-line" id="sentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Continue on WhatsApp</a><a class="btn btn-line" id="sentBook" href={ROUTES.book}>Book a call</a><a class="sent-track" id="sentTrack" href={ROUTES.track} hidden>Follow it on Track: sign in with this email</a></div>
     </aside>
   </div>
   <div class="next-h"><h2 class="camp">What happens next</h2><p>After you send the request.</p></div>

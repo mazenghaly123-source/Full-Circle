@@ -7,8 +7,8 @@ export const esc = (s: string) => s.replace(/([\\`*_[\]<>|])/g, '\\$1');
 /** An absolute URL on the site, from a path such as /about or /#faq. */
 export const abs = (site: URL, path: string) => new URL(path, site).href;
 
-/** A link, with its text escaped. */
-export const link = (text: string, url: string) => `[${esc(text)}](${url})`;
+/** A link, with its text escaped; brackets in the address are escaped, or they would end the link early (a WhatsApp message in a link). */
+export const link = (text: string, url: string) => `[${esc(text)}](${url.replace(/\(/g, '%28').replace(/\)/g, '%29')})`;
 
 export const h2 = (s: string) => `## ${esc(s)}`;
 export const h3 = (s: string) => `### ${esc(s)}`;

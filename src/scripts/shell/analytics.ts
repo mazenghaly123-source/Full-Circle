@@ -92,8 +92,11 @@ if (enabled) {
     const b = (e.target as Element).closest<HTMLElement>('[data-consent]');
     if (b) decide(b.dataset.consent as Choice);
   });
-  // the WhatsApp links, on every page (header, phone bar, contact, the sent request)
+  // the booking buttons (Book a call, 8 Nov 2026), then the WhatsApp links, on every page (header, phone
+  // bar, contact, the sent request); a booking that opens WhatsApp counts as a booking
   document.addEventListener('click', (e) => {
+    const book = (e.target as Element).closest<HTMLAnchorElement>('a[data-book]');
+    if (book) { track('book_click', { kind: book.dataset.book!, page: location.pathname }); return; }
     const a = (e.target as Element).closest<HTMLAnchorElement>('a[href^="https://wa.me/"]');
     if (a) track('whatsapp_click', { page: location.pathname });
   });

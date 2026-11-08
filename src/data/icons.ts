@@ -31,6 +31,8 @@ export const ICONS = {
   bulk: '<rect x="3.5" y="11.5" width="7.5" height="7.5" rx="1.8"/><rect x="13" y="11.5" width="7.5" height="7.5" rx="1.8"/><rect x="8.2" y="3.5" width="7.5" height="7.5" rx="1.8"/><circle class="rd" cx="12" cy="7.2" r="1.2"/>',
   // following an order
   phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M9.8 12.2l1.6 1.6 3-3.2"/><circle class="rd" cx="12" cy="18" r="1"/>',
+  // an online meeting
+  video: '<rect x="3.5" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M16 10.6l4.5-2.6v8l-4.5-2.6"/><circle class="rd" cx="7.3" cy="10.2" r="1.2"/>',
   camera: '<rect x="3.5" y="7" width="17" height="12" rx="2.5"/><path d="M9 7l1.4-2.5h3.2L15 7"/><circle cx="12" cy="13" r="3.2"/><circle class="rd" cx="17.5" cy="10" r="1"/>',
   // a cookie, bitten (the analytics consent bar)
   cookie: '<path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5 3.4 3.4 0 0 1-4.25-4.25A3.4 3.4 0 0 1 12 3.5z"/><circle cx="8.6" cy="9.8" r="1"/><circle cx="9.6" cy="15.6" r="1"/><circle cx="15.4" cy="15.2" r="1"/><circle class="rd" cx="12.6" cy="12.3" r="1.3"/>',

@@ -595,6 +595,30 @@ test('contact: copy, and the form checks before sending', async ({ page }) => {
   await expect(page.locator('#cForm')).toBeHidden();
 });
 
+test('book a call: at the floor, by phone or online, from the Home hero, the header and Contact', async ({ page }, info) => {
+  await page.goto('/');
+  await page.locator('.hero .cta a', { hasText: 'Book a call' }).click();
+  await page.waitForURL('**/book-a-call');
+  await expect(page.locator('h1')).toHaveText('Book a call.');
+  if (!isPhone(info)) await expect(page.locator('header a.book-link')).toHaveClass(/on/);
+  // until there is a calendar, each kind opens WhatsApp with its request ready
+  const kinds = page.locator('#bookKinds a[data-book]');
+  await expect(kinds).toHaveText(['Book a visit', 'Book a call', 'Book a meeting']);
+  for (const [i, ask] of [[0, 'a visit to the floor'], [1, 'a phone call'], [2, 'an online meeting']] as const) {
+    const href = (await kinds.nth(i).getAttribute('href'))!;
+    expect(href.startsWith('https://wa.me/201011435406?text=')).toBe(true);
+    expect(decodeURIComponent(href.split('text=')[1])).toBe(`Hi Full Circle, I'd like to book ${ask} (30 minutes). My brand: `);
+    await expect(kinds.nth(i)).toHaveAttribute('target', '_blank');
+  }
+  await expect(page.locator('.book-how')).toHaveText('You pick the time with us on WhatsApp.');
+  await openNav(page, '/contact', isPhone(info));
+  await page.waitForURL('**/contact');
+  await expect(page.locator('.ccards a[href="/book-a-call"]').first()).toBeVisible();
+  // the phone menu and the footer list it too
+  await expect(page.locator('.mmenu a[href="/book-a-call"]')).toHaveCount(1);
+  await expect(page.locator('footer a[href="/book-a-call"]')).toHaveCount(1);
+});
+
 test('links from the prototype (/#how) land on the real pages', async ({ page }) => {
   await page.goto('/#how');
   await page.waitForURL('**/how-it-works');
@@ -1028,6 +1052,8 @@ test.describe('the forms send to the backend', () => {
     await expect(page.locator('#sentWa')).toHaveText('Continue on WhatsApp');
     await expect(page.locator('#sentWa')).toHaveAttribute('href', 'https://wa.me/201011435406?text=Hi%20Full%20Circle%2C%20I%20just%20sent%20sample%20request%20FC-2501%20(Acme%20Studio).');
     await expect(page.locator('#sentWa')).toHaveAttribute('target', '_blank');
+    await expect(page.locator('#sentBook')).toBeVisible();
+    await expect(page.locator('#sentBook')).toHaveAttribute('href', '/book-a-call');
     // a number cannot sign in to Track yet, so the way there is not offered
     await expect(page.locator('#sentTrack')).toBeHidden();
     // once sent, the picks cannot change and the request is not sent twice
