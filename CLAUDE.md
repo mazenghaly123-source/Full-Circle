@@ -80,6 +80,10 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   menu, snap carousels with dots, animated orange/indigo hero light, labelled hero ring.
   Phone quality matters a lot: test at 390×844 and 375×667.
 - Starting/Scaling: split section on Home now; dedicated ad landing pages later.
+- Book a call (Mazen, 8 Nov 2026, "very important"): `/book-a-call`, 30 minutes at the floor, by phone or
+  online (`BOOKING` in `site.ts`). In the header beside Track order, the phone menu, the footer, first on
+  Contact, as the Home hero's second button, and after a request is sent. Each kind opens its calendar page
+  once Mazen has one (its `url`); until then WhatsApp with the request ready. Secondary to Request a sample.
 - The request form starts at 60–150 pieces (Mazen, 27 Oct 2026): no "Under 60" option. The minimum line under the
   quantity shows only for denim at 60–150, as a small quiet note (no red, it must not look like an error).
 - The site takes no files (Mazen, 15 Oct 2026): the request form has no upload, and sketches,
