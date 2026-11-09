@@ -39,7 +39,7 @@ const css = [tone ? `--tone:${tone}` : '', style].filter(Boolean).join(';');
     />
   )}
   {caption.length > 0 && (
-    <div class="cap mono">{caption.map((t) => <span>{t}</span>)}</div>
+    <div class="cap mono">{caption.map((t) => t === 'Photo' ? <span aria-hidden="true" data-nosnippet>{t}</span> : <span>{t}</span>)}</div>
   )}
   <slot />
 </div>

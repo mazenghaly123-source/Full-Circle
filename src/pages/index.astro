@@ -6,7 +6,7 @@ import CtaBand from '../components/CtaBand.astro';
 import Icon from '../components/Icon.astro';
 import sprite from '../components/sprite.svg?raw';
 import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../data/mark';
-import { ARCS, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, ROUTES, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring, sampleLine } from '../data/site';
+import { ARCS, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PHONE, PHONE_URL, PLAIN_LINE, ROUTES, SITE, STAGES, WHATSAPP, WHATSAPP_URL, pad, ring, sampleLine } from '../data/site';
 
 // hero ring: one label per part of the work (Design, Build, Launch), just outside the ring
 const heroLabels = ARCS.map((a, i) => {
@@ -26,7 +26,7 @@ const arcPaths = markArcPaths(sprite);
   <div class="wrap">
     <div>
       <h1 class="camp wide"><span class="l1">Idea to product.</span> <span class="l2">Full circle.</span></h1>
-      <p class="lead">From idea to launch, under one roof in Cairo. What you approve in sampling is what ships.</p>
+      <p class="lead">{PLAIN_LINE} What you approve in sampling is what ships.</p>
       <div class="cta"><a href={ROUTES.start} class="btn btn-red">Request a sample</a><a href={ROUTES.book} class="btn btn-line">Book a call</a></div>
       <p class="mono dim note">Free first call / we reply quickly</p>
     </div>
@@ -87,7 +87,7 @@ const arcPaths = markArcPaths(sprite);
 <section class="wrap" id="h-make" style="padding-bottom:clamp(88px,10vw,150px)">
   <div class="sh"><h2 class="camp wide">What we make</h2><p>Denim first. Imported fabrics and trims.</p></div>
   <div class="make snap acc" id="makeGrid">{MAKE.map((m, i) => (
-    <a class={i === 0 ? 'cat on' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} sizes="(max-width: 760px) 72vw, 480px" /><span class="num mono">{i === 0 ? 'Our specialty' : pad(i + 1)}</span><span class="v" aria-hidden="true">{m.n}</span><div class="t"><h3 class="camp">{m.n}</h3><div class="meta"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><span class="go mono">See details</span></div></a>
+    <a class={i === 0 ? 'cat on' : 'cat'} href={`${ROUTES.make}#cat-${m.id}`}><Photo img={`cat-${m.id}`} tone={m.tone} sizes="(max-width: 760px) 72vw, 480px" /><span class="num mono">{i === 0 ? 'Our speciality' : pad(i + 1)}</span><span class="v" aria-hidden="true">{m.n}</span><div class="t"><h3 class="camp">{m.n}</h3><div class="meta"><span><Icon name="pieces" />{m.sub}</span><span><Icon name="clock" />{sampleLine(m.samp)}</span></div><span class="go mono">See details</span></div></a>
   ))}</div><div class="dots" data-for="makeGrid"></div>
   <div class="make-foot"><a href={ROUTES.make} class="btn btn-line">All capabilities</a></div>
 </section>
@@ -171,7 +171,7 @@ const arcPaths = markArcPaths(sprite);
     <div><span class="mono dim">WhatsApp</span><a class="cv" href={WHATSAPP_URL} target="_blank" rel="noopener"><b>{WHATSAPP}</b><span class="ar" aria-hidden="true">↗</span></a></div>
     <div><span class="mono dim">Phone</span><a class="cv" href={PHONE_URL}><b>{PHONE}</b></a></div>
     <div><span class="mono dim">Instagram</span><a class="cv" href={INSTAGRAM_URL} target="_blank" rel="noopener"><b>{INSTAGRAM}</b><span class="ar" aria-hidden="true">↗</span></a></div>
-    <div><span class="mono dim">Studio + floor</span><b>Cairo, Egypt</b></div>
+    <div><span class="mono dim">Studio + floor</span><b>{SITE.address.street}, Cairo</b></div>
   </div>
 </section>
 </Base>

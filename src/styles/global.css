@@ -970,6 +970,35 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .priv b{color:var(--bone);font-weight:500}
 .priv a{color:var(--bone);text-decoration:underline;text-underline-offset:3px}
 @media (max-width:760px){.priv section{grid-template-columns:1fr}}
+/* text for screen readers and search only, where the page shows the same words another way (How it
+   works' step names, shown in the label above each step's heading) */
+.vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+/* the search pages (src/components/Landing.astro, 9 Nov 2026): the inner pages' parts, plus the facts as
+   chips under the lead, two buttons, short paragraphs, the categories as rows and the related links */
+/* their titles hold long words ("manufacturer"), so the size follows the screen: the longest word fits */
+body:is([data-page="egypt"],[data-page="jeans"],[data-page="privatelabel"],[data-page="hoodies"]) .phero h1.wide{font-size:clamp(24px,calc((100vw - 48px) / 12.2),92px)}
+.lfacts{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.lfacts li{display:inline-flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r-s);background:rgba(17,17,15,0.45);font-family:var(--f-mono);font-size:12px;line-height:1;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap}
+.lfacts .ic{width:17px;height:17px}
+.lcta{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.lsec{padding-block:clamp(64px,8vw,120px) 0}
+.lbody{display:grid;gap:16px;max-width:64ch}
+.lbody p{margin:0;font-size:clamp(17px,1.4vw,20px);line-height:1.55;color:var(--cotton)}
+.lbody p:first-child{color:var(--bone)}
+.lcats{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.lcats a{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,1.6fr) auto;gap:14px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);transition:padding 420ms var(--ease)}
+.lcats a:hover{padding-left:10px}
+.lcats b{font-family:var(--f-camp);font-weight:700;font-size:clamp(24px,2.4vw,32px);line-height:1;text-transform:uppercase}
+.lcats span:not(.mono){color:var(--cotton)}
+.lrel{display:grid;gap:12px;padding-block:clamp(64px,8vw,120px)}
+.lrel ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.lrel a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-m);transition:border-color 300ms}
+.lrel a:hover{border-color:var(--bone)}
+@media (max-width:760px){
+  .lfacts li{font-size:11px;padding:8px 10px}
+  .lcats a{grid-template-columns:34px minmax(0,1fr);row-gap:6px}
+  .lcats a>span:nth-of-type(2),.lcats a>span:nth-of-type(3){grid-column:2}
+}
 /* the analytics consent bar (26 Oct 2026): one of the site's icon cards (.three), fixed at the
    bottom, shown only on the live domain until the visitor answers; both buttons weigh the same */
 .consent{position:fixed;z-index:40;left:24px;bottom:24px;width:min(620px,calc(100% - 48px));display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:18px;align-items:center;padding:18px 18px 18px 22px;background:rgba(17,17,15,0.94);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:0 24px 60px -16px rgba(0,0,0,0.7)}
@@ -981,6 +1010,17 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .consent .cbtn{display:flex;gap:8px}
 .consent .btn{padding:12px 16px;min-height:44px;border-radius:var(--r-m)}
 @media (max-width:760px){.consent{left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:calc(100% - 20px);grid-template-columns:34px minmax(0,1fr);column-gap:16px;row-gap:14px;padding:18px}.consent .cbtn{grid-column:1/-1}.consent .cbtn .btn{flex:1}}
+/* short phones (Mazen, 9 Nov 2026): the same words and buttons, tighter, the buttons stacked at the side, so the
+   hero's buttons stay in view above it (at 375×667 it covered them) */
+@media (max-width:760px) and (max-height:760px){
+  .consent{grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:0;padding:12px 12px 12px 16px;bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  .consent .ic{display:none}
+  .consent p{gap:4px}
+  .consent b{font-size:19px}
+  .consent span{font-size:12.5px;line-height:1.4}
+  .consent .cbtn{grid-column:auto;flex-direction:column;gap:6px;align-self:center}
+  .consent .cbtn .btn{flex:none;min-height:44px;padding:10px 14px}
+}
 /* a request on Track (27 Oct 2026): listed with the orders until it becomes one, but not a link */
 .ord.req{cursor:default}
 .ord.req:hover{background:none}
@@ -1313,4 +1353,18 @@ main:focus,h1[tabindex="-1"]:focus,h2[tabindex="-1"]:focus,h3[tabindex="-1"]:foc
 .aq>span{color:var(--cotton);font-size:15px}
 .aq .opts{gap:6px}
 .aq .opt{padding:8px 12px;font-size:12px}
+/* 9 Nov 2026 (Mazen, after the SEO audit): What we make shows each category's line, already in its data;
+   the footer gets a column for the search pages; tap targets of 44px on phones (the footer's links, the
+   contact page's values, the menu button); the hero's small note in Raw Cotton, for contrast */
+.mcat .line{margin:0;color:var(--cotton);font-size:16px;line-height:1.5}
+.foot-grid{grid-template-columns:1.4fr repeat(4,minmax(0,1fr))}
+@media (max-width:1020px){.foot-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.foot-grid>div:first-child{grid-column:1/-1}}
+@media (max-width:760px){
+  .foot-grid{grid-template-columns:1fr 1fr}
+  .foot-grid ul{gap:0}
+  .foot-grid ul a{display:inline-flex;align-items:center;min-height:44px}
+  .ccards a.cv{display:inline-flex;align-items:center;min-height:44px}
+}
+@media (max-width:1020px){.burger{width:44px;height:44px}.burger span:first-child{top:18px}.burger span:last-child{top:25px}}
+.hero .note{color:var(--cotton)}
 /* ===== end approved changes ===== */

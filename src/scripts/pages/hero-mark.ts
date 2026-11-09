@@ -43,10 +43,12 @@ async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<M
   const { SVGLoader } = await import('three/addons/loaders/SVGLoader.js');
   const { RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js');
   started = true;
+  await breathe();
   // geometry from the real logo, extruded in a worker while the scene is set up here
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sym.getAttribute('viewBox')}">${sym.innerHTML.replace(/currentColor/g, '#000')}</svg>`;
   const shapes: InstanceType<typeof THREE.Shape>[] = []; new SVGLoader().parse(svg).paths.forEach((p) => SVGLoader.createShapes(p).forEach((sh) => shapes.push(sh)));
   const extruded = extrude(shapes.map((sh) => sh.toJSON()));
+  await breathe();
   const cv = canvas ?? document.createElement('canvas');
   cv.className = 'mark3'; cv.id = 'mark3'; cv.setAttribute('aria-hidden', 'true');
   canvas = cv;
@@ -56,8 +58,10 @@ async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<M
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.92;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const scene = new THREE.Scene();
+  await breathe();
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  await breathe();
   const camera = new THREE.PerspectiveCamera(26, 1, 10, 5000); camera.position.set(0, 0, 1010);
   // the mesh's attributes stay empty until the worker sends them, so the shaders can compile meanwhile
   const geo = new THREE.BufferGeometry();
@@ -126,6 +130,21 @@ async function setUp(sym: HTMLElement, extrude: (shapes: unknown[]) => Promise<M
 const ATTRIBUTES = [['position', 3], ['normal', 3], ['uv', 2]] as const;
 
 /**
+ * Hands the main thread back between the set-up's heavy steps (SEO audit, 9 Nov 2026: in one block they held it
+ * for seconds on slow phones, so the hero photo painted late and taps waited). After the next frame, or 50ms
+ * in a hidden tab, where frames stop.
+ */
+const breathe = () => new Promise<void>((resolve) => {
+  let done = false;
+  const go = () => { if (!done) { done = true; resolve(); } };
+  requestAnimationFrame(() => setTimeout(go, 0));
+  setTimeout(go, 50);
+});
+
+/** Runs fn when the browser is idle after the page's first paint, and within `ms` at the latest. */
+const whenIdle = (fn: () => void, ms: number) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: ms }) : setTimeout(fn, Math.min(ms, 200)));
+
+/**
  * Starts the worker that extrudes the mesh (hero-mesh.worker.ts), so its script loads alongside
  * three.js. `extrude` sends it the logo's shapes and resolves with the mesh's arrays.
  */
@@ -174,9 +193,11 @@ export const heroMarkFeature: Feature = {
     // setting up the scene still takes the main thread, so after a page change it waits for the wipe
     const delay = arrival === 'load' ? 0 : WIPE_CLEAR_MS;
     later(signal, () => { expired = true; if (!started || failed) flat(); }, 2600 + delay);
-    later(signal, () => ensureBuilt().then(() => {
+    // and on a first load it waits for the browser to be idle (within 800ms), so the hero photo paints first
+    const start = () => ensureBuilt().then(() => {
       if (signal.aborted || !wrap.isConnected || !wrap.classList.contains('m3wait')) return;
       if (ready) attach(wrap, signal); else if (expired) flat();
-    }), delay);
+    });
+    later(signal, () => (arrival === 'load' && !building ? whenIdle(() => { if (!signal.aborted) start(); }, 800) : start()), delay);
   },
 };

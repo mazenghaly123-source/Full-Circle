@@ -2,7 +2,7 @@
 // /robots.txt and the markdown catalog. All are built from src/data/site.ts and the markdown
 // registry, so they say the same things and list the same pages. Keep the three policy files
 // (robots.txt, llms.txt, ai.txt) in sync with one another: change them here, together.
-import { EMAIL, INSTAGRAM_URL, MAKE, PAGES, PRIVATE_PATHS, SITE, WHATSAPP, type PageKey } from '../data/site';
+import { EMAIL, INSTAGRAM_URL, MAKE, PAGES, PHONE, PRIVATE_PATHS, SITE, WHATSAPP, type PageKey } from '../data/site';
 import { abs, day, link, list } from './format';
 import { listMarkdownRoutes, mdFile, renderMarkdown } from './registry';
 
@@ -19,7 +19,7 @@ const facts = () => [
   'Samples take 7 to 25 days (cotton fastest, denim longest).',
   'Works with brands in the Gulf and the Middle East, Turkey and China.',
   'No prices are published: a first call gives a sample price and a bulk range.',
-  `Contact: WhatsApp ${WHATSAPP}, email ${EMAIL}; hours ${SITE.hours} (Cairo).`,
+  `Contact: WhatsApp ${WHATSAPP}, phone ${PHONE}, email ${EMAIL}; hours ${SITE.hours} (Cairo).`,
 ].join(' ');
 
 export function llmsTxt(site: URL) {
@@ -109,6 +109,8 @@ These rules cover the public pages listed in [llms.txt](${url('/llms.txt')}). Ex
 ## Contact
 
 Email: ${EMAIL}
+Phone: ${PHONE}
+WhatsApp: ${WHATSAPP}
 [Contact page](${url('/contact')})
 [Instagram](${INSTAGRAM_URL})
 

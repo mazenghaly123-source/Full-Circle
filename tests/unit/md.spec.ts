@@ -118,6 +118,31 @@ test('the Worker: a page with no markdown is a markdown 404; HEAD and OPTIONS an
   expect(pre.headers.get('access-control-allow-methods')).toBe('GET, HEAD, OPTIONS');
 });
 
+test('the Worker: one address per page, www, plain http, workers.dev, a trailing slash or .html get a 301 to it', async () => {
+  const env = { ASSETS: { fetch: async () => new Response('<h1>page</h1>', { headers: { 'Content-Type': 'text/html' } }) } };
+  const go = (url: string, method = 'GET') => worker.fetch(new Request(url, { method }), env);
+  const cases: [string, string][] = [
+    ['https://www.fullcircle-co.com/about?x=1', 'https://fullcircle-co.com/about?x=1'],
+    ['http://fullcircle-co.com/', 'https://fullcircle-co.com/'],
+    ['http://www.fullcircle-co.com/what-we-make/', 'https://fullcircle-co.com/what-we-make'],
+    ['https://full-circle.mazenghaly123.workers.dev/contact', 'https://fullcircle-co.com/contact'],
+    ['https://fullcircle-co.com/about/', 'https://fullcircle-co.com/about'],
+    ['https://fullcircle-co.com/index.html', 'https://fullcircle-co.com/'],
+    ['https://fullcircle-co.com/about.html', 'https://fullcircle-co.com/about'],
+    ['https://fullcircle-co.com/about/index.html', 'https://fullcircle-co.com/about'],
+  ];
+  for (const [from, to] of cases) {
+    const res = await go(from);
+    expect(res.status, from).toBe(301);
+    expect(res.headers.get('location'), from).toBe(to);
+  }
+  expect((await go('https://www.fullcircle-co.com/about', 'HEAD')).status).toBe(301);
+  // already there, a preview build's own address, a markdown file and a preflight: served as they are
+  for (const url of ['https://fullcircle-co.com/', 'https://fullcircle-co.com/about', 'https://abc123-full-circle.mazenghaly123.workers.dev/about', 'https://fullcircle-co.com/about.md'])
+    expect((await go(url)).status, url).not.toBe(301);
+  expect((await go('https://www.fullcircle-co.com/about.md', 'OPTIONS')).status).toBe(204);
+});
+
 test('robots.txt, llms.txt and ai.txt agree: the same business, pages and private paths', () => {
   const robots = robotsTxt(site), llms = llmsTxt(site), ai = aiTxt(site);
   for (const bot of ['OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'GPTBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'Bytespider'])

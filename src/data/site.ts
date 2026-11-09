@@ -1,5 +1,6 @@
 import type { AlsoOption, OptionOf } from '../../supabase/functions/_shared/forms';
 import type { GarmentKey } from './garments';
+import type { IconName } from './icons';
 
 // Site content, copied from prototype/index.html. Pages render it at build time; the browser
 // scripts import the same data, so there is one copy of every stage, category and question.
@@ -14,7 +15,10 @@ export const EMAIL = 'fullcircleworks.co@gmail.com';
 export const INSTAGRAM = '@fullcircle_eg';
 export const INSTAGRAM_URL = 'https://www.instagram.com/fullcircle_eg/';
 
-export type PageKey = 'home' | 'how' | 'make' | 'about' | 'start' | 'track' | 'contact' | 'book' | 'privacy' | 'notfound';
+export type PageKey = 'home' | 'how' | 'make' | 'about' | 'start' | 'track' | 'contact' | 'book' | 'privacy' | 'notfound' | LandingKey;
+
+/** The search pages (Mazen, 9 Nov 2026): one per search a brand makes, built from LANDINGS below. */
+export type LandingKey = 'egypt' | 'jeans' | 'privatelabel' | 'hoodies';
 
 /** Real URLs for the prototype's hash pages (#how → /how-it-works). */
 export const ROUTES = {
@@ -28,14 +32,19 @@ export const ROUTES = {
   book: '/book-a-call',
 } as const;
 
+/** What Full Circle is, in one plain line under the headline (Mazen, 9 Nov 2026): Home, What we make, About. */
+export const PLAIN_LINE = 'Clothing development and manufacturing in Cairo, from design to delivery.';
+
 /** Who Full Circle is, said once for the structured data (structured-data.ts), llms.txt and ai.txt. */
 export const SITE = {
   name: 'Full Circle',
-  description: 'Fashion development and manufacturing for brands that are starting or scaling.',
+  description: 'Clothing development and manufacturing in Cairo, for brands that are starting or scaling.',
   /** Who Full Circle is in a few sentences, for agents and search (llms.txt, ai.txt, the Organization). */
   summary: 'Full Circle is a clothing development and manufacturing partner in Cairo, Egypt, for brands that are starting or scaling. One team takes a brand full circle in three parts: design (brand identity, product design, tech packs), build (fabric, patterns, sampling, bulk production and QC) and launch (delivery, product photos, ad creatives). What the brand approves in sampling is what ships, and every order can be followed on a tracking page.',
   address: { street: 'Gisr El Suez', city: 'Cairo', country: 'EG' },
   hours: 'Sunday – Thursday, 9:00 – 17:00',
+  /** The same hours for machines (schema.org openingHoursSpecification), Cairo time. */
+  open: { days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: '09:00', closes: '17:00' },
 };
 
 /**
@@ -60,10 +69,10 @@ export const PRIVATE_PATHS = ['/admin'];
  * Each page's search title and description, and, for the main pages, a summary written for AI
  * agents (the `ai-summary` tag; elsewhere the description stands in).
  */
-export const PAGES: Record<PageKey, { title: string; description: string; summary?: string }> = {
+export const PAGES: Record<PageKey, { title: string; description: string; summary?: string; /** kept out of search (the portal's sign-in) */ noindex?: boolean }> = {
   home: {
     title: 'Full Circle / Clothing manufacturer in Cairo, Egypt',
-    description: 'Branding, design, patterns, fabric, samples and bulk production under one roof in Cairo, for clothing brands starting or scaling. From 60 pieces per colour.',
+    description: 'Branding, design, denim and bulk production in Cairo, then product photos and ads, for clothing brands starting or scaling. From 60 pieces per colour.',
     summary: 'Home page of Full Circle, a clothing development and manufacturing partner in Cairo, Egypt: what it makes and from how many pieces, how it works in three parts (design, build, launch), the client tracking page, and answers to common questions.',
   },
   how: {
@@ -87,6 +96,7 @@ export const PAGES: Record<PageKey, { title: string; description: string; summar
   track: {
     title: 'Track your order / Full Circle',
     description: 'Sign in with the email or WhatsApp number on your order to see every order, its stage, the next decision, photos and the full approval log.',
+    noindex: true,
   },
   contact: {
     title: 'Contact / Clothing manufacturer in Cairo / Full Circle',
@@ -101,6 +111,26 @@ export const PAGES: Record<PageKey, { title: string; description: string; summar
     description: 'What Full Circle collects when you request a sample, send a message or follow an order, why, where it is kept, and what you can ask for.',
   },
   notfound: { title: 'Not found / Full Circle', description: 'This page does not exist.' },
+  egypt: {
+    title: 'Clothing manufacturer in Egypt / Cairo factory / Full Circle',
+    description: 'A clothing manufacturer in Cairo for brands starting or scaling: denim, hoodies, tees, jackets and more. From 60 pieces per colour, samples in 7 to 25 days.',
+    summary: 'Full Circle as a clothing manufacturer in Egypt: what it makes in its Cairo factory and from how many pieces, sampling times, denim and imported fabrics, how an order runs, and who it makes for.',
+  },
+  jeans: {
+    title: 'Jeans manufacturer in Egypt / Denim in Cairo / Full Circle',
+    description: 'Jeans and denim jackets made in Cairo, from pattern to wash, in imported denims you will not find in the local market. From 150 pieces per colour.',
+    summary: 'Full Circle as a jeans and denim manufacturer in Cairo, Egypt: imported denims and trims, the minimum order (150 per colour), sampling time, and how a jeans order runs from pattern to QC.',
+  },
+  privatelabel: {
+    title: 'Private label clothing manufacturer in Cairo / Full Circle',
+    description: 'Your clothing, made in Cairo under your own label: design, tech pack, patterns, samples and bulk, with your labels, tags and packaging. From 60 pieces.',
+    summary: 'Private label clothing by Full Circle in Cairo, Egypt: the brand designs or brings a reference, Full Circle develops and makes it under the brand\'s own label, tags and packaging, and the brand owns its patterns.',
+  },
+  hoodies: {
+    title: 'Hoodie manufacturer in Egypt / Made in Cairo / Full Circle',
+    description: 'Heavyweight hoodies, sweatpants and shorts made in Cairo for your brand, with imported trims. From 60 pieces, samples from 7 days.',
+    summary: 'Full Circle as a hoodie manufacturer in Cairo, Egypt: heavyweight hoodies, sweatpants and shorts, the minimum order (60), sampling time, and how bulk is checked against the approved sample.',
+  },
 };
 
 export type Stage = {
@@ -161,6 +191,139 @@ export const FAQ: [string, string][] = [
   ['Do you work with brands outside Egypt?', 'Yes. We work with brands in the Gulf and the Middle East, Turkey and China, and you follow every stage on the tracking page.'],
   ['Can I visit the floor?', 'Yes. Book a visit when we schedule your first call.'],
 ];
+
+/**
+ * The search pages (Mazen chose four, 9 Nov 2026), each one search a brand makes. Every fact is one the site
+ * already states (CLAUDE.md, confirmed content): no prices, no bulk lead times, no fabric weights.
+ */
+export type Landing = {
+  key: LandingKey;
+  path: string;
+  /** The H1 and the crumb. */
+  h1: string;
+  crumb: string;
+  lead: string;
+  /** The hero's background photo slot. */
+  photo: string;
+  /** The sample request's product, when the page is about one. */
+  product?: ProductOption;
+  facts: [IconName, string][];
+  /** The page's first section: a heading and a few short paragraphs. */
+  intro: { h: string; p: string[] };
+  /** Three icon cards. */
+  cards: { h: string; items: [IconName, string, string][] };
+  faq: [string, string][];
+  related: LandingKey[];
+};
+
+/** One of the FAQ's answers, by its question. */
+const faqOf = (q: string) => FAQ.find(([x]) => x === q)!;
+const FAQ_TECHPACK = faqOf('Do I need a tech pack to start?');
+const FAQ_OWN = faqOf('Who owns my designs and patterns?');
+const FAQ_ABROAD = faqOf('Do you work with brands outside Egypt?');
+const FAQ_MIN = faqOf('What is the minimum order?');
+
+export const LANDINGS: Landing[] = [
+  {
+    key: 'egypt', path: '/clothing-manufacturer-egypt', h1: 'Clothing manufacturer in Egypt.', crumb: 'Clothing manufacturer in Egypt',
+    lead: PLAIN_LINE, photo: 'stage-06',
+    facts: [['pieces', 'From 60 pcs / colour'], ['clock', 'Samples in 7–25 days'], ['denim', 'Denim speciality'], ['ring', 'Live order tracking']],
+    intro: {
+      h: 'Made in Cairo',
+      p: [
+        'Full Circle is a clothing development and manufacturing partner in Gisr El Suez, Cairo. One team takes a brand from the first sketch to delivered bulk: design, patterns, fabric, samples, production and quality control under one roof.',
+        'Brands come to us at two points. Starting: an idea, no factory yet. Scaling: selling already, and bulk must match the sample.',
+      ],
+    },
+    cards: {
+      h: 'Why brands make with us',
+      items: [
+        ['denim', 'Denim speciality', 'Jeans and denim jackets, from pattern to wash.'],
+        ['source', 'Imported fabrics + trims', 'Fabrics you will not find in the local market, at a competitive price.'],
+        ['qc', 'What you approve is what ships', 'Bulk is checked against your signed sample: chest, length, sleeve, stitch, colour.'],
+      ],
+    },
+    faq: [FAQ_MIN, FAQ_TECHPACK, FAQ_OWN, ['Can I visit the factory?', 'Yes. Our floor is in Gisr El Suez, Cairo. Book a visit, Sunday to Thursday, 9:00 to 17:00.']],
+    related: ['jeans', 'hoodies', 'privatelabel'],
+  },
+  {
+    key: 'jeans', path: '/jeans-manufacturer-egypt', h1: 'Jeans manufacturer in Egypt.', crumb: 'Jeans manufacturer in Egypt',
+    lead: 'Denim is our speciality: jeans and denim jackets, from pattern to wash, made in Cairo.', photo: 'cat-denim', product: 'Denim',
+    facts: [['pieces', 'From 150 pcs / colour'], ['clock', 'Samples up to 25 days'], ['source', 'Imported denims'], ['trims', 'Imported trims']],
+    intro: {
+      h: 'Denim, start to finish',
+      p: [
+        'Jeans and denim jackets, from pattern to wash, in denims we import that you will not find in the local market.',
+        'Buttons, rivets, zips and labels come from abroad too. Jeans start at 150 pieces per colour, and denim jackets at 150.',
+      ],
+    },
+    cards: {
+      h: 'How a jeans order runs',
+      items: [
+        ['pattern', 'Paper first', 'Every piece is drawn, cut in paper and graded before the denim is touched.'],
+        ['sample', 'You approve the sample', 'Up to 25 days for denim. Bulk waits for your approval.'],
+        ['qc', 'Checked before packed', 'Every piece is checked against your signed sample.'],
+      ],
+    },
+    faq: [
+      ['What is the minimum for jeans?', '150 pieces per colour. Denim jackets start at 150 too.'],
+      ['How long does a denim sample take?', 'Up to 25 days. Denim takes the longest of everything we make.'],
+      FAQ_TECHPACK, FAQ_ABROAD,
+    ],
+    related: ['egypt', 'privatelabel', 'hoodies'],
+  },
+  {
+    key: 'privatelabel', path: '/private-label-clothing', h1: 'Private label clothing.', crumb: 'Private label clothing',
+    lead: 'Your designs and your label, made in our Cairo factory, from design to delivery.', photo: 'path-starting',
+    facts: [['pieces', 'From 60 pcs / colour'], ['tag', 'Your labels + tags'], ['clock', 'Samples in 7–25 days'], ['techpack', 'You own the patterns']],
+    intro: {
+      h: 'Your brand on every piece',
+      p: [
+        'Private label means the clothes carry your brand, not ours. We develop and make them; you sell them.',
+        'Bring a sketch, a reference garment or a mood board. We turn it into a tech pack, make the patterns and the sample, and run bulk once you approve it. A new brand gets its name, logo, labels, tags and packaging with us too.',
+      ],
+    },
+    cards: {
+      h: 'Design, build, launch',
+      items: [
+        ['design', 'Design', 'Brand identity, product design and the tech pack.'],
+        ['produce', 'Build', 'Fabric and trims, patterns, the sample you approve, production and QC.'],
+        ['camera', 'Launch', 'Delivery, product photos and ad creatives.'],
+      ],
+    },
+    faq: [FAQ_OWN, FAQ_TECHPACK, FAQ_MIN, FAQ_ABROAD],
+    related: ['egypt', 'jeans', 'hoodies'],
+  },
+  {
+    key: 'hoodies', path: '/hoodie-manufacturer-egypt', h1: 'Hoodie manufacturer in Egypt.', crumb: 'Hoodie manufacturer in Egypt',
+    lead: 'Heavyweight hoodies, sweatpants and shorts, made in our Cairo factory.', photo: 'cat-hoodies', product: 'Hoodies',
+    facts: [['pieces', 'From 60 pcs'], ['clock', 'Samples from 7 days'], ['trims', 'Imported trims'], ['qc', 'Checked against your sample']],
+    intro: {
+      h: 'Fleece that holds its shape',
+      p: [
+        'Heavyweight fleece cut to hold its shape, plus the pieces that go with it.',
+        'Hoodies, sweatpants and shorts start at 60 pieces each, with trims from abroad. Samples from 7 days.',
+      ],
+    },
+    cards: {
+      h: 'What you approve is what ships',
+      items: [
+        ['sample', 'The sample', 'Fitted and revised until you sign one off.'],
+        ['bulk', 'The bulk run', 'Made against the approved sample, checked along the line.'],
+        ['qc', 'Five checks', 'Chest, length, sleeve, stitch and colour, on every bulk piece.'],
+      ],
+    },
+    faq: [
+      ['What is the minimum for hoodies?', '60 pieces. Sweatpants and shorts start at 60 too.'],
+      ['How long does a hoodie sample take?', 'From 7 days. Across everything we make, samples take 7 to 25 days: cotton is the fastest, denim the longest.'],
+      FAQ_TECHPACK, FAQ_ABROAD,
+    ],
+    related: ['egypt', 'privatelabel', 'jeans'],
+  },
+];
+
+/** A search page by its key. */
+export const landing = (k: LandingKey) => LANDINGS.find((l) => l.key === k)!;
 
 // The request form's questions and its minimum-order rule live with the functions that receive the
 // form (supabase/functions/_shared/forms.ts), so the site and the server check the same options.
