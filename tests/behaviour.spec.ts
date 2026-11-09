@@ -5,7 +5,7 @@ import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import { FOLLOW_UP_KEY, PAGES, isPhone, mockBackend, mockCalendar, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
-import { BOOKING_NOTICE, BOOK_ERRORS } from '../supabase/functions/_shared/booking';
+import { BOOKING_NOTICE, BOOK_ERRORS, dayShort } from '../supabase/functions/_shared/booking';
 import { REST, figurePaths } from '../src/data/garments';
 import { LANDINGS } from '../src/data/site';
 
@@ -627,6 +627,11 @@ test('book a call: at the floor, by phone or online, from the Home hero, the hea
   await expect(page.locator('footer a[href="/book-a-call"]')).toHaveCount(1);
 });
 
+/** Waits until the page stops scrolling (an error line may bring its picks into view). */
+const settled = (page: Page) => page.waitForFunction(() => new Promise<boolean>((done) => {
+  const y = scrollY; setTimeout(() => done(scrollY === y), 150);
+}));
+
 test('book a call on the page: how, the day, a free time and the details go into the calendar', async ({ page }) => {
   const errors = watchErrors(page);
   const { sent, days } = await mockCalendar(page);
@@ -642,14 +647,16 @@ test('book a call on the page: how, the day, a free time and the details go into
   // nothing picked: the line says what is missing, and points at it
   await page.locator('#bSend').click();
   await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.kind);
+  await settled(page);
   await page.locator('#bookKinds [data-kind="online"]').click();
   await expect(page.locator('#bookKinds [data-kind="online"] .cal-go')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#bkKind')).toHaveText('Online meeting');
   await page.locator('#bSend').click();
   await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.slot);
+  await settled(page);
   await page.locator('#bkDays .opt').nth(1).click();
   await page.locator('#bkTimes .opt', { hasText: '10:30' }).click();
-  await expect(page.locator('#bkWhen')).toContainText('10:30');
+  await expect(page.locator('#bkWhen')).toHaveText(`${dayShort(days[1].date)}, 10:30`);
   await page.locator('#bName').fill('Sara');
   await page.locator('#bPhone').fill('0101 143 5406');
   await page.locator('#bEmail').fill('sara@kind');
@@ -677,7 +684,9 @@ test('a time taken meanwhile is said so, and the free times come again without i
   await page.locator('#bSend').click();
   await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.taken);
   await expect(page.locator('#bkTimes .opt[aria-pressed="true"]')).toHaveCount(0);
+  await settled(page);
   await page.locator('#bkTimes .opt').nth(1).click();
+  await expect(page.locator('#bkTimes .opt').nth(1)).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#bSend').click();
   await expect(page.locator('#bSentLine')).toContainText('See you at the floor in Gisr El Suez.');
   expect(sent).toHaveLength(2);

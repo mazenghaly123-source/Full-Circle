@@ -3,6 +3,7 @@
 // to see it whole, reply on WhatsApp or by email, mark it replied or closed, and turn a request into
 // an order.
 import { REQUEST_QUESTIONS } from '../../../../supabase/functions/_shared/forms';
+import { whenShort } from '../../../../supabase/functions/_shared/booking';
 import * as api from '../api';
 import type { View } from '../app';
 import { age, esc, failed, toast, when } from '../ui';
@@ -11,7 +12,7 @@ import { convertDialog } from './convert';
 type Item = { kind: 'r'; r: api.Request } | { kind: 'm'; m: api.Message } | { kind: 'b'; b: api.Booking };
 const KIND_NAME = { visit: 'Visit at the floor', phone: 'Phone call', online: 'Online meeting' } as const;
 /** When a booked call is, in Cairo time. */
-const callTime = (b: api.Booking) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(b.starts_at));
+const callTime = (b: api.Booking) => whenShort(b.starts_at);
 const TABS = [['new', 'New'], ['replied', 'Replied'], ['done', 'Done'], ['all', 'All']] as const;
 type Tab = (typeof TABS)[number][0];
 

@@ -82,10 +82,24 @@ export const isFree = (start: string, now: Date, busy: Busy[], r: Rules = BOOKIN
 /** The end of a meeting that starts at `start`. */
 export const endOf = (start: string, r: Rules = BOOKING_RULES) => new Date(new Date(start).getTime() + r.minutes * 60000).toISOString();
 
+/**
+ * A moment's parts in Cairo time. Put together by hand: engines join them differently ("Mon 16 Nov" in one,
+ * "Mon, 16 Nov" in another), and the site, the admin and the emails must read the same.
+ */
+function cairo(at: Date, tz: string = BOOKING_RULES.tz) {
+  const p = (o: Intl.DateTimeFormatOptions) => Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: tz, ...o }).formatToParts(at).map((x) => [x.type, x.value]));
+  const long = p({ weekday: 'long', day: 'numeric', month: 'long' }), short = p({ weekday: 'short', month: 'short' }), w = wall(at, tz);
+  return { weekday: long.weekday, wd: short.weekday, day: long.day, month: long.month, mon: short.month, time: `${String(w.h).padStart(2, '0')}:${String(w.min).padStart(2, '0')}` };
+}
+
 /** A start time in words, in Cairo time: "Sunday 16 November, 10:30". */
-export const whenText = (start: string, tz: string = BOOKING_RULES.tz) =>
-  new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-    .format(new Date(start)).replace(' at ', ', ');
+export const whenText = (start: string, tz: string = BOOKING_RULES.tz) => { const c = cairo(new Date(start), tz); return `${c.weekday} ${c.day} ${c.month}, ${c.time}`; };
+/** A start time in short, in Cairo time: "Sun 16 Nov, 10:30". */
+export const whenShort = (start: string, tz: string = BOOKING_RULES.tz) => { const c = cairo(new Date(start), tz); return `${c.wd} ${c.day} ${c.mon}, ${c.time}`; };
+/** A Cairo date (YYYY-MM-DD) in short: "Sun 16 Nov". */
+export const dayShort = (date: string) => { const c = cairo(new Date(`${date}T12:00:00Z`), 'UTC'); return `${c.wd} ${c.day} ${c.mon}`; };
+/** A start time's clock, in Cairo time: "10:30". */
+export const timeShort = (start: string, tz: string = BOOKING_RULES.tz) => cairo(new Date(start), tz).time;
 
 /** The privacy line under the button, with its own version, stored with each booking (as NOTICE in forms.ts). */
 export const BOOKING_NOTICE = {

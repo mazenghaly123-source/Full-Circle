@@ -3,14 +3,14 @@
 // and the details, and "Book it" sends them. The client and staff get the invite by email. If the function cannot
 // be reached, the page stays as its markup has it: each kind opens WhatsApp with the request ready.
 import type { Feature } from '../core/lifecycle';
-import { $, byId, focusHeading, markInvalid, toast, vib } from '../core/util';
+import { $, byId, focusHeading, markInvalid, rm, toast, vib } from '../core/util';
 import { book } from '../core/state';
 import { source } from '../core/source';
 import { track } from '../shell/analytics';
 import { isProblem, submit } from '../core/send';
 import { BACKEND } from '../../data/backend';
 import { BOOKING, whatsappLink } from '../../data/site';
-import { BOOKING_NOTICE, BOOKING_RULES, BOOK_ERRORS, checkBooking, type BookingData, type Day } from '../../../supabase/functions/_shared/booking';
+import { BOOKING_NOTICE, BOOK_ERRORS, checkBooking, dayShort as dayLabel, timeShort as timeLabel, type BookingData, type Day } from '../../../supabase/functions/_shared/booking';
 
 const SEND = 'Book it', SENDING = 'Booking…';
 /** The free times are fetched again when the page comes back after this long. */
@@ -20,11 +20,6 @@ const CHECKED = ['bookKinds', 'bkTimes', 'bName', 'bPhone', 'bEmail', 'bBrand'] 
 const FIELD: Record<string, string> = { slot: 'bkTimes', name: 'bName', phone: 'bPhone', email: 'bEmail', brand: 'bBrand' };
 const FIELDS = [['bName', 'name'], ['bPhone', 'phone'], ['bEmail', 'email'], ['bBrand', 'brand'], ['bNote', 'note']] as const;
 
-const tz = BOOKING_RULES.tz;
-/** "Mon 16 Nov" for a Cairo date (YYYY-MM-DD). */
-const dayLabel = (date: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${date}T12:00:00Z`));
-/** "10:30", Cairo time. */
-const timeLabel = (start: string) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(start));
 const kindName = (k: string) => BOOKING.find((b) => b.kind === k)?.n ?? '';
 const dayOf = (date: string): Day | undefined => book.days.find((d) => d.date === date);
 
@@ -140,8 +135,11 @@ export const bookFeature: Feature = {
       book.err = msg; book.bad = bad; $('bErr').textContent = msg; markInvalid(document, CHECKED, bad, 'bErr');
       const first = bad[0] && $(bad[0]);
       if (!first) return;
-      if (first.matches('input, textarea')) first.focus();
-      else { (first.querySelector('button') as HTMLElement | null)?.focus({ preventScroll: true }); first.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      if (first.matches('input, textarea')) { first.focus(); return; }
+      (first.querySelector('button') as HTMLElement | null)?.focus({ preventScroll: true });
+      // scrolled to only when it is off the screen, so nothing moves under the finger
+      const r = first.getBoundingClientRect();
+      if (r.top < 80 || r.bottom > innerHeight - 80) first.scrollIntoView({ behavior: rm ? 'auto' : 'smooth', block: 'center' });
     };
     $('bSend').addEventListener('click', async () => {
       if (book.sending || book.sent) return;

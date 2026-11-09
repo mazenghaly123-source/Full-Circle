@@ -1,7 +1,7 @@
 // Booking a call (supabase/functions/_shared/booking.ts): the free times worked out from the calendar's
 // booked times, Cairo time all year, the checks on a booking, its emails and its calendar invite.
 import { expect, test } from '@playwright/test';
-import { BOOK_ERRORS, checkBooking, endOf, freeDays, inviteFile, isFree, whenText, zoned } from '../../supabase/functions/_shared/booking';
+import { BOOK_ERRORS, checkBooking, dayShort, endOf, freeDays, inviteFile, isFree, timeShort, whenShort, whenText, zoned } from '../../supabase/functions/_shared/booking';
 import { clientBookingEmail, staffBookingEmail } from '../../supabase/functions/_shared/emails';
 
 const cairo = (s: string) => new Date(`${s}+02:00`);
@@ -51,6 +51,10 @@ test('a time is bookable only on the grid, in the hours, ahead and free', () => 
 
 test('the time in words is Cairo time', () => {
   expect(whenText(at('2026-11-16T08:30:00Z'))).toBe('Monday 16 November, 10:30');
+  expect(whenShort(at('2026-11-16T08:30:00Z'))).toBe('Mon 16 Nov, 10:30');
+  expect(whenShort(at('2026-07-14T06:00:00Z'))).toBe('Tue 14 Jul, 09:00');
+  expect(dayShort('2026-11-16')).toBe('Mon 16 Nov');
+  expect(timeShort(at('2026-11-16T07:00:00Z'))).toBe('09:00');
 });
 
 test('a booking needs a time, a name, a number, an email and the brand', () => {
