@@ -60,7 +60,7 @@ export const BOOKING = [
 export const BOOKING_LENGTH = '30 minutes';
 
 /** Where a booking button goes: the kind's calendar, or WhatsApp with the request ready. */
-export const bookingHref = (b: (typeof BOOKING)[number]) => b.url || whatsappLink(`Hi Full Circle, I'd like to book ${b.ask} (${BOOKING_LENGTH}). My brand: `);
+export const bookingHref = (b: { url: string; ask: string }) => b.url || whatsappLink(`Hi Full Circle, I'd like to book ${b.ask} (${BOOKING_LENGTH}). My brand: `);
 
 /** Paths kept out of search and AI crawlers: robots.txt disallows them and ai.txt excludes them. */
 export const PRIVATE_PATHS = ['/admin'];
