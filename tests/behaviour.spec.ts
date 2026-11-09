@@ -606,16 +606,14 @@ test('book a call: at the floor, by phone or online, from the Home hero, the hea
   await page.waitForURL('**/book-a-call');
   await expect(page.locator('h1')).toHaveText('Book a call.');
   if (!isPhone(info)) await expect(page.locator('header a.book-link')).toHaveClass(/on/);
-  // until there is a calendar, each kind opens WhatsApp with its request ready
+  // each kind opens its own Cal.com page
   const kinds = page.locator('#bookKinds a[data-book]');
   await expect(kinds).toHaveText(['Book a visit', 'Book a call', 'Book a meeting']);
-  for (const [i, ask] of [[0, 'a visit to the floor'], [1, 'a phone call'], [2, 'an online meeting']] as const) {
-    const href = (await kinds.nth(i).getAttribute('href'))!;
-    expect(href.startsWith('https://wa.me/201011435406?text=')).toBe(true);
-    expect(decodeURIComponent(href.split('text=')[1])).toBe(`Hi Full Circle, I'd like to book ${ask} (30 minutes). My brand: `);
+  for (const [i, slug] of [[0, 'visit'], [1, 'phone'], [2, 'online']] as const) {
+    await expect(kinds.nth(i)).toHaveAttribute('href', `https://cal.com/full-circle-vthrwq/${slug}`);
     await expect(kinds.nth(i)).toHaveAttribute('target', '_blank');
   }
-  await expect(page.locator('.book-how')).toHaveText('You pick the time with us on WhatsApp.');
+  await expect(page.locator('.book-how')).toHaveText('You pick the time in our calendar.');
   await openNav(page, '/contact', isPhone(info));
   await page.waitForURL('**/contact');
   await expect(page.locator('.ccards a[href="/book-a-call"]').first()).toBeVisible();

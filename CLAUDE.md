@@ -82,8 +82,9 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - Starting/Scaling: split section on Home now; dedicated ad landing pages later.
 - Book a call (Mazen, 8 Nov 2026, "very important"): `/book-a-call`, 30 minutes at the floor, by phone or
   online (`BOOKING` in `site.ts`). In the header beside Track order, the phone menu, the footer, first on
-  Contact, as the Home hero's second button, and after a request is sent. Each kind opens its calendar page
-  once Mazen has one (its `url`); until then WhatsApp with the request ready. Secondary to Request a sample.
+  Contact, as the Home hero's second button, and after a request is sent. Each kind opens its own Cal.com page
+  (9 Nov 2026: `cal.com/full-circle-vthrwq/visit`, `/phone`, `/online`, all 30 minutes; a kind without a `url` falls
+  back to WhatsApp with the request ready). Secondary to Request a sample.
 - The request form's question 05, "Also want" (Mazen, 8 Nov 2026): optional, any of Branding, Product photos, Ad
   creatives (`REQUEST_ALSO` in `_shared/forms.ts`); How it works carries its picks over (`?also=`). After sending, two
   optional one-tap questions, "How did you hear about us?" and "Where do you sell?" (`FOLLOW_UP`), saved through

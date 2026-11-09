@@ -192,9 +192,9 @@ site's look.
   until each becomes an order they can see (`my_requests`), the sent box links to Track, and the
   receipt email says where to sign in. Sign-ups stay off ([ADR 0003](./adr/0003-supabase-backend-with-invite-only-sign-in.md),
   amended). WhatsApp-only requests get no sign-in until codes on WhatsApp are on. Other ideas from
-  the comparison wait on Mazen: a Book a meeting button (Google Calendar or Cal.com, in person or a
-  call), proof figures and client logos, the sample fee credited to bulk, a "how did you hear about
-  us" question. Our own ideas, proposed to Mazen: a Sample Passport (the five checks measured on the
+  the comparison: Book a call (done 8 Nov; its three Cal.com pages, visit, phone and online, wired 9 Nov) and
+  "How did you hear about us?" (done 8 Nov, after sending); still waiting on Mazen: proof figures and client
+  logos, the sample fee credited to bulk. Our own ideas, proposed to Mazen: a Sample Passport (the five checks measured on the
   approved sample and again on bulk), a "can we make it?" checker (MOQ and sampling from the
   picks), a Jeans Builder (fit, imported denim, wash, trims, a leather back patch with the brand's
   logo), a season planner per market, the Circle Floor (a 3D floor with the 8 stations in a ring,
@@ -298,10 +298,6 @@ Decisions:
 
 
 Small, on Mazen:
-- **Book a call's calendar** (8 Nov): the page is live with WhatsApp booking. For real time slots, a free
-  Cal.com account on fullcircleworks.co@gmail.com, connected to its Google Calendar, Sunday – Thursday
-  9:00 – 17:00 Cairo, with three 30-minute event types: a visit at the floor (Gisr El Suez), a phone call
-  (ask for the number), an online meeting (Google Meet). Their three links go in `BOOKING[].url` (`site.ts`).
 - Delete the two test photos in Storage → `stage-photos` (`3/…` and `4/…`; their orders are gone).
 - Send one request from his phone (it is real data now, and it shows in `/admin`), to prove the
   Turnstile secret is set (see *Supabase*).

@@ -49,13 +49,13 @@ export const SITE = {
 
 /**
  * Booking a call (Mazen, 8 Nov 2026): in person at the floor, a phone call or an online meeting, 30 minutes
- * in working hours. `url` is the kind's booking page (a calendar such as Cal.com) once there is one; until
- * then the button opens WhatsApp with the request ready to send.
+ * in working hours. `url` is the kind's Cal.com booking page (9 Nov 2026); a kind without one opens WhatsApp
+ * with the request ready to send.
  */
 export const BOOKING = [
-  { kind: 'visit', n: 'At the floor', icon: 'pin', line: 'Come to Gisr El Suez, Cairo. See the cutting room, the fabrics and real samples.', go: 'Book a visit', url: '', ask: 'a visit to the floor' },
-  { kind: 'phone', n: 'Phone call', icon: 'phone', line: 'We call you at the time you pick.', go: 'Book a call', url: '', ask: 'a phone call' },
-  { kind: 'online', n: 'Online meeting', icon: 'video', line: 'A video call, wherever you are. The link comes with your booking.', go: 'Book a meeting', url: '', ask: 'an online meeting' },
+  { kind: 'visit', n: 'At the floor', icon: 'pin', line: 'Come to Gisr El Suez, Cairo. See the cutting room, the fabrics and real samples.', go: 'Book a visit', url: 'https://cal.com/full-circle-vthrwq/visit', ask: 'a visit to the floor' },
+  { kind: 'phone', n: 'Phone call', icon: 'phone', line: 'We call you at the time you pick.', go: 'Book a call', url: 'https://cal.com/full-circle-vthrwq/phone', ask: 'a phone call' },
+  { kind: 'online', n: 'Online meeting', icon: 'video', line: 'A video call, wherever you are. The link comes with your booking.', go: 'Book a meeting', url: 'https://cal.com/full-circle-vthrwq/online', ask: 'an online meeting' },
 ] as const;
 export const BOOKING_LENGTH = '30 minutes';
 
