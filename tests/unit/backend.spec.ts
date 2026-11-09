@@ -207,8 +207,10 @@ test('a booked call is saved, and the client and staff are emailed with the cale
   expect(mine.attachments?.[0]).toMatchObject({ filename: 'invite.ics', content_type: 'text/calendar; charset=utf-8; method=PUBLISH' });
   expect(invite(mine)).toContain(`DTSTART:${ics(start)}`);
   expect(invite(mine)).toContain('SUMMARY:Online meeting with Full Circle');
-  const [alert] = (await mailsTo('staff@fullcircle.test', 1)).filter((m) => m.subject.startsWith('Online meeting booked: Kind'));
-  expect(alert.subject).toBe(`Online meeting booked: Kind, ${out.when}`);
+  // the first test booked for Kind too: this booking's alert is the one with its time
+  const subject = `Online meeting booked: Kind, ${out.when}`;
+  await expect.poll(() => mails.filter((m) => m.subject === subject).length, { timeout: 15_000 }).toBe(1);
+  const alert = mails.find((m) => m.subject === subject)!;
   expect(alert.reply_to).toBe(email);
   expect(alert.text).toContain('Send them the video link on WhatsApp before the call.');
   expect(invite(alert)).toContain('SUMMARY:Online meeting: Kind');
