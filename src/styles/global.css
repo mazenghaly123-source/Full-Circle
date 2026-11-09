@@ -1367,4 +1367,7 @@ body:is([data-page="egypt"],[data-page="jeans"],[data-page="privatelabel"],[data
 }
 @media (max-width:1020px){.burger{width:44px;height:44px}.burger span:first-child{top:18px}.burger span:last-child{top:25px}}
 .hero .note{color:var(--cotton)}
+/* What we make's Denim and Hoodies cards link to their search pages, beside the button (under it on phones) */
+.mcat .mfoot{flex-wrap:wrap;align-items:center;gap:14px 20px}
+@media (max-width:760px){.mcat .mfoot .linkline{flex-basis:100%;justify-content:center;min-height:44px}}
 /* ===== end approved changes ===== */

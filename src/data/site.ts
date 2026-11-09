@@ -87,7 +87,7 @@ export const PAGES: Record<PageKey, { title: string; description: string; summar
   },
   about: {
     title: 'About / Clothing development partner in Cairo / Full Circle',
-    description: 'A development and manufacturing partner for clothing brands, based in Cairo. One team holds the whole chain, from first sketch to delivered bulk.',
+    description: 'A development and manufacturing partner for clothing brands, based in Cairo. One team holds the whole chain, from the first sketch to the launch.',
   },
   start: {
     title: 'Request a clothing sample in Cairo / Full Circle',
@@ -99,7 +99,7 @@ export const PAGES: Record<PageKey, { title: string; description: string; summar
     noindex: true,
   },
   contact: {
-    title: 'Contact / Clothing manufacturer in Cairo / Full Circle',
+    title: 'Contact Full Circle / WhatsApp, phone, email / Cairo',
     description: 'WhatsApp is the fastest way to reach Full Circle in Cairo. Phone, email and Instagram are here too. To start production, request a sample.',
   },
   book: {
@@ -231,7 +231,7 @@ export const LANDINGS: Landing[] = [
     intro: {
       h: 'Made in Cairo',
       p: [
-        'Full Circle is a clothing development and manufacturing partner in Gisr El Suez, Cairo. One team takes a brand from the first sketch to delivered bulk: design, patterns, fabric, samples, production and quality control under one roof.',
+        'Full Circle is a clothing development and manufacturing partner in Gisr El Suez, Cairo. One team takes a brand from the first sketch to the launch: design, patterns, fabric, samples, production and quality control under one roof, then delivery, product photos and ads.',
         'Brands come to us at two points. Starting: an idea, no factory yet. Scaling: selling already, and bulk must match the sample.',
       ],
     },
@@ -321,6 +321,9 @@ export const LANDINGS: Landing[] = [
     related: ['egypt', 'privatelabel', 'jeans'],
   },
 ];
+
+/** The search page about a category of What we make, where there is one (its card links to it). */
+export const CATEGORY_LANDING: Record<string, LandingKey> = { denim: 'jeans', hoodies: 'hoodies' };
 
 /** A search page by its key. */
 export const landing = (k: LandingKey) => LANDINGS.find((l) => l.key === k)!;

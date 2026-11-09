@@ -4,6 +4,7 @@
 // make and the search pages add the making as a service, with the minimums the page shows. Every value
 // comes from site.ts, in the words the pages show.
 import { ARCS, EMAIL, FAQ, INSTAGRAM_URL, MAKE, PAGES, PHONE, ROUTES, SITE, WHATSAPP, landing, type LandingKey, type PageKey } from './site';
+import { listMarkdownRoutes, updated } from '../md/registry';
 
 const tel = (n: string) => n.replace(/\s/g, '');
 
@@ -85,9 +86,12 @@ export function structuredData(page: PageKey, site: URL) {
     },
   };
   const website = { '@type': 'WebSite', '@id': `${home}#website`, name: SITE.name, url: home, inLanguage: 'en', publisher: org };
+  // the date the page's words last changed (git, as in the sitemap and its markdown), where git can tell
+  const sources = listMarkdownRoutes().find((r) => r.key === page)?.sources;
+  const modified = sources ? updated(sources) : null;
   const webpage = {
     '@type': PAGE_TYPE[page] ?? 'WebPage', '@id': `${url}#webpage`, url, name: PAGES[page].title, description: PAGES[page].description,
-    inLanguage: 'en', isPartOf: { '@id': `${home}#website` }, about: org,
+    inLanguage: 'en', isPartOf: { '@id': `${home}#website` }, about: org, ...(modified ? { dateModified: modified } : {}),
     ...(page === 'home' ? {} : { breadcrumb: { '@id': `${url}#breadcrumb` } }),
   };
   const breadcrumb = page === 'home' ? [] : [{

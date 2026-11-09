@@ -69,7 +69,7 @@ const parts = [
     <div class="yo-part" id={parts[1].id}><span class="n">{parts[1].n}</span><div><h2 class="camp wide">{parts[1].name}</h2><p>{parts[1].line}</p></div></div>
     <div class="yo-st" data-i="3">
       <div class="yo-top mono"><span>{label(3)}</span><span class="dim">Swatches</span></div>
-      <h3 class="camp"><span class="vh">{DEMO_STEPS[3].n}: </span>Fabric + trims.</h3>
+      <h3 class="camp">Fabric + trims.</h3>
       <div class="yo-sws" role="group" aria-label="Fabric" id="yoFabrics">{DEMO_FABRICS.map((f, i) => (
         <button class="yo-sw" data-fab={f.fab} data-name={f.name} aria-pressed={i === 0 ? 'true' : 'false'}><i class={`tx-${f.fab}`}></i>{'imported' in f && <span class="imp">Imported</span>}<span class="mono">{f.short}</span></button>
       ))}</div>

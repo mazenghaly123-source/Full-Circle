@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { NOTICE, REQUEST_ALSO } from '../supabase/functions/_shared/forms';
-import { ARCS, FAQ, LANDINGS, MAKE, PLAIN_LINE, SITE, ring, sampleLine } from '../src/data/site';
+import { ARCS, CATEGORY_LANDING, FAQ, LANDINGS, MAKE, PLAIN_LINE, SITE, ring, sampleLine } from '../src/data/site';
 import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../src/data/mark';
 import { ICONS, iconSvg, type IconName } from '../src/data/icons';
 
@@ -104,6 +104,8 @@ const REDESIGN = {
   street: SITE.address.street,
   tagline: SITE.description,
   landings: LANDINGS.map((l) => ({ path: l.path, crumb: l.crumb })),
+  // What we make's cards that link to their search page (9 Nov 2026), by card
+  catLinks: MAKE.map((m) => (CATEGORY_LANDING[m.id] ? LANDINGS.find((l) => l.key === CATEGORY_LANDING[m.id])! : null)).map((l) => (l ? { path: l.path, crumb: l.crumb } : null)),
   // How it works in three parts, one per arc of the mark (27 Oct 2026), and the hero ring's labels for them
   arcs: ARCS,
   arcPaths: markArcPaths(readFileSync(resolve('src/components/sprite.svg'), 'utf8')),
@@ -259,7 +261,7 @@ export async function approvePrototype(page: Page) {
         const ph = art.querySelector('.ph')!, m = re.make[i];
         ph.querySelector('.cap span')!.textContent = i === 0 ? 'Our speciality' : two(i);
         art.className = 'mcat'; art.replaceChildren(ph);
-        ph.insertAdjacentHTML('afterend', `<div class="body"><h2 class="camp">${m.n}</h2><div class="mfacts"><span>${re.icon.pieces}${m.sub}</span><span>${re.icon.clock}${m.samp}</span></div><p class="line">${m.line}</p><p class="items">${m.items}</p><div class="mfoot"><a class="btn btn-red">Request a sample</a></div></div>`);
+        ph.insertAdjacentHTML('afterend', `<div class="body"><h2 class="camp">${m.n}</h2><div class="mfacts"><span>${re.icon.pieces}${m.sub}</span><span>${re.icon.clock}${m.samp}</span></div><p class="line">${m.line}</p><p class="items">${m.items}</p><div class="mfoot"><a class="btn btn-red">Request a sample</a>${re.catLinks[i] ? `<a class="linkline" href="${re.catLinks[i].path}">${re.catLinks[i].crumb}</a>` : ''}</div></div>`);
       });
       const why = [...make.querySelectorAll('.sh')].find((e) => e.textContent!.trim().startsWith('What sets us apart'))!;
       why.parentElement!.removeAttribute('style'); why.parentElement!.classList.add('why');
