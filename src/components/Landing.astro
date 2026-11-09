@@ -1,0 +1,49 @@
+---
+// A search page (Mazen chose four, 9 Nov 2026): one per search a brand makes, in the inner pages' look
+// (the logo's face for the title, icon facts, icon cards, the FAQ's rows, the closing band). Its words
+// come from LANDINGS in data/site.ts, which the markdown version (src/md/registry.ts) shares.
+import Base from '../layouts/Base.astro';
+import PageHero from './PageHero.astro';
+import CtaBand from './CtaBand.astro';
+import BgImg from './BgImg.astro';
+import Icon from './Icon.astro';
+import { MAKE, ROUTES, landing, pad, type LandingKey } from '../data/site';
+
+interface Props {
+  page: LandingKey;
+}
+
+const l = landing(Astro.props.page);
+const start = l.product ? `${ROUTES.start}?product=${encodeURIComponent(l.product)}` : ROUTES.start;
+const LINKS: Record<LandingKey, string> = { egypt: 'Clothing manufacturer in Egypt', jeans: 'Jeans manufacturer in Egypt', privatelabel: 'Private label clothing', hoodies: 'Hoodie manufacturer in Egypt' };
+---
+<Base page={l.key}>
+<PageHero crumb={l.crumb} title={l.h1} lead={l.lead} light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%),radial-gradient(40% 50% at 15% 90%,#C96832,transparent 72%)" wide>
+  <BgImg img={l.photo} sizes="100vw" eager slot="bg" describe />
+  <ul class="lfacts" aria-label="At a glance">{l.facts.map(([k, t]) => <li><Icon name={k} />{t}</li>)}</ul>
+  <div class="lcta"><a class="btn btn-red" href={start}>Request a sample</a><a class="btn btn-line" href={ROUTES.book}>Book a call</a></div>
+</PageHero>
+<section class="wrap lsec">
+  <div class="sh"><h2 class="camp wide">{l.intro.h}</h2></div>
+  <div class="lbody">{l.intro.p.map((p) => <p>{p}</p>)}</div>
+</section>
+{l.key === 'egypt' && (
+  <section class="wrap lsec">
+    <div class="sh"><h2 class="camp wide">What we make</h2></div>
+    <ul class="lcats">{MAKE.map((m, i) => <li><a href={`${ROUTES.make}#cat-${m.id}`}><span class="mono dim">{pad(i + 1)}</span><b>{m.n}</b><span>{m.items}</span><span class="mono">{m.sub}</span></a></li>)}</ul>
+  </section>
+)}
+<section class="wrap lsec">
+  <div class="sh"><h2 class="camp wide">{l.cards.h}</h2></div>
+  <div class="three">{l.cards.items.map(([k, b, t]) => <div><Icon name={k} /><b>{b}</b><span>{t}</span></div>)}</div>
+</section>
+<section class="wrap lsec">
+  <div class="sh"><h2 class="camp wide">Questions</h2></div>
+  <div class="faq">{l.faq.map(([q, a], i) => <details><summary><span class="mono dim">{pad(i + 1)}</span><h3>{q}</h3><span class="plus"></span></summary><p class="ans">{a}</p></details>)}</div>
+</section>
+<nav class="wrap lrel" aria-label="Related">
+  <span class="mono dim">Also</span>
+  <ul>{l.related.map((k) => <li><a href={landing(k).path}>{LINKS[k]}</a></li>)}<li><a href={ROUTES.make}>What we make</a></li><li><a href={ROUTES.how}>How it works</a></li></ul>
+</nav>
+<CtaBand title="Request a sample." text="Four picks, under a minute. No account needed."><a href={start} class="btn btn-red" style="padding:16px 22px">Start the request</a></CtaBand>
+</Base>

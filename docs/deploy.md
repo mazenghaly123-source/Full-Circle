@@ -37,8 +37,9 @@ The site then answers on `full-circle.<your-subdomain>.workers.dev`.
    at Cloudflare.
 2. In the Worker: **Settings → Domains & Routes → Add → Custom domain**, add the domain (and `www`
    if wanted; then add a Redirect Rule from `www` to the bare domain).
-3. In `wrangler.jsonc`, set `"workers_dev": false` so the `workers.dev` copy of the live site is not
-   indexed by search engines (preview URLs stay on and are marked `noindex` by Cloudflare).
+3. Keep `workers_dev` on (preview builds need it): the Worker sends its own `workers.dev` address, `www` and
+   plain http to the domain with a 301 (`src/canonical.ts`), so the copy is never indexed. Preview URLs
+   are marked `noindex` by Cloudflare. A new domain or alias goes in `ALIAS_HOSTS` there.
 4. In `astro.config.mjs`, set `site` to the domain (needed for the sitemap and canonical links in
    phase 5).
 5. In the Cloudflare dashboard for the domain, turn off **Web Analytics** (Cloudflare switches it on

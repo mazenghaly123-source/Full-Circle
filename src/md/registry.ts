@@ -6,8 +6,8 @@
 import { execFileSync } from 'node:child_process';
 import { NOTICE, REQUEST_ALSO } from '../../supabase/functions/_shared/forms';
 import {
-  ARCS, BOOKING, BOOKING_LENGTH, DEMO_GATE, DEMO_LAUNCH, DEMO_PRODUCTS, DEMO_STEPS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, MAKE, PAGES, PHONE,
-  REQUEST_QUESTIONS, ROUTES, SITE, WHATSAPP, WHATSAPP_URL, bookingHref, sampleLine, type PageKey,
+  ARCS, BOOKING, BOOKING_LENGTH, DEMO_GATE, DEMO_LAUNCH, DEMO_PRODUCTS, DEMO_STEPS, EMAIL, FAQ, INSTAGRAM, INSTAGRAM_URL, LANDINGS, MAKE, PAGES, PHONE,
+  PLAIN_LINE, REQUEST_QUESTIONS, ROUTES, SITE, WHATSAPP, WHATSAPP_URL, bookingHref, landing, sampleLine, type Landing, type PageKey,
 } from '../data/site';
 import { abs, b, day, h2, h3, link, list, ordered, page, table } from './format';
 
@@ -29,7 +29,34 @@ const DATA = ['src/data/site.ts'];
 const NAMES: Partial<Record<PageKey, string>> = {
   home: 'Home', how: 'How it works', make: 'What we make', about: 'About', start: 'Request a sample',
   track: 'Track order', contact: 'Contact', book: 'Book a call', privacy: 'Privacy notice',
+  egypt: 'Clothing manufacturer in Egypt', jeans: 'Jeans manufacturer in Egypt', privatelabel: 'Private label clothing', hoodies: 'Hoodie manufacturer in Egypt',
 };
+
+/** A page's path by its key. */
+const pathOf = (k: PageKey) => (k === 'privacy' ? '/privacy' : k in ROUTES ? ROUTES[k as keyof typeof ROUTES] : landing(k as Landing['key']).path);
+
+/** A search page (LANDINGS in site.ts), in the order the page shows it. */
+const landingRoute = (l: Landing): MarkdownRoute => ({
+  key: l.key, path: l.path, name: NAMES[l.key]!, section: 'core', sources: ['src/components/Landing.astro', ...DATA],
+  related: [...l.related, 'make', 'start'],
+  body: (site) => {
+    const start = abs(site, l.product ? `${ROUTES.start}?product=${encodeURIComponent(l.product)}` : ROUTES.start);
+    return [
+      `${b(l.h1)} ${l.lead}`,
+      list(l.facts.map(([, t]) => t)),
+      `${link('Request a sample', start)} / ${link('Book a call', abs(site, ROUTES.book))}`,
+      h2(l.intro.h),
+      l.intro.p.join('\n\n'),
+      ...(l.key === 'egypt' ? [h2('What we make'), table(['Category', 'Items', 'Minimum'], MAKE.map((m) => [m.n, m.items, m.sub]))] : []),
+      h2(l.cards.h),
+      list(l.cards.items.map(([, t, x]) => `${b(t)}: ${x}`)),
+      h2('Questions'),
+      l.faq.map(([q, a]) => `${h3(q)}\n${a}`).join('\n\n'),
+      h2('Request a sample.'),
+      `Four picks, under a minute. No account needed. ${link('Start the request', start)}`,
+    ];
+  },
+});
 const contacts = (): [string, string][] => [
   ['WhatsApp', link(WHATSAPP, WHATSAPP_URL)],
   ['Phone', PHONE],
@@ -42,7 +69,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
     key: 'home', path: ROUTES.home, name: 'Home', section: 'core', sources: ['src/pages/index.astro', ...DATA],
     related: ['how', 'make', 'start', 'contact'],
     body: (site) => [
-      `${b('Idea to product. Full circle.')} From idea to launch, under one roof in Cairo. What you approve in sampling is what ships.`,
+      `${b('Idea to product. Full circle.')} ${PLAIN_LINE} What you approve in sampling is what ships.`,
       list(['From 60 pcs', '7–25 day samples', 'Denim + imports', 'Live tracking', 'Free first call / we reply quickly']),
       h2('Where is your brand?'),
       `${h3('Starting.')}\nAn idea, no factory yet. Design / Tech pack / First samples. ${link('Start a new brand', abs(site, `${ROUTES.start}?path=Starting`))}`,
@@ -64,7 +91,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       h2('Questions'),
       FAQ.map(([q, a]) => `${h3(q)}\n${a}`).join('\n\n'),
       h2('Contact'),
-      list([...contacts().filter(([k]) => k !== 'Email'), ['Studio + floor', 'Cairo, Egypt']].map(([k, v]) => `${k}: ${v}`)),
+      list([...contacts().filter(([k]) => k !== 'Email'), ['Studio + floor', `${SITE.address.street}, Cairo`]].map(([k, v]) => `${k}: ${v}`)),
     ],
   },
   {
@@ -107,8 +134,10 @@ const ROUTE_LIST: MarkdownRoute[] = [
     key: 'make', path: ROUTES.make, name: 'What we make', section: 'core', sources: ['src/pages/what-we-make.astro', ...DATA],
     related: ['start', 'how', 'home'],
     body: (site) => [
-      'Six categories, made in Cairo. Denim first.',
+      `${PLAIN_LINE} Six categories, denim first.`,
       table(['Category', 'Minimum', 'Samples', 'Items'], MAKE.map((m) => [m.n, m.sub, sampleLine(m.samp), m.items])),
+      list(MAKE.map((m) => `${b(m.n)}: ${m.line}`)),
+      list(LANDINGS.filter((l) => l.product).map((l) => link(l.crumb, abs(site, l.path)))),
       list(MAKE.map((m) => `${m.n}: ${link('Request a sample', abs(site, `${ROUTES.start}?product=${encodeURIComponent(m.product)}`))}`)),
       h2('What sets us apart'),
       list([`${b('Denim speciality')}: Pattern to wash, from 150 pcs / colour.`, `${b('Imported fabrics + leather')}: Fabrics not sold in Cairo, and leather, at a competitive price.`, `${b('Imported trims')}: Buttons, rivets, zips and labels from abroad.`]),
@@ -117,17 +146,16 @@ const ROUTE_LIST: MarkdownRoute[] = [
     ],
   },
   {
-    key: 'about', path: ROUTES.about, name: 'About', section: 'core', sources: ['src/pages/about.astro'],
+    key: 'about', path: ROUTES.about, name: 'About', section: 'core', sources: ['src/pages/about.astro', ...DATA],
     related: ['how', 'contact', 'start'],
     body: () => [
-      `${b('Fashion culture leads. Process proves it.')} One partner in Cairo, from the first sketch to delivered bulk.`,
+      `${b('Fashion culture leads. Process proves it.')} ${PLAIN_LINE}`,
       h2('Why one partner'),
       `${b('The usual way')}: Designer / gap / Pattern maker / gap / Fabric supplier / gap / Factory. Four suppliers, and a bulk run that does not match the sample.`,
       `${b('With Full Circle')}: One team. The sample you approve is what ships.`,
       h2('How we work with you'),
       list([`${b('Every stage has an output')}: You see it before we move on.`, `${b('Every decision is yours')}: Nothing moves without your approval.`, `${b('Nothing ships unseen')}: Ask for a photo of any stage.`]),
-      'Coming next: Full Circle Studio, a consultancy arm for brands that need direction before production.',
-      h2('Where we sell'),
+      h2('Where our brands sell'),
       list(['Made in Cairo', 'Gulf + Middle East', 'Turkey', 'China']),
       h2('Come and see.'),
       'A first call, or a visit to the floor in Cairo.',
@@ -163,7 +191,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
     related: ['start', 'about'],
     body: (site) => [
       'WhatsApp is the fastest way to reach us.',
-      list([['Book a call', link('At the floor, by phone or online', abs(site, ROUTES.book))], ...contacts(), ['Where', 'Cairo, Egypt / visits by appointment'], ['Hours', 'Sunday – Thursday / 9:00 – 17:00'], ['Markets', 'Gulf + Middle East / Turkey / China'], ['Other', 'Press, partnerships and careers: email us.']].map(([k, v]) => `${k}: ${v}`)),
+      list([['Book a call', link('At the floor, by phone or online', abs(site, ROUTES.book))], ...contacts(), ['Where', `${SITE.address.street}, Cairo / visits by appointment`], ['Hours', 'Sunday – Thursday / 9:00 – 17:00'], ['Markets', 'Gulf + Middle East / Turkey / China'], ['Other', 'Press, partnerships and careers: email us.']].map(([k, v]) => `${k}: ${v}`)),
       h2('Send a message'),
       list(['Your name', 'Email or WhatsApp', 'Message']),
       `${NOTICE.contact} ${link('Privacy notice', abs(site, '/privacy'))}`,
@@ -237,6 +265,8 @@ const ROUTE_LIST: MarkdownRoute[] = [
     ],
   },
 ];
+// the search pages after the main ones (llms.txt lists them in this order)
+ROUTE_LIST.push(...LANDINGS.map(landingRoute));
 
 /** Public pages with no markdown version, and why. tests/md.spec.ts fails on a page in neither list. */
 export const MARKDOWN_SKIPPED: Record<string, string> = {
@@ -255,7 +285,7 @@ export const mdFile = (path: string) => (path === '/' ? 'index' : path.slice(1))
  * clone every file seems to change in its one commit, so that date is not trusted (the build first
  * tries to fetch the whole history: scripts/unshallow.mjs). A page not committed yet is dated today.
  */
-function updated(sources: string[]) {
+export function updated(sources: string[]) {
   const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   try {
     if (git('rev-parse', '--is-shallow-repository') === 'true') return null;
@@ -274,7 +304,7 @@ export function renderMarkdown(r: MarkdownRoute, site: URL) {
     canonical: abs(site, r.path),
     updated: updated(r.sources),
     body: r.body(site),
-    related: r.related.map((k) => [NAMES[k]!, abs(site, k === 'privacy' ? '/privacy' : ROUTES[k as keyof typeof ROUTES])]),
+    related: r.related.map((k) => [NAMES[k]!, abs(site, pathOf(k))]),
   });
 }
 

@@ -14,10 +14,12 @@
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
     // the pages with a markdown version (src/md/registry.ts; tests/unit/md.spec.ts keeps the two
-    // lists the same), their .md files, and /api/md/
+    // lists the same), their .md files, and /api/md/; and any path ending in / or .html, which the
+    // Worker sends to the page's one address with a 301 (src/canonical.ts) instead of the assets' 307
     "run_worker_first": [
       "/", "/how-it-works", "/what-we-make", "/about", "/request-a-sample", "/track", "/contact", "/book-a-call", "/privacy",
-      "/*.md", "/api/md", "/api/md/*"
+      "/clothing-manufacturer-egypt", "/jeans-manufacturer-egypt", "/private-label-clothing", "/hoodie-manufacturer-egypt",
+      "/*.md", "/api/md", "/api/md/*", "/*/", "/*.html"
     ]
   },
   // the live site: each `wrangler deploy` from main attaches these as Custom Domains (Cloudflare adds
@@ -28,7 +30,8 @@
   ],
   // twice a day, one call that keeps the free-plan Supabase project from pausing (src/worker.ts, `scheduled`)
   "triggers": { "crons": ["23 5 * * *", "47 17 * * *"] },
-  // set to false once fullcircle-co.com is confirmed live, so the workers.dev copy is not indexed
+  // kept on (9 Nov 2026): preview builds need it, and the Worker sends its own workers.dev address to the
+  // domain with a 301 (src/canonical.ts), so that copy is never indexed; previews are noindex by Cloudflare
   "workers_dev": true,
   "preview_urls": true,
   // `wrangler preview` (Cloudflare's preview builds) refuses to run without this block; it can stay

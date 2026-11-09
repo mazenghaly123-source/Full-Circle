@@ -6,6 +6,7 @@ import { PNG } from 'pngjs';
 import { FOLLOW_UP_KEY, PAGES, isPhone, mockBackend, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
 import { REST, figurePaths } from '../src/data/garments';
+import { LANDINGS } from '../src/data/site';
 
 // Software WebGL in headless Chromium needs seconds to draw the 3D hero mark and blocks the page
 // meanwhile, so tests that are not about it get the flat-mark fallback (three.js refuses to load).
@@ -970,7 +971,7 @@ test.describe('approved changes', () => {
     await expect(page.locator('#cat-denim img')).toHaveAttribute('alt', /washed wide-leg jeans/);
   });
 
-  test('search engines and shares: the address on the domain, the share card, the business, the sitemap', async ({ page, request }) => {
+  test('search engines and shares: the address on the domain, the share card, the business and the page, the sitemap', async ({ page, request }) => {
     await page.goto('/about');
     const head = (sel: string, attr = 'content') => page.locator(`head ${sel}`).getAttribute(attr);
     expect(await head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/about');
@@ -979,12 +980,18 @@ test.describe('approved changes', () => {
     expect(await head('meta[property="og:description"]')).toBe(await head('meta[name=description]'));
     expect(await head('meta[property="og:image"]')).toBe('https://fullcircle-co.com/og.jpg');
     expect((await request.get('/og.jpg')).headers()['content-type']).toBe('image/jpeg');
-    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    // every page says what it is (SEO audit, 9 Nov 2026): About is an AboutPage, under Home in its breadcrumb
+    const ld = async () => JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
+    const about = await ld();
+    expect(about.find((n: any) => n['@type'] === 'AboutPage')).toMatchObject({ url: 'https://fullcircle-co.com/about', name: await page.title() });
+    expect(about.find((n: any) => n['@type'] === 'BreadcrumbList').itemListElement.map((i: any) => i.name)).toEqual(['Home', 'About']);
+    expect((await request.get('/logo.png')).headers()['content-type']).toBe('image/png');
     // the business, on Home
     await page.goto('/');
     const [org] = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
     const graph = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
-    expect(org).toMatchObject({ '@type': 'Organization', name: 'Full Circle', url: 'https://fullcircle-co.com/', telephone: '+20226987277', address: { addressLocality: 'Cairo', addressCountry: 'EG' } });
+    expect(org).toMatchObject({ '@type': ['Organization', 'LocalBusiness'], name: 'Full Circle', url: 'https://fullcircle-co.com/', logo: 'https://fullcircle-co.com/logo.png', telephone: '+20226987277', address: { streetAddress: 'Gisr El Suez', addressLocality: 'Cairo', addressCountry: 'EG' } });
+    expect(org.openingHoursSpecification[0]).toMatchObject({ dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: '09:00', closes: '17:00' });
     expect(org.hasOfferCatalog.itemListElement.map((o: any) => o.itemOffered.name)).toEqual(['Design', 'Build', 'Launch']);
     // the FAQ, as the page shows it
     const faq = graph.find((n: any) => n['@type'] === 'FAQPage');
@@ -995,10 +1002,10 @@ test.describe('approved changes', () => {
     await clickStill(page.locator('footer a[href="/about"]').first());
     await page.waitForURL('**/about');
     await expect.poll(() => head('link[rel=canonical]', 'href')).toBe('https://fullcircle-co.com/about');
-    await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+    await expect.poll(async () => (await ld()).some((n: any) => n['@type'] === 'AboutPage')).toBe(true);
     // What we make: the making as a service, one offer per category card, with its minimum
     await page.goto('/what-we-make');
-    const service = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
+    const service = (await ld()).find((n: any) => n['@type'] === 'Service');
     expect(service).toMatchObject({ '@type': 'Service', provider: { '@id': 'https://fullcircle-co.com/#organization' } });
     const offers = service.hasOfferCatalog.itemListElement;
     expect(offers.map((o: any) => o.itemOffered.name)).toEqual(await page.locator('.mcat h2').allTextContents());
@@ -1009,12 +1016,43 @@ test.describe('approved changes', () => {
     await expect(page.locator('head link[rel=canonical]')).toHaveCount(0);
     // every page in the menu is in the sitemap; the admin is kept out of search
     const sitemap = await (await request.get('/sitemap.xml')).text();
-    for (const p of ['/', '/how-it-works', '/what-we-make', '/about', '/request-a-sample', '/track', '/contact', '/privacy']) expect(sitemap).toContain(`<loc>https://fullcircle-co.com${p}</loc>`);
+    for (const p of ['/', '/how-it-works', '/what-we-make', '/about', '/request-a-sample', '/contact', '/book-a-call', '/privacy', ...LANDINGS.map((l) => l.path)]) expect(sitemap).toContain(`<loc>https://fullcircle-co.com${p}</loc>`);
     expect(sitemap).not.toContain('admin');
+    // the portal's sign-in is kept out of search (9 Nov 2026), and out of the sitemap
+    expect(sitemap).not.toContain('/track<');
+    await page.goto('/track');
+    expect(await head('meta[name=robots]')).toBe('noindex, follow');
     const robots = await (await request.get('/robots.txt')).text();
     expect(robots).toContain('Disallow: /admin');
     expect(robots).toContain('Sitemap: https://fullcircle-co.com/sitemap.xml');
   });
+});
+
+test.describe('the search pages (9 Nov 2026)', () => {
+  for (const l of LANDINGS) {
+    test(`${l.path}: its title, facts and buttons fit the screen, and it says what it is`, async ({ page }) => {
+      const errors = watchErrors(page);
+      await page.goto(l.path);
+      await expect(page.locator('h1')).toHaveText(l.h1);
+      await expect(page.locator('.phero .lead')).toHaveText(l.lead);
+      // nothing wider than the screen (the titles hold long words)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      const box = await page.locator('h1').boundingBox();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+      // the request opens with the page's product picked
+      const href = await page.locator('.lcta .btn-red').getAttribute('href');
+      expect(href).toBe(l.product ? `/request-a-sample?product=${encodeURIComponent(l.product)}` : '/request-a-sample');
+      // the page, its breadcrumb and the making as a service, for search engines
+      const graph = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!)['@graph'];
+      expect(graph.find((n: any) => n['@type'] === 'WebPage')).toMatchObject({ url: `https://fullcircle-co.com${l.path}` });
+      expect(graph.find((n: any) => n['@type'] === 'BreadcrumbList').itemListElement.map((i: any) => i.name)).toEqual(['Home', l.crumb]);
+      expect(graph.find((n: any) => n['@type'] === 'Service')).toBeTruthy();
+      // every search page links to the others, and the footer lists them all
+      for (const k of l.related) await expect(page.locator(`.lrel a[href="${LANDINGS.find((x) => x.key === k)!.path}"]`)).toHaveCount(1);
+      await expect(page.locator('footer a[href^="/"]').filter({ hasText: /manufacturer|Private label/ })).toHaveCount(LANDINGS.length);
+      expect(errors).toEqual([]);
+    });
+  }
 });
 
 test.describe('the forms send to the backend', () => {

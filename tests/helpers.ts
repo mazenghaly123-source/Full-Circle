@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { NOTICE, REQUEST_ALSO } from '../supabase/functions/_shared/forms';
-import { ARCS, FAQ, MAKE, ring, sampleLine } from '../src/data/site';
+import { ARCS, CATEGORY_LANDING, FAQ, LANDINGS, MAKE, PLAIN_LINE, SITE, ring, sampleLine } from '../src/data/site';
 import { ARC_PAD, MARK_ARCS, MARK_C, markArcPaths } from '../src/data/mark';
 import { ICONS, iconSvg, type IconName } from '../src/data/icons';
 
@@ -98,7 +98,14 @@ const FORM_LINES = { request: NOTICE.request, contact: NOTICE.contact };
 const REDESIGN = {
   font: `data:font/woff2;base64,${readFileSync(resolve('src/assets/fonts/microgramma-d-extended-bold.woff2')).toString('base64')}`,
   icon: Object.fromEntries((Object.keys(ICONS) as IconName[]).map((k) => [k, iconSvg(k)])) as Record<IconName, string>,
-  make: MAKE.map((m) => ({ n: m.n, items: m.items, sub: m.sub, samp: sampleLine(m.samp) })),
+  make: MAKE.map((m) => ({ n: m.n, items: m.items, line: m.line, sub: m.sub, samp: sampleLine(m.samp) })),
+  // after the SEO audit (9 Nov 2026): the plain line, the address, the footer's search pages
+  plain: PLAIN_LINE,
+  street: SITE.address.street,
+  tagline: SITE.description,
+  landings: LANDINGS.map((l) => ({ path: l.path, crumb: l.crumb })),
+  // What we make's cards that link to their search page (9 Nov 2026), by card
+  catLinks: MAKE.map((m) => (CATEGORY_LANDING[m.id] ? LANDINGS.find((l) => l.key === CATEGORY_LANDING[m.id])! : null)).map((l) => (l ? { path: l.path, crumb: l.crumb } : null)),
   // How it works in three parts, one per arc of the mark (27 Oct 2026), and the hero ring's labels for them
   arcs: ARCS,
   arcPaths: markArcPaths(readFileSync(resolve('src/components/sprite.svg'), 'utf8')),
@@ -172,7 +179,7 @@ export async function approvePrototype(page: Page) {
       const $h = <T extends Element = HTMLElement>(sel: string) => home.querySelector<T>(sel)!;
       $h('.hero .wrap > div > div.mono.dim').remove();
       const h1 = $h('.hero h1'); h1.classList.add('wide'); h1.innerHTML = '<span class="l1">Idea to product.</span> <span class="l2">Full circle.</span>';
-      $h('.hero .lead').textContent = 'From idea to launch, under one roof in Cairo. What you approve in sampling is what ships.';
+      $h('.hero .lead').textContent = `${re.plain} What you approve in sampling is what ships.`;
       // the hero ring names the three parts of the work (27 Oct 2026)
       $h('#heroLabels').innerHTML = re.heroLabels.map((l) => `<text x="${l.x}" y="${l.y}" text-anchor="middle" class="${l.cls}">${l.t}</text>`).join('');
       const facts: [string, string | null][] = [['pieces', null], ['clock', '7–25 day samples'], ['denim', 'Denim + imports'], ['ring', null]];
@@ -203,7 +210,7 @@ export async function approvePrototype(page: Page) {
       [...row.querySelectorAll('.cat')].forEach((a, i) => {
         a.querySelector('.cap')!.remove();
         const h3 = a.querySelector('h3')!; a.querySelector('span.mono')!.remove();
-        a.querySelector('.ph')!.insertAdjacentHTML('afterend', `<span class="num mono">${i === 0 ? 'Our specialty' : String(i + 1).padStart(2, '0')}</span><span class="v" aria-hidden="true">${h3.textContent}</span><div class="t"></div>`);
+        a.querySelector('.ph')!.insertAdjacentHTML('afterend', `<span class="num mono">${i === 0 ? 'Our speciality' : String(i + 1).padStart(2, '0')}</span><span class="v" aria-hidden="true">${h3.textContent}</span><div class="t"></div>`);
         a.querySelector('.t')!.append(h3);
         h3.insertAdjacentHTML('afterend', `<div class="meta"><span>${re.icon.pieces}${re.make[i].sub}</span><span>${re.icon.clock}${re.make[i].samp}</span></div><span class="go mono">See details</span>`);
         if (i === 0) a.classList.add('on');
@@ -247,14 +254,14 @@ export async function approvePrototype(page: Page) {
       const $m = <T extends Element = HTMLElement>(sel: string) => make.querySelector<T>(sel)!;
       const two = (i: number) => String(i + 1).padStart(2, '0');
       $m('.phero h1').classList.add('wide');
-      $m('.phero .lead').textContent = 'Six categories, made in Cairo. Denim first.';
+      $m('.phero .lead').textContent = `${re.plain} Six categories, denim first.`;
       $m('#catNav').querySelectorAll('.opt').forEach((b, i) => b.insertAdjacentHTML('afterbegin', `<b>${two(i)}</b>`));
       const panels = $m('#catPanels'); panels.classList.add('mcats');
       [...panels.querySelectorAll('.catpanel')].forEach((art, i) => {
         const ph = art.querySelector('.ph')!, m = re.make[i];
-        ph.querySelector('.cap span')!.textContent = i === 0 ? 'Our specialty' : two(i);
+        ph.querySelector('.cap span')!.textContent = i === 0 ? 'Our speciality' : two(i);
         art.className = 'mcat'; art.replaceChildren(ph);
-        ph.insertAdjacentHTML('afterend', `<div class="body"><h2 class="camp">${m.n}</h2><div class="mfacts"><span>${re.icon.pieces}${m.sub}</span><span>${re.icon.clock}${m.samp}</span></div><p class="items">${m.items}</p><div class="mfoot"><a class="btn btn-red">Request a sample</a></div></div>`);
+        ph.insertAdjacentHTML('afterend', `<div class="body"><h2 class="camp">${m.n}</h2><div class="mfacts"><span>${re.icon.pieces}${m.sub}</span><span>${re.icon.clock}${m.samp}</span></div><p class="line">${m.line}</p><p class="items">${m.items}</p><div class="mfoot"><a class="btn btn-red">Request a sample</a>${re.catLinks[i] ? `<a class="linkline" href="${re.catLinks[i].path}">${re.catLinks[i].crumb}</a>` : ''}</div></div>`);
       });
       const why = [...make.querySelectorAll('.sh')].find((e) => e.textContent!.trim().startsWith('What sets us apart'))!;
       why.parentElement!.removeAttribute('style'); why.parentElement!.classList.add('why');
@@ -267,12 +274,14 @@ export async function approvePrototype(page: Page) {
       const head = (k: string, lead: string) => { pg(k).querySelector('.phero h1')!.classList.add('wide'); pg(k).querySelector('.phero .lead')!.textContent = lead; };
       const sh = (root: Element, start: string) => [...root.querySelectorAll('.sh')].find((e) => e.textContent!.trim().startsWith(start))!;
       const cards = (rows: (readonly [keyof typeof re.icon, string, string])[]) => rows.map(([k, b, t]) => `<div>${re.icon[k]}<b>${b}</b><span>${t}</span></div>`).join('');
-      head('about', 'One partner in Cairo, from the first sketch to delivered bulk.');
+      head('about', re.plain);
       const about = pg('about');
       for (const t of ['Why one partner', 'How we work with you', 'Where we sell']) { const h = sh(about, t); h.querySelector('h2')!.classList.add('wide'); h.querySelector('p')?.remove(); }
       const chainP = about.querySelectorAll('.chain p');
       chainP[0].textContent = 'Four suppliers, and a bulk run that does not match the sample.';
       chainP[1].textContent = 'One team. The sample you approve is what ships.';
+      sh(about, 'Where we sell').querySelector('h2')!.textContent = 'Where our brands sell';
+      [...about.querySelectorAll('p.mono.dim')].find((e) => e.textContent!.trim().startsWith('Coming next'))?.remove();
       about.querySelector('.rules')!.outerHTML = `<div class="three">${cards([['techpack', 'Every stage has an output', 'You see it before we move on.'], ['qc', 'Every decision is yours', 'Nothing moves without your approval.'], ['camera', 'Nothing ships unseen', 'Ask for a photo of any stage.']])}</div>`;
       about.querySelector('.contact')!.innerHTML = ([['pin', 'Made in Cairo'], ['globe', 'Gulf + Middle East'], ['globe', 'Turkey'], ['globe', 'China']] as const).map(([k, b]) => `<div>${re.icon[k]}<b>${b}</b></div>`).join('');
       about.querySelector('.ctaband p')!.textContent = 'A first call, or a visit to the floor in Cairo.';
@@ -300,6 +309,15 @@ export async function approvePrototype(page: Page) {
       // the request form's question 05, "Also want", and its row in the summary (8 Nov 2026)
       pg('start').querySelector('#qs')!.insertAdjacentHTML('beforeend', `<div class="q q-also"><div class="q-h"><span class="mono" id="q-also">${re.also.label}</span><span class="mono dim">${re.also.hint}</span></div><div class="opts" id="opts-also" role="group" aria-labelledby="q-also">${re.also.options.map((o) => `<button class="opt" aria-pressed="false"><span class="tk"></span>${o}</button>`).join('')}</div></div>`);
       pg('start').querySelector('#srows')!.insertAdjacentHTML('beforeend', `<div class="srow"><span class="dim">${re.also.summary}</span><span class="empty">—</span></div>`);
+      // after the SEO audit (9 Nov 2026): the floor's address where the site names the city, the footer's line from
+      // SITE.description, and a footer column for the search pages
+      const byB = (root: Element, start: string) => [...root.querySelectorAll('b')].find((e) => e.textContent!.startsWith(start))!;
+      [...home.querySelectorAll('.contact > div')].find((d) => d.textContent!.includes('Studio + floor'))!.querySelector('b')!.textContent = `${re.street}, Cairo`;
+      byB(pg('contact'), 'Cairo, Egypt / visits').textContent = `${re.street}, Cairo / visits by appointment`;
+      document.querySelector('.foot-grid > div:first-child p')!.textContent = re.tagline;
+      document.querySelector('.foot-bottom span')!.textContent = `Full Circle / ${re.street}, Cairo, Egypt`;
+      [...document.querySelectorAll('.foot-grid > div')].find((d) => d.querySelector('span.mono')?.textContent === 'Clients')!
+        .insertAdjacentHTML('afterend', `<div><span class="mono dim">Made in Cairo</span><ul>${re.landings.map((l) => `<li><a href="${l.path}">${l.crumb}</a></li>`).join('')}</ul></div>`);
     });
   }, [APPROVED_CSS, FIELD_LABELS, FORM_LINES, FAQ, REDESIGN] as const);
 }

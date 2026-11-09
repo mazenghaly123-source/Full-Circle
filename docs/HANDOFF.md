@@ -135,7 +135,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
 - **Two cron triggers** (`triggers` in `wrangler.jsonc`, PR #27): the Worker's `scheduled` handler calls
   Supabase twice a day so the free plan never pauses the project.
 - **Not done yet:**
-  - `"workers_dev": false` (the domain is live).
+  - ~~`"workers_dev": false`~~ Not needed (9 Nov 2026): the Worker sends workers.dev, www and http to the domain with a 301.
   - Turning off Cloudflare Web Analytics on the zone.
   - No build variables are set, and none are needed: the defaults are the one project
     (`src/data/project.ts`).
@@ -214,6 +214,20 @@ site's look.
      titles under 60 characters, descriptions under 160). Google shows FAQ rich results only for government and
      health sites since 2023, so the FAQPage is for other search engines and AI answers. Next, when Mazen wants:
      check them in Google's Rich Results Test and Search Console once the sitemap is submitted.
+   - **SEO audit and fixes (9 Nov 2026):** the claude-seo plugin (`.claude/settings.json`, pinned to v2.5.0) scored
+     the live site 70/100. Mazen asked for every fix and chose: the plain line "Clothing development and manufacturing
+     in Cairo, from design to delivery." under the headline on Home, What we make and About (`PLAIN_LINE`); four
+     search pages built straight on the preview (`LANDINGS`, `Landing.astro`, footer column *Made in Cairo*); a
+     compact consent bar on short phones; About without names. Also: one address per page (`src/canonical.ts`,
+     301s), Track noindex and out of the sitemap, `<lastmod>`, IndexNow (`scripts/indexnow.mjs`, its workflow),
+     `security.txt`, HSTS `includeSubDomains`, a report-only CSP, structured data on every page, the category lines on
+     What we make, Gisr El Suez on Contact, Home and the footer, the 3D mark's set-up split into steps and started
+     when idle. **Mazen's to do (off the site):** Cloudflare *Always Use HTTPS*; Bing Webmaster Tools (import from
+     Search Console) and the sitemap; a Google Business Profile ("Clothing manufacturer", hours, phone, real floor
+     photos), then its link in `sameAs` (`structured-data.ts`) and a map link on Contact; LinkedIn, Facebook, Bing
+     Places, Apple Business Connect and Egyptian/B2B directories with the same name and line; real client proof with
+     consent; an address on the domain; the floor's map pin (coordinates) for the schema. In a cloud session, the
+     plugin's scripts refuse the sandbox's loopback proxy: run them with the proxy variables unset (direct egress works).
    - **AI-readable site (26 Oct), live** (PR #18; the GEO checker scores 8/9, the missing one is an MCP
      file, as there is no MCP server). Mazen approved the plan, the Worker
      ([ADR 0006](./adr/0006-a-worker-for-markdown.md)) and allowing every training crawler. Every public
@@ -362,7 +376,7 @@ Dashboard and account tasks:
 4. **Before the first real order:** the order test (phases 2–4) can no longer run on the real project.
    Agree with Mazen how to prove it: a local stack (`supabase start` where Docker exists), or one real
    request of his own that he deletes afterwards.
-5. **Launch items left:** `workers_dev: false`, Lighthouse on the domain, captcha in Auth → Attack
+5. **Launch items left:** Lighthouse on the domain, captcha in Auth → Attack
    Protection, and Pro when orders start.
 
 ## Suggested skills for the next session

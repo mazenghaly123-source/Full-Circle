@@ -7,6 +7,9 @@
 //   /api/md/about                  → the same, always; /api/md/_catalog lists them all
 // Twice a day (`triggers` in wrangler.jsonc) it also makes one call to the Supabase project, so the free
 // plan never pauses it for inactivity (supabase/migrations/20261030151642_keep_awake.sql).
+// First of all it keeps one address per page (src/canonical.ts): www, plain http, the workers.dev
+// address, a trailing slash or .html get a permanent redirect to https://fullcircle-co.com/<page>.
+import { redirectFor } from './canonical';
 import { keepAwake } from './keep-awake';
 import { CORS, canonicalOf, describedByLink, lastModifiedOf, markdownHeaders, notFoundMarkdown, prefersMarkdown } from './md/http';
 
@@ -31,6 +34,8 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+    const to = (request.method === 'GET' || request.method === 'HEAD') && redirectFor(url);
+    if (to) return new Response(null, { status: 301, headers: { Location: to, 'Cache-Control': 'public, max-age=86400' } });
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Max-Age': '86400' } });
 
     if (path === '/api/md/_catalog') {

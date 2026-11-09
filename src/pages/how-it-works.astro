@@ -39,7 +39,7 @@ const parts = [
     <div class="yo-part" id={parts[0].id}><span class="n">{parts[0].n}</span><div><h2 class="camp wide">{parts[0].name}</h2><p>{parts[0].line}</p></div></div>
     <div class="yo-st" data-i="0">
       <div class="yo-top mono"><span>{label(0)}</span><span class="dim">Your order <b class="yoCode">FC-0000</b></span></div>
-      <h3 class="camp">Where is the brand?</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[0].n}: </span>Where is the brand?</h3>
       <div class="yo-paths" role="group" aria-label="Brand stage">
         <button class="yo-pb" data-yopath="Starting" aria-pressed="false"><span class="camp">Starting</span><span>An idea. No name, no logo yet.</span></button>
         <button class="yo-pb" data-yopath="Scaling" aria-pressed="false"><span class="camp">Scaling</span><span>Already selling. You have the brand.</span></button>
@@ -54,14 +54,14 @@ const parts = [
     </div>
     <div class="yo-st" data-i="1">
       <div class="yo-top mono"><span>{label(1)}</span><span class="dim">Sketches</span></div>
-      <h3 class="camp">Pick the product.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[1].n}: </span>Pick the product.</h3>
       <div class="opts" role="group" aria-label="Product" id="yoProducts">{DEMO_PRODUCTS.map((p, i) => <button class="opt" aria-pressed={i === 0 ? 'true' : 'false'}>{p.label}</button>)}</div>
       <p>We sketch it first, so you see the product before anything is cut.</p>
       <StageTerms i={1} />
     </div>
     <div class="yo-st" data-i="2">
       <div class="yo-top mono"><span>{label(2)}</span><span class="dim">Paper</span></div>
-      <h3 class="camp">On paper.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[2].n}: </span>On paper.</h3>
       <p class="yo-big">Measurements, trims and construction notes. The tech pack is what the factory builds from.</p>
       <StageTerms i={2}><dt>Base size</dt><dd>M</dd></StageTerms>
     </div>
@@ -78,7 +78,7 @@ const parts = [
     </div>
     <div class="yo-st" data-i="4">
       <div class="yo-top mono"><span>{label(4)}</span><span class="dim">Cut in paper</span></div>
-      <h3 class="camp">Paper first.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[4].n}: </span>Paper first.</h3>
       <p class="yo-big">Every piece is drawn, cut in paper and graded before fabric is touched.</p>
       <StageTerms i={4}><dt>Grade</dt><dd>XS / S / M / L / XL</dd></StageTerms>
     </div>
@@ -92,14 +92,14 @@ const parts = [
     </div>
     <div class="yo-st" data-i="6">
       <div class="yo-top mono"><span>{label(6)}</span><span class="dim">Bulk</span></div>
-      <h3 class="camp">Then it repeats.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[6].n}: </span>Then it repeats.</h3>
       <div class="yo-gate" id="yoGate"><span class="d"></span><span>Your order is waiting at the sample. Approve it to release bulk.</span><button class="btn btn-line" data-yoapprove style="margin-left:auto;padding:9px 12px">Approve</button></div>
       <div><div class="yo-num"><span id="yoUnits">000</span><small>/ 300 units</small></div><span class="mono dim">Cut and sewn against sample 03 / demo numbers</span></div>
       <StageTerms i={6} />
     </div>
     <div class="yo-st" data-i="7">
       <div class="yo-top mono"><span>{label(7)}</span><span class="dim">Against the sample</span></div>
-      <h3 class="camp">Checked before packed.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[7].n}: </span>Checked before packed.</h3>
       <ul class="yo-checks" id="yoChecks">
         <li><span class="bx"></span><span>Chest</span><span class="mono">±0.5 cm</span></li>
         <li><span class="bx"></span><span>Length</span><span class="mono">±1 cm</span></li>
@@ -113,14 +113,14 @@ const parts = [
     <div class="yo-part" id={parts[2].id}><span class="n">{parts[2].n}</span><div><h2 class="camp wide">{parts[2].name}</h2><p>{parts[2].line}</p></div></div>
     <div class="yo-st" data-i="8">
       <div class="yo-top mono"><span>{label(8)}</span><span class="dim">Made in Cairo</span></div>
-      <h3 class="camp">Packed and shipped.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[8].n}: </span>Packed and shipped.</h3>
       <p class="yo-big">Counted, packed and documented, then shipped to you.</p>
       <p>In Egypt, the Gulf and the Middle East, Turkey or China.</p>
       <StageTerms i={8} />
     </div>
     <div class="yo-st" data-i="9">
       <div class="yo-top mono"><span>{label(9)}</span><span class="dim">By request</span></div>
-      <h3 class="camp">Ready to sell.</h3>
+      <h3 class="camp"><span class="vh">{DEMO_STEPS[9].n}: </span>Ready to sell.</h3>
       <div class="opts" role="group" aria-label="Launch content" id="yoLaunch">
         <button class="opt" data-l="Product photos" aria-pressed="true"><span class="tk"></span>Product photos</button>
         <button class="opt" data-l="Ad creatives" aria-pressed="true"><span class="tk"></span>Ad creatives</button>

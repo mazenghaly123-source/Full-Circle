@@ -4,11 +4,11 @@ import PageHero from '../components/PageHero.astro';
 import CtaBand from '../components/CtaBand.astro';
 import BgImg from '../components/BgImg.astro';
 import Icon from '../components/Icon.astro';
-import { ROUTES } from '../data/site';
+import { PLAIN_LINE, ROUTES } from '../data/site';
 
 ---
 <Base page="about">
-<PageHero crumb="About" title="Fashion culture leads. Process proves it." lead="One partner in Cairo, from the first sketch to delivered bulk." light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(40% 50% at 20% 90%,#A63F3F,transparent 72%)" wide><BgImg img="about-floor" sizes="100vw" eager slot="bg" /></PageHero>
+<PageHero crumb="About" title="Fashion culture leads. Process proves it." lead={PLAIN_LINE} light="radial-gradient(40% 50% at 85% 20%,#C96832,transparent 70%),radial-gradient(40% 50% at 20% 90%,#A63F3F,transparent 72%)" wide><BgImg img="about-floor" sizes="100vw" eager slot="bg" /></PageHero>
 <section class="wrap sec">
   <div class="sh"><h2 class="camp wide">Why one partner</h2></div>
   <div class="chain">
@@ -22,10 +22,9 @@ import { ROUTES } from '../data/site';
 <section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
   <div class="sh"><h2 class="camp wide">How we work with you</h2></div>
   <div class="three"><div><Icon name="techpack" /><b>Every stage has an output</b><span>You see it before we move on.</span></div><div><Icon name="qc" /><b>Every decision is yours</b><span>Nothing moves without your approval.</span></div><div><Icon name="camera" /><b>Nothing ships unseen</b><span>Ask for a photo of any stage.</span></div></div>
-  <p class="mono dim" style="margin-top:56px">Coming next / Full Circle Studio, a consultancy arm for brands that need direction before production.</p>
 </section>
 <section class="wrap" style="padding-bottom:clamp(88px,10vw,150px)">
-  <div class="sh"><h2 class="camp wide">Where we sell</h2></div>
+  <div class="sh"><h2 class="camp wide">Where our brands sell</h2></div>
   <div class="contact" style="border-top:0;margin-top:-12px">
     <div><Icon name="pin" /><b>Made in Cairo</b></div>
     <div><Icon name="globe" /><b>Gulf + Middle East</b></div>

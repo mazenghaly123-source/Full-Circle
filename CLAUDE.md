@@ -173,10 +173,21 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   words shown with the forms live in `supabase/functions/_shared/forms.ts`, which the site and the
   Edge Functions both import (site.ts re-exports the questions).
 - `Base.astro` writes each page's canonical address, share tags and structured data
-  (`src/data/structured-data.ts`, 30 Oct 2026: on Home the business with its three parts as services, the site
-  and the FAQ; on What we make the making as a service with its six categories and minimums); titles, descriptions and the `ai-summary` tag come from `PAGES` in
-  `src/data/site.ts`. The share card is `public/og.jpg`, rendered by `scripts/og-image.mjs`. `sitemap.xml`
-  is an endpoint in `src/pages/`.
+  (`src/data/structured-data.ts`, 9 Nov 2026: on every page the business (Organization + LocalBusiness, hours,
+  `public/logo.png`), the site, the page (AboutPage, ContactPage or WebPage) and its breadcrumb; Home adds the FAQ,
+  What we make and the search pages the making as a service with its minimums); titles, descriptions, the
+  `ai-summary` tag and `noindex` (Track) come from `PAGES` in `src/data/site.ts`. The share card is
+  `public/og.jpg`, rendered by `scripts/og-image.mjs`. `sitemap.xml` is an endpoint in `src/pages/`: every page
+  with a markdown version but Track, with its git date as `<lastmod>`.
+- One address per page (9 Nov 2026, `src/canonical.ts`): the Worker sends www, plain http, its workers.dev
+  address, a trailing slash and `.html` to `https://fullcircle-co.com/<page>` with a 301 (`run_worker_first`
+  lists `/*/` and `/*.html` for that). IndexNow: the key file is `public/<key>.txt`, and
+  `.github/workflows/indexnow.yml` submits the changed pages after each deploy of main.
+- The search pages (Mazen chose four, 9 Nov 2026): `/clothing-manufacturer-egypt`, `/jeans-manufacturer-egypt`,
+  `/private-label-clothing`, `/hoodie-manufacturer-egypt`, all from `LANDINGS` in `site.ts` through
+  `src/components/Landing.astro`, in the footer's *Made in Cairo* column. Confirmed facts only: no prices, no bulk
+  times, no fabric weights. The plain line under the headline on Home, What we make and About is `PLAIN_LINE`
+  ("Clothing development and manufacturing in Cairo, from design to delivery.").
 - Every public page has a markdown version for AI agents (26 Oct 2026): `/about.md`, `/about` with
   `Accept: text/markdown`, and `/api/md/about`, written in `src/md/registry.ts` from the same data and
   in the page's own words. The one Worker, `src/worker.ts` ([ADR 0006](./docs/adr/0006-a-worker-for-markdown.md)),

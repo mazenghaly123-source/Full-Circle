@@ -15,13 +15,13 @@ interface Props {
 }
 
 const { page } = Astro.props;
-const { title, description, summary = description } = PAGES[page];
+const { title, description, summary = description, noindex = false } = PAGES[page];
 // the page's address on the domain, as the site links to it (/about, not /about.html)
 const canonical = new URL(Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/'), Astro.site).href;
 const image = new URL('/og.jpg', Astro.site).href;
 // the same page in markdown, for AI agents (src/md/registry.ts); every page but the 404 has one
 const markdown = page !== 'notfound' && new URL(`/${mdFile(new URL(canonical).pathname)}.md`, Astro.site).href;
-// what the page says about itself to search engines (src/data/structured-data.ts): Home and What we make
+// what the page says about itself to search engines (src/data/structured-data.ts): every page but the 404
 const structured = structuredData(page, Astro.site!);
 ---
 <!doctype html>
@@ -33,6 +33,7 @@ const structured = structuredData(page, Astro.site!);
 <meta name="description" content={description}>
 <meta name="ai-summary" content={summary}>
 {page === 'notfound' ? <meta name="robots" content="noindex"> : <link rel="canonical" href={canonical}>}
+{noindex && <meta name="robots" content="noindex, follow">}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Full Circle">
 <meta property="og:title" content={title}>
