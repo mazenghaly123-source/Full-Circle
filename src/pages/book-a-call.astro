@@ -1,25 +1,62 @@
 ---
-// Book a call (Mazen, 8 Nov 2026): 30 minutes in person at the floor, on the phone or online. Each kind
-// opens its booking page once there is one (BOOKING in data/site.ts); until then WhatsApp, ready to send.
+// Book a call (Mazen, 8 Nov 2026; booked on the page itself since 9 Nov, after Factory 21's /book): 30 minutes
+// at the floor, on the phone or online. Once the book-call function answers with the free times (the site keeps
+// its own calendar), the page books itself (scripts/pages/book.ts): how, the day, the time, the details, and the
+// invite comes by email. Until then, or if the function cannot be reached, each kind opens WhatsApp with the
+// request ready, as this markup has it.
 import Base from '../layouts/Base.astro';
 import PageHero from '../components/PageHero.astro';
 import Icon from '../components/Icon.astro';
 import { BOOKING, BOOKING_LENGTH, ROUTES, SITE, WHATSAPP_URL, bookingHref } from '../data/site';
-
-const calendar = BOOKING.every((b) => b.url);
+import { BOOKING_NOTICE } from '../../supabase/functions/_shared/booking';
+import { PRIVACY } from '../data/backend';
 ---
 <Base page="book">
 <PageHero crumb="Book a call" title="Book a call." lead="Thirty minutes with us, at the floor, on the phone or online. The first call is free." light="radial-gradient(40% 50% at 80% 25%,#C96832,transparent 70%),radial-gradient(45% 55% at 20% 90%,#243E8F,transparent 72%)" wide />
 <section class="wrap" style="padding-block:clamp(48px,6vw,88px) clamp(88px,10vw,150px)">
-  <div class="book3" id="bookKinds">{BOOKING.map((b) => (
-    <div data-kind={b.kind}>
-      <Icon name={b.icon} />
-      <h2 class="camp">{b.n}</h2>
-      <p>{b.line}</p>
-      <a class="btn btn-red" href={bookingHref(b)} target="_blank" rel="noopener" data-book={b.kind}>{b.go}</a>
+  <div id="book" data-cal="off">
+    <div class="q-h bk-step"><span class="mono" id="bk-how">01 / How</span><span class="mono dim">Pick one</span></div>
+    <div class="book3" id="bookKinds" role="group" aria-labelledby="bk-how">{BOOKING.map((b) => (
+      <div data-kind={b.kind}>
+        <Icon name={b.icon} />
+        <h2 class="camp">{b.n}</h2>
+        <p>{b.line}</p>
+        <a class="btn btn-red wa-go" href={bookingHref(b)} target="_blank" rel="noopener" data-book={b.kind}>{b.go}</a>
+        <button type="button" class="btn btn-line cal-go" aria-pressed="false" aria-label={b.n} data-pick={b.kind}><span class="tk"></span>Pick</button>
+      </div>
+    ))}</div>
+    <p class="mono dim book-how" id="bookHow" aria-live="polite">You pick the time with us on WhatsApp.</p>
+
+    <div class="start bk" id="bookCal" hidden>
+      <div class="bk-pick">
+        <div class="q"><div class="q-h"><span class="mono" id="bk-day">02 / Day</span><span class="mono dim">Cairo time</span></div>
+          <div class="opts bk-days" id="bkDays" role="group" aria-labelledby="bk-day"></div></div>
+        <div class="q"><div class="q-h"><span class="mono" id="bk-time">03 / Time</span><span class="mono dim">{BOOKING_LENGTH}</span></div>
+          <div class="opts bk-times" id="bkTimes" role="group" aria-labelledby="bk-time"></div></div>
+      </div>
+      <aside class="summary bk-box" id="bkBox">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="mono">Your call</span><span class="mono dim" id="bkLen">{BOOKING_LENGTH}</span></div>
+        <div id="bkRows"><div class="srow"><span class="dim">How</span><span class="empty" id="bkKind">—</span></div><div class="srow"><span class="dim">When</span><span class="empty" id="bkWhen">—</span></div></div>
+        <div class="form-box" style="display:grid;gap:12px">
+          <label class="mono dim flabel" for="bName">Your name</label>
+          <input class="field" id="bName" placeholder="Your name" autocomplete="name">
+          <label class="mono dim flabel" for="bPhone">WhatsApp</label>
+          <input class="field" id="bPhone" placeholder="WhatsApp number" autocomplete="tel" inputmode="tel">
+          <label class="mono dim flabel" for="bEmail">Email</label>
+          <input class="field" id="bEmail" placeholder="Email, for the invite" autocomplete="email" inputmode="email">
+          <label class="mono dim flabel" for="bBrand">Brand name</label>
+          <input class="field" id="bBrand" placeholder="Brand name" autocomplete="organization">
+          <label class="mono dim flabel" for="bNote">What it's about (optional)</label>
+          <textarea class="field" id="bNote" placeholder="The product, the quantity (optional)" style="min-height:64px"></textarea>
+          <div class="ts" id="bTs"></div>
+          <button class="btn btn-red" id="bSend">Book it</button>
+          <span class="mono errline" id="bErr" role="alert"></span>
+          <p class="notice">{BOOKING_NOTICE.text} <a href={PRIVACY}>Privacy notice</a></p>
+        </div>
+        <div class="sent-box bk-sent"><h2 class="camp" id="bSentH" tabindex="-1">Booked.</h2><p style="margin:0;color:var(--cotton)" id="bSentLine"></p><a class="btn btn-line" id="bSentWa" href={WHATSAPP_URL} target="_blank" rel="noopener">Message us on WhatsApp</a></div>
+      </aside>
     </div>
-  ))}</div>
-  <p class="mono dim book-how">{calendar ? 'You pick the time in our calendar.' : 'You pick the time with us on WhatsApp.'}</p>
+  </div>
   <dl class="kv2 book-kv">
     <dt>Length</dt><dd>{BOOKING_LENGTH}</dd>
     <dt>Hours</dt><dd>{SITE.hours}, Cairo time</dd>

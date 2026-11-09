@@ -29,6 +29,11 @@ export type Message = {
   /** contact: from the contact page; whatsapp: a reply to the WhatsApp number */
   via: 'contact' | 'whatsapp';
 };
+/** A call booked on the site (supabase/functions/book-call); the bookings are the site's calendar. */
+export type Booking = {
+  id: number; kind: 'visit' | 'phone' | 'online'; starts_at: string; ends_at: string; name: string; phone: string; whatsapp: string | null;
+  email: string; brand: string; note: string | null; meet_url: string | null; status: 'new' | 'replied' | 'closed'; source: Record<string, string>; created_at: string;
+};
 export type Member = { id: number; name: string; email: string; whatsapp: string | null; created_at: string };
 export type Client = { id: number; brand: string; notes: string | null; created_at: string; client_members: Member[]; orders: { id: number; code: string; name: string; stage: number; status: string }[] };
 export type Decision = { id: number; stage: number; title: string; body: string | null; photo_ids: number[]; status: 'open' | 'approved' | 'changes_asked' | 'withdrawn'; note: string | null; opened_label: string; opened_at: string; closed_label: string | null; closed_at: string | null };
@@ -93,7 +98,9 @@ export async function requestsSince(iso: string): Promise<Counted[]> {
   }
 }
 export const messages = () => get<Message[]>('messages?select=*&order=created_at.desc&limit=300');
-export const setStatus = (table: 'requests' | 'messages', id: number, status: string) => write(`${table}?id=eq.${id}`, 'PATCH', { status });
+/** The calls booked on the site; none while the table is not there yet (before its migration). */
+export const bookings = () => get<Booking[]>('bookings?select=*&order=created_at.desc&limit=300').then((b) => Array.isArray(b) ? b : []).catch(() => [] as Booking[]);
+export const setStatus = (table: 'requests' | 'messages' | 'bookings', id: number, status: string) => write(`${table}?id=eq.${id}`, 'PATCH', { status });
 
 export const orders = () => get<OrderRow[]>('orders?select=id,code,name,product,summary,qty,stage,status,due_on,created_at,client_id,clients(brand),'
   + 'order_decisions(id,stage,title,status),photo_requests(stage,answered_at),order_events(id,kind,decision_id)&order=created_at.desc');

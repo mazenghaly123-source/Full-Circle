@@ -1,4 +1,5 @@
 import type { AlsoOption, OptionOf } from '../../supabase/functions/_shared/forms';
+import type { BookingKind } from '../../supabase/functions/_shared/booking';
 import type { GarmentKey } from './garments';
 import type { IconName } from './icons';
 
@@ -49,18 +50,19 @@ export const SITE = {
 
 /**
  * Booking a call (Mazen, 8 Nov 2026): in person at the floor, a phone call or an online meeting, 30 minutes
- * in working hours. `url` is the kind's booking page (a calendar such as Cal.com) once there is one; until
- * then the button opens WhatsApp with the request ready to send.
+ * in working hours. Since 9 Nov the page books on the spot, in the site's own calendar (the book-call function:
+ * working hours less the calls already booked), and emails the invite; each kind's button opens WhatsApp with the
+ * request ready if the calendar cannot be reached.
  */
 export const BOOKING = [
-  { kind: 'visit', n: 'At the floor', icon: 'pin', line: 'Come to Gisr El Suez, Cairo. See the cutting room, the fabrics and real samples.', go: 'Book a visit', url: '', ask: 'a visit to the floor' },
-  { kind: 'phone', n: 'Phone call', icon: 'phone', line: 'We call you at the time you pick.', go: 'Book a call', url: '', ask: 'a phone call' },
-  { kind: 'online', n: 'Online meeting', icon: 'video', line: 'A video call, wherever you are. The link comes with your booking.', go: 'Book a meeting', url: '', ask: 'an online meeting' },
-] as const;
+  { kind: 'visit', n: 'At the floor', icon: 'pin', line: 'Come to Gisr El Suez, Cairo. See the cutting room, the fabrics and real samples.', go: 'Book a visit', ask: 'a visit to the floor' },
+  { kind: 'phone', n: 'Phone call', icon: 'phone', line: 'We call you at the time you pick.', go: 'Book a call', ask: 'a phone call' },
+  { kind: 'online', n: 'Online meeting', icon: 'video', line: 'A video call, wherever you are. We send the link on WhatsApp before the call.', go: 'Book a meeting', ask: 'an online meeting' },
+] as const satisfies readonly { kind: BookingKind; n: string; icon: IconName; line: string; go: string; ask: string }[];
 export const BOOKING_LENGTH = '30 minutes';
 
-/** Where a booking button goes: the kind's calendar, or WhatsApp with the request ready. */
-export const bookingHref = (b: (typeof BOOKING)[number]) => b.url || whatsappLink(`Hi Full Circle, I'd like to book ${b.ask} (${BOOKING_LENGTH}). My brand: `);
+/** A kind's WhatsApp booking, with the request ready, for when the calendar cannot be reached. */
+export const bookingHref = (b: { ask: string }) => whatsappLink(`Hi Full Circle, I'd like to book ${b.ask} (${BOOKING_LENGTH}). My brand: `);
 
 /** Paths kept out of search and AI crawlers: robots.txt disallows them and ai.txt excludes them. */
 export const PRIVATE_PATHS = ['/admin'];

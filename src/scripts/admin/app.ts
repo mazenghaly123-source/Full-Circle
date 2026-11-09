@@ -64,8 +64,8 @@ async function route() {
 const shown = { inbox: 0, orders: 0, approvals: 0 };
 async function counts() {
   try {
-    const [rq, ms, os] = await Promise.all([api.requests(), api.messages(), api.orders()]);
-    shown.inbox = rq.filter((r) => r.status === 'new').length + ms.filter((m) => m.status === 'new').length;
+    const [rq, ms, bk, os] = await Promise.all([api.requests(), api.messages(), api.bookings(), api.orders()]);
+    shown.inbox = [...rq, ...ms, ...bk].filter((x) => x.status === 'new').length;
     shown.orders = os.filter((o) => o.status === 'active' || o.status === 'paused').length;
     shown.approvals = os.filter((o) => waitingOn(o) === 'us').length;
     paintCounts(document);

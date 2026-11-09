@@ -118,6 +118,38 @@ export function staffMessageEmail(m: MessageMail) {
     : { subject: `New message from ${m.name}`, ...render(`Message from ${m.name}`, 'Sent from the contact page.', rows) };
 }
 
+export type BookingMail = {
+  kind: 'visit' | 'phone' | 'online'; when: string; name: string; brand: string; phone: string; whatsapp: string | null; email: string;
+  note: string; meet: string | null; at: Date; source: Source;
+};
+const KIND_WORDS = { visit: 'Visit at the floor', phone: 'Phone call', online: 'Online meeting' } as const;
+
+/** The alert staff get for a call booked on the site, with the invite to add it to the calendar. */
+export function staffBookingEmail(b: BookingMail) {
+  const rows: Row[] = [
+    ['When', `${b.when} (Cairo), 30 minutes`], ['Kind', KIND_WORDS[b.kind]], ['Brand', b.brand], ['Name', b.name],
+    b.whatsapp ? ['WhatsApp', b.whatsapp, `https://wa.me/${b.whatsapp.slice(1)}`] : ['Phone', `${b.phone} (check the country code)`],
+    ['Email', b.email, `mailto:${b.email}`],
+  ];
+  if (b.meet) rows.push(['Video link', b.meet, b.meet]);
+  if (b.note) rows.push(['About', b.note]);
+  const from = sourceLine(b.source);
+  if (from) rows.push(['Came from', from]);
+  rows.push(['Booked', cairoTime(b.at)]);
+  const todo = b.kind === 'online' && !b.meet ? ' Send them the video link on WhatsApp before the call.' : b.kind === 'phone' ? ' Call them on the number below.' : '';
+  return { subject: `${KIND_WORDS[b.kind]} booked: ${b.brand}, ${b.when}`, ...render(`${KIND_WORDS[b.kind]} booked`, `${b.name} from ${b.brand} booked it on the site, and was sent the invite. Open the attached invite to add it to your calendar.${todo}`, rows) };
+}
+
+/** The confirmation a client gets for a call they booked, with the invite to add it to their calendar. */
+export function clientBookingEmail(b: Pick<BookingMail, 'kind' | 'when' | 'name' | 'phone' | 'whatsapp' | 'meet'>) {
+  const rows: Row[] = [['When', `${b.when}, Cairo time (30 minutes)`], ['How', KIND_WORDS[b.kind]]];
+  if (b.kind === 'visit') rows.push(['Where', 'Full Circle, Gisr El Suez, Cairo']);
+  if (b.kind === 'phone') rows.push(['We call you on', b.whatsapp ?? b.phone]);
+  if (b.kind === 'online') rows.push(b.meet ? ['Join the call', b.meet, b.meet] : ['Video link', 'We send it on WhatsApp before the call']);
+  rows.push(['To change the time', `Message us on WhatsApp, ${SITE.whatsapp}`, SITE.whatsappUrl]);
+  return { subject: `Booked: ${KIND_WORDS[b.kind].toLowerCase()} with Full Circle, ${b.when}`, ...render('Your call is booked', `Hello ${b.name}, thank you. Open the attached invite to add it to your calendar.`, rows) };
+}
+
 /** The eight stages, as the site names them (src/data/site.ts). */
 export const STAGE_NAMES = ['Research', 'Design support', 'Sourcing', 'Development', 'Sampling', 'Production', 'QC', 'Delivery'] as const;
 const stageName = (n: number) => `${String(n).padStart(2, '0')} ${STAGE_NAMES[Math.min(Math.max(n, 1), 8) - 1]}`;

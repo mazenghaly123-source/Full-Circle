@@ -382,6 +382,33 @@ export async function mockBackend(page: Page, answer: (fn: 'submit-request' | 's
   return sent;
 }
 
+/**
+ * Stands in for the book-call function: the free times (none, with `calendar: false`) and the answer to a
+ * booking. The free times are two days ahead of the real clock, 9:00 to 10:30 Cairo time.
+ */
+export async function mockCalendar(page: Page, o: { calendar?: boolean; answer?: (n: number) => { status?: number; json?: object } } = {}) {
+  const sent: Sent[] = [];
+  await page.route('https://challenges.cloudflare.com/turnstile/**', (route) => route.fulfill({
+    contentType: 'text/javascript',
+    body: 'window.turnstile = { render(el, o) { setTimeout(() => o.callback("XXXX.DUMMY.TOKEN.XXXX"), 10); return "w"; }, remove() {} };',
+  }));
+  const days = calendarDays();
+  await page.route(/\/functions\/v1\/book-call$/, async (route) => {
+    const body = JSON.parse(route.request().postData() ?? '{}');
+    if (body.slots) return route.fulfill({ contentType: 'application/json', json: o.calendar === false ? { calendar: false } : { calendar: true, days } });
+    sent.push({ url: route.request().url(), body: route.request().postDataBuffer() });
+    const a = o.answer?.(sent.length) ?? {};
+    await route.fulfill({ status: a.status ?? 200, contentType: 'application/json', json: a.json ?? { ok: true, when: 'Monday 16 November, 10:30', meet: null } });
+  });
+  return { sent, days };
+}
+
+/** Two days of free times, as the function answers them. */
+export function calendarDays() {
+  const day = (n: number) => { const d = new Date(Date.now() + n * 86400_000); return d.toISOString().slice(0, 10); };
+  return [1, 2].map((n) => ({ date: day(n), slots: [0, 30, 60, 90].map((m) => new Date(`${day(n)}T07:00:00Z`).getTime() + m * 60000).map((t) => new Date(t).toISOString()) }));
+}
+
 /** The key the stand-in gives a sent request, for the answers after sending. */
 export const FOLLOW_UP_KEY = '0e1a8f2c-5b7d-4c3e-9a61-2f4b8d0c7e15';
 
@@ -514,6 +541,7 @@ export async function mockAdmin(page: Page, o: { staff?: boolean; role?: 'owner'
     { id: 4, code: 'FC-2390', path: 'Scaling', product: 'Jackets', qty: '150–500', have: 'A garment', brand: 'Demo Studio', contact: 'laila@demo.test', contact_channel: 'email', email: 'laila@demo.test', whatsapp: null, note: null, status: 'converted', source: { referrer: 'https://www.google.com/' }, created_at: ago(24 * 45), orders: [{ id: 4, code: 'FC-2390' }] },
   ];
   const messages: any[] = [{ id: 1, name: 'Sara', contact: 'sara@x.test', contact_channel: 'email', email: 'sara@x.test', whatsapp: null, text: 'Do you make swimwear?', status: 'new', created_at: ago(2), via: 'contact' }];
+  const bookings: any[] = [];
   const clients: any[] = [{ id: 1, brand: 'Demo Studio', notes: null, created_at: ago(500), client_members: [{ id: 1, name: 'Laila', email: 'laila@demo.test', whatsapp: '+201011435406', created_at: ago(480) }] }];
   const ev = (order: any, kind: string, extra: object = {}) => order.order_events.push({ id: ++next, kind, side: ['approved', 'changes_asked', 'photo_asked'].includes(kind) ? 'client' : 'staff', actor_id: 'me', actor_label: ['approved', 'changes_asked', 'photo_asked'].includes(kind) ? 'Laila' : 'Mazen', stage: order.stage, to_stage: null, decision_id: null, title: null, note: null, created_at: now(), ...extra });
   const blank = (id: number, code: string, client_id: number, name: string, product: string, stage: number): any => ({
@@ -612,8 +640,8 @@ export async function mockAdmin(page: Page, o: { staff?: boolean; role?: 'owner'
     if (path === 'staff') {
       if (method === 'GET') return route.fulfill({ json: eq('user_id') ? staff.filter((s) => s.user_id === eq('user_id')) : staff });
     }
-    if (path === 'requests' || path === 'messages') {
-      const list = path === 'requests' ? requests : messages;
+    if (path === 'requests' || path === 'messages' || path === 'bookings') {
+      const list = path === 'requests' ? requests : path === 'messages' ? messages : bookings;
       if (method === 'PATCH') { const x = list.find((y) => y.id === Number(eq('id'))); Object.assign(x, body); return route.fulfill({ status: 204, body: '' }); }
       return route.fulfill({ json: list });
     }
@@ -655,7 +683,7 @@ export async function mockAdmin(page: Page, o: { staff?: boolean; role?: 'owner'
     calls.push({ fn: 'upload', method: req.method(), body: path });
     return route.fulfill({ json: { Key: path } });
   });
-  return { calls, requests, messages, orders, clients, staff };
+  return { calls, requests, messages, bookings, orders, clients, staff };
 }
 
 /** Signs in to the mocked admin (mockAdmin) with the right code. */

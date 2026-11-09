@@ -77,6 +77,12 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   request opened, a year on): applied by Mazen in the SQL editor on 30 Oct, with the clean-out of the test data.
 - `20261108095056` request_also (8 Nov, MCP, adds only): requests' `also` (question 05), `heard` and `sells` (the
   answers after sending) and `follow_up`, the key `submit-request` returns so the sender can send those answers.
+- `20261109180942` bookings and `20261109181049` bookings_own_calendar (9 Nov, MCP, add only): calls booked on
+  `/book-a-call`, staff read them and move their status; one booking per time (a closed one frees it).
+  `20261109200000` bookings_retention (the nightly clean-up also deletes a booked call a year after it) holds a
+  DELETE: **not applied yet**; Mazen runs it in the SQL editor with
+  `insert into supabase_migrations.schema_migrations (version, name) values ('20261109200000', 'bookings_retention');`
+  (it only matters a year on, before November 2027).
 - `20261030151642` keep_awake (30 Oct, MCP): `public.alive()`, which anon may call; the Worker calls it
   twice a day so the free plan never pauses the project.
 - `20261030153525` developer_role and `20261030153541` developer_is_owner (30 Oct, MCP): a third staff role,
@@ -89,6 +95,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   by Mazen in the SQL editor on 7 Nov (it holds a DELETE); the project lists it. Mazen's first test
   order (FC-2501, 30 Oct) was cleared by hand in the SQL editor and the code sequence set back to FC-2501.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
+  - `book-call` v1 (9 Nov: Book a call on the page; checked live with { slots: true } and two refused bookings, nothing written),
   - `submit-request` v11 (8 Nov: question 05 and the answers after sending, PR #35; the files deployed were compared with the repo's), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
     `whatsapp-webhook` v1.
@@ -203,6 +210,13 @@ site's look.
   (both use data the site already has). Mazen liked Factory 21's 3D factory floor most: ours is
   the Circle Floor, on Track, not a copy.
 
+- **Book a call on the page (9 Nov, Mazen, after Factory 21's `/book`):** Cal.com was tried and dropped (it opens
+  its own page), then Google Calendar (its setup was too much for Mazen). The site keeps its own calendar:
+  `book-call` offers Sunday – Thursday 9:00 – 17:00 Cairo, 30 minutes with 15 between, 3 hours to 3 weeks ahead,
+  less the calls already booked; it saves the booking and emails the client and staff, each with an `.ics` invite.
+  It cannot see Mazen's own appointments: a way to block times from `/admin` is the next step if he wants it. An
+  online meeting's video link goes on WhatsApp (a fixed Meet link from Mazen would go in the invite: `meet` in
+  `book-call`). Bookings are in the admin's inbox (Calls).
 0. **SEO, GEO and analytics** (Mazen, 24 Oct: "start SEO and GEO, and connect Google Analytics").
    - **Analytics (26 Oct):** GA4 `G-XNT9FPB5RQ` behind a consent bar (Mazen's choice), with page views,
      `generate_lead` for a sent request or message, and `whatsapp_click`; the privacy notice now names

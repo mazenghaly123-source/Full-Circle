@@ -82,8 +82,14 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - Starting/Scaling: split section on Home now; dedicated ad landing pages later.
 - Book a call (Mazen, 8 Nov 2026, "very important"): `/book-a-call`, 30 minutes at the floor, by phone or
   online (`BOOKING` in `site.ts`). In the header beside Track order, the phone menu, the footer, first on
-  Contact, as the Home hero's second button, and after a request is sent. Each kind opens its calendar page
-  once Mazen has one (its `url`); until then WhatsApp with the request ready. Secondary to Request a sample.
+  Contact, as the Home hero's second button, and after a request is sent. Secondary to Request a sample.
+  It books on the page itself, as Factory 21's `/book` does (Mazen, 9 Nov 2026: no outside booking pages, never
+  Cal.com or the like, and no Google setup for him to do): how, the day, a free time, the details, "Book it". The
+  site keeps its own calendar: the free times are Sunday – Thursday, 9:00 – 17:00 Cairo, 30 minutes, less the calls
+  already booked (one booking per time; a closed one frees it). The `book-call` function saves it and emails the
+  client and staff, each with a calendar invite (`.ics`) to add in one tap (`_shared/booking.ts`). It does not see
+  Mazen's own calendar; the video link of an online meeting goes on WhatsApp. Bookings land in the admin's inbox. If
+  the function cannot be reached, each kind opens WhatsApp with the request ready.
 - The request form's question 05, "Also want" (Mazen, 8 Nov 2026): optional, any of Branding, Product photos, Ad
   creatives (`REQUEST_ALSO` in `_shared/forms.ts`); How it works carries its picks over (`?also=`). After sending, two
   optional one-tap questions, "How did you hear about us?" and "Where do you sell?" (`FOLLOW_UP`), saved through
@@ -212,7 +218,7 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   `public.alive()` twice a day so the free plan never pauses it (`src/keep-awake.ts`). Every build sends to
   it unless `PUBLIC_SUPABASE_URL` says otherwise (`src/data/project.ts`, `src/data/backend.ts`).
 - Row-level security on every table, and the publishable key reaches none of them: the forms
-  write through the `submit-request` and `submit-contact` Edge Functions, which check a Turnstile
+  write through the `submit-request`, `submit-contact` and `book-call` Edge Functions, which check a Turnstile
   token. `supabase/tests/database/` holds who-can-reach-what tests; run `supabase test db`, or
   `scripts/test-db-local.sh` where there is no Docker (a cloud session).
 - The portal (`/track`, phase 3) signs in through Supabase Auth with a 6-digit code and reads the

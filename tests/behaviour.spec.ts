@@ -3,8 +3,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
-import { FOLLOW_UP_KEY, PAGES, isPhone, mockBackend, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
+import { FOLLOW_UP_KEY, PAGES, isPhone, mockBackend, mockCalendar, mockPortal, postedData, signInPortal, watchErrors } from './helpers';
 import { ERRORS, NOTICE } from '../supabase/functions/_shared/forms';
+import { BOOKING_NOTICE, BOOK_ERRORS } from '../supabase/functions/_shared/booking';
 import { REST, figurePaths } from '../src/data/garments';
 import { LANDINGS } from '../src/data/site';
 
@@ -601,12 +602,13 @@ test('contact: copy, and the form checks before sending', async ({ page }) => {
 });
 
 test('book a call: at the floor, by phone or online, from the Home hero, the header and Contact', async ({ page }, info) => {
+  // the calendar is not linked yet: each kind books on WhatsApp
+  await mockCalendar(page, { calendar: false });
   await page.goto('/');
   await page.locator('.hero .cta a', { hasText: 'Book a call' }).click();
   await page.waitForURL('**/book-a-call');
   await expect(page.locator('h1')).toHaveText('Book a call.');
   if (!isPhone(info)) await expect(page.locator('header a.book-link')).toHaveClass(/on/);
-  // until there is a calendar, each kind opens WhatsApp with its request ready
   const kinds = page.locator('#bookKinds a[data-book]');
   await expect(kinds).toHaveText(['Book a visit', 'Book a call', 'Book a meeting']);
   for (const [i, ask] of [[0, 'a visit to the floor'], [1, 'a phone call'], [2, 'an online meeting']] as const) {
@@ -616,12 +618,69 @@ test('book a call: at the floor, by phone or online, from the Home hero, the hea
     await expect(kinds.nth(i)).toHaveAttribute('target', '_blank');
   }
   await expect(page.locator('.book-how')).toHaveText('You pick the time with us on WhatsApp.');
+  await expect(page.locator('#bookCal')).toBeHidden();
   await openNav(page, '/contact', isPhone(info));
   await page.waitForURL('**/contact');
   await expect(page.locator('.ccards a[href="/book-a-call"]').first()).toBeVisible();
   // the phone menu and the footer list it too
   await expect(page.locator('.mmenu a[href="/book-a-call"]')).toHaveCount(1);
   await expect(page.locator('footer a[href="/book-a-call"]')).toHaveCount(1);
+});
+
+test('book a call on the page: how, the day, a free time and the details go into the calendar', async ({ page }) => {
+  const errors = watchErrors(page);
+  const { sent, days } = await mockCalendar(page);
+  await page.goto('/book-a-call');
+  // the free times came: the kinds are a choice, nothing opens WhatsApp
+  await expect(page.locator('#bookCal')).toBeVisible();
+  await expect(page.locator('.book-how')).toHaveText('Pick a time: it is booked on the spot, and the invite comes by email.');
+  await expect(page.locator('#bookKinds a[data-book]').first()).toBeHidden();
+  await expect(page.locator('#bkDays .opt')).toHaveCount(2);
+  await expect(page.locator('#bkDays .opt').first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#bkTimes .opt')).toHaveText(['09:00', '09:30', '10:00', '10:30']);
+
+  // nothing picked: the line says what is missing, and points at it
+  await page.locator('#bSend').click();
+  await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.kind);
+  await page.locator('#bookKinds [data-kind="online"]').click();
+  await expect(page.locator('#bookKinds [data-kind="online"] .cal-go')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#bkKind')).toHaveText('Online meeting');
+  await page.locator('#bSend').click();
+  await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.slot);
+  await page.locator('#bkDays .opt').nth(1).click();
+  await page.locator('#bkTimes .opt', { hasText: '10:30' }).click();
+  await expect(page.locator('#bkWhen')).toContainText('10:30');
+  await page.locator('#bName').fill('Sara');
+  await page.locator('#bPhone').fill('0101 143 5406');
+  await page.locator('#bEmail').fill('sara@kind');
+  await page.locator('#bBrand').fill('Kind');
+  await page.locator('#bSend').click();
+  await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.email);
+  await expect(page.locator('#bEmail')).toBeFocused();
+  expect(sent).toHaveLength(0);
+
+  await page.locator('#bEmail').fill('Sara@Kind.Studio');
+  await page.locator('#bSend').click();
+  await expect(page.locator('#bSentH')).toBeVisible();
+  await expect(page.locator('#bSentLine')).toHaveText('Monday 16 November, 10:30, Cairo time. The invite is on its way to sara@kind.studio. We send the video link on WhatsApp before the call.');
+  expect(postedData(sent[0])).toMatchObject({ kind: 'online', start: days[1].slots[3], name: 'Sara', phone: '0101 143 5406', email: 'Sara@Kind.Studio', brand: 'Kind', notice: BOOKING_NOTICE.version, turnstile: 'XXXX.DUMMY.TOKEN.XXXX' });
+  await expect(page.locator('#bSentWa')).toHaveAttribute('href', /wa\.me\/201011435406\?text=/);
+  expect(errors).toEqual([]);
+});
+
+test('a time taken meanwhile is said so, and the free times come again without it', async ({ page }) => {
+  const { sent } = await mockCalendar(page, { answer: (n) => n === 1 ? { status: 409, json: { error: BOOK_ERRORS.taken, field: 'slot' } } : {} });
+  await page.goto('/book-a-call');
+  await page.locator('#bookKinds [data-kind="visit"]').click();
+  await page.locator('#bkTimes .opt').first().click();
+  for (const [id, v] of [['bName', 'Sara'], ['bPhone', '0101 143 5406'], ['bEmail', 'sara@kind.studio'], ['bBrand', 'Kind']]) await page.locator(`#${id}`).fill(v);
+  await page.locator('#bSend').click();
+  await expect(page.locator('#bErr')).toHaveText(BOOK_ERRORS.taken);
+  await expect(page.locator('#bkTimes .opt[aria-pressed="true"]')).toHaveCount(0);
+  await page.locator('#bkTimes .opt').nth(1).click();
+  await page.locator('#bSend').click();
+  await expect(page.locator('#bSentLine')).toContainText('See you at the floor in Gisr El Suez.');
+  expect(sent).toHaveLength(2);
 });
 
 test('links from the prototype (/#how) land on the real pages', async ({ page }) => {

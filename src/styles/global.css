@@ -1370,4 +1370,31 @@ body:is([data-page="egypt"],[data-page="jeans"],[data-page="privatelabel"],[data
 /* What we make's Denim and Hoodies cards link to their search pages, beside the button (under it on phones) */
 .mcat .mfoot{flex-wrap:wrap;align-items:center;gap:14px 20px}
 @media (max-width:760px){.mcat .mfoot .linkline{flex-basis:100%;justify-content:center;min-height:44px}}
+/* 9 Nov 2026 (Mazen, after Factory 21's /book): Book a call books on the page itself, in Full Circle's Google
+   Calendar. Once the free times come, the three kinds are a choice (01), then the day (02), the time (03) and the
+   details beside them; until then each kind opens WhatsApp */
+.bk-step{margin-bottom:14px}
+#book:not([data-cal="on"]) .bk-step,#book:not([data-cal="on"]) .cal-go,#book[data-cal="on"] .wa-go{display:none}
+#book[data-cal="on"] .book3>div{cursor:pointer}
+.book3>div.on{border-color:var(--bone)}
+.cal-go{display:inline-flex;align-items:center;justify-self:start;margin-top:8px}
+.cal-go .tk{width:14px;height:14px;border:1px solid currentColor;border-radius:4px;display:inline-grid;place-items:center;margin-right:10px}
+.cal-go[aria-pressed="true"]{background:var(--bone);color:var(--bg);border-color:var(--bone)}
+.cal-go[aria-pressed="true"] .tk::after{content:"";width:4px;height:8px;border:solid var(--bg);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.bk{margin-top:clamp(28px,3.5vw,48px)}
+.bk[hidden]{display:none}
+.bk-times{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr))}
+.bk-times .opt{text-align:center}
+.bk-times:empty::before{content:"No free time this day";color:var(--dim);font-family:var(--f-mono);font-size:11.5px;letter-spacing:0.1em;text-transform:uppercase}
+@media (max-width:860px){
+  #book[data-cal="on"] .book3>div{grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto;align-items:center;gap:14px;padding:14px 16px}
+  #book[data-cal="on"] .book3 p{display:none}
+  #book[data-cal="on"] .book3 h2{font-size:24px}
+  #book[data-cal="on"] .book3 .ic{width:26px;height:26px}
+  #book[data-cal="on"] .cal-go{margin-top:0}
+  .bk-days{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding:2px 16px 6px}
+  .bk-days::-webkit-scrollbar{display:none}
+  .bk-days .opt{flex:none}
+  .bk-times{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 /* ===== end approved changes ===== */
