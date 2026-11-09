@@ -3,7 +3,7 @@
 // PHOTOS_PHONE shows that one up to `phoneUpTo` wide, so a phone does not crop a wide photo to a strip.
 import { Picture, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import { PHOTOS, PHOTOS_PHONE, photoWidths } from '../data/photos';
+import { PHOTOS, PHOTOS_PHONE, PHOTO_ALT, photoWidths } from '../data/photos';
 
 interface Props {
   /** Photo slot name, e.g. cat-denim (the prototype's data-img). */
@@ -13,9 +13,12 @@ interface Props {
   class?: string;
   /** The widest screen, in px, that gets the tall version (when the slot has one). */
   phoneUpTo?: number;
+  /** Describe the photo (its PHOTO_ALT text) for image search and screen readers; off where it only sets a mood. */
+  describe?: boolean;
 }
 
-const { img: slot, sizes, eager = false, class: cls, phoneUpTo = 760 } = Astro.props;
+const { img: slot, sizes, eager = false, class: cls, phoneUpTo = 760, describe = false } = Astro.props;
+const alt = describe ? (PHOTO_ALT[slot] ?? '') : '';
 const photo = PHOTOS[slot];
 const phone = PHOTOS_PHONE[slot];
 const srcset = async (src: ImageMetadata, format: 'avif' | 'webp' | 'jpg') =>
@@ -34,7 +37,7 @@ const sources = phone && photo ? [
         src={fallback.src}
         srcset={fallback.srcSet.attribute}
         sizes={sizes}
-        alt=""
+        alt={alt}
         loading={eager ? 'eager' : 'lazy'}
         fetchpriority={eager ? 'high' : undefined}
         decoding="async"
@@ -48,7 +51,7 @@ const sources = phone && photo ? [
       formats={['avif', 'webp']}
       widths={photoWidths(photo)}
       sizes={sizes}
-      alt=""
+      alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       fetchpriority={eager ? 'high' : undefined}
       decoding="async"

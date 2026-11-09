@@ -82,6 +82,12 @@ export const PHOTO_ALT: Record<string, string> = {
   'promise-sample': 'Approved black hoodie sample on a dress form in the cutting room, with its hang tag',
   'promise-bulk': 'Stack of folded black hoodies from the bulk run, each with the same hang tag',
   'portal-sample': 'Raw indigo jeans sample hanging on the cutting room wall, labelled with tape',
+  // the photos behind Home's How it works, one per part, and the search pages' heroes (9 Nov 2026)
+  'stage-01': 'Mood board on the studio wall: jeans, hoodies, knitwear, shirts, fabric swatches and colour chips',
+  'stage-05': 'White hoodie sample on a dress form being pinned at the shoulder, a sewing machine behind it',
+  'stage-06': 'Black fleece being sewn on an overlock machine',
+  'stage-08': 'Black hoodies packed in labelled bags, ready to go into cartons',
+  'path-starting': 'Checking a first hoodie sample on the cutting table',
 };
 
 /** Where to keep the subject when a photo is cropped. */

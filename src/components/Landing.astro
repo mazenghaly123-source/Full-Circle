@@ -19,7 +19,7 @@ const LINKS: Record<LandingKey, string> = { egypt: 'Clothing manufacturer in Egy
 ---
 <Base page={l.key}>
 <PageHero crumb={l.crumb} title={l.h1} lead={l.lead} light="radial-gradient(40% 50% at 85% 25%,#243E8F,transparent 70%),radial-gradient(40% 50% at 15% 90%,#C96832,transparent 72%)" wide>
-  <BgImg img={l.photo} sizes="100vw" eager slot="bg" />
+  <BgImg img={l.photo} sizes="100vw" eager slot="bg" describe />
   <ul class="lfacts" aria-label="At a glance">{l.facts.map(([k, t]) => <li><Icon name={k} />{t}</li>)}</ul>
   <div class="lcta"><a class="btn btn-red" href={start}>Request a sample</a><a class="btn btn-line" href={ROUTES.book}>Book a call</a></div>
 </PageHero>
