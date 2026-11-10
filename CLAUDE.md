@@ -107,7 +107,10 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   sizes and pieces, labels, trims, packing), with files. The line above (no files, details on WhatsApp) was a first
   shape only and stands until the builder ships. Mock, waiting for his word: https://claude.ai/artifact/Cd3FbnyEWSnaQy8XcGCMdb
   (no account, ends in Request the sample; the piece is our own line figure, it turns and shows each colour and print
-  where it sits; a drop planner counts back from Ramadan and the Eids). Its fits, washes, print methods and fabric
+  where it sits; a drop planner counts back from Ramadan and the Eids). It must not look like Factory 21's (Mazen
+  rejected a first mock with the questions on the left and the garment on the right, their layout): the piece stands
+  in the middle inside the mark's three arcs (Piece, Details, Run), which close as the order fills in; one question
+  at a time sits under it; prints are placed by tapping a + on the piece; the spec writes itself on a hang tag. Its fits, washes, print methods and fabric
   choices are stand-ins until Mazen confirms ours. The sample fee stays on request, no price.
 - Later, not now (Mazen, 10 Nov 2026): notifications in the portal; download my data and delete my account (small,
   good for trust: keep it on the list); payments and reorder in the portal.
