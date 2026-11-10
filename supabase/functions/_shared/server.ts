@@ -153,7 +153,9 @@ export const sameContact = (reach: Contact, typed: string): Record<string, strin
 /** Who gets the staff alerts (comma-separated STAFF_EMAILS, otherwise the address on the site). */
 export const staffEmails = () => (env('STAFF_EMAILS') ?? 'fullcircleworks.co@gmail.com').split(',').map((s) => s.trim()).filter(Boolean);
 
-type Email = { to: string[]; subject: string; text: string; html: string; replyTo?: string };
+/** A file sent with an email (a calendar invite): its text, which is sent base64-encoded. */
+export type Attachment = { filename: string; content: string; contentType: string };
+type Email = { to: string[]; subject: string; text: string; html: string; replyTo?: string; attachments?: Attachment[] };
 
 /** Sends one email through Resend. Without RESEND_API_KEY nothing is sent and it says so. */
 export async function sendEmail(m: Email): Promise<Sent> {
@@ -165,7 +167,10 @@ export async function sendEmail(m: Email): Promise<Sent> {
     const res = await fetch(env('RESEND_API_URL') ?? 'https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to: m.to, subject: m.subject, text: m.text, html: m.html, reply_to: m.replyTo }),
+      body: JSON.stringify({
+        from, to: m.to, subject: m.subject, text: m.text, html: m.html, reply_to: m.replyTo,
+        attachments: m.attachments?.map((a) => ({ filename: a.filename, content: btoa(String.fromCharCode(...new TextEncoder().encode(a.content))), content_type: a.contentType })),
+      }),
     });
     const out = await res.json().catch(() => ({}));
     return res.ok ? { status: 'sent', providerId: out.id } : { status: 'failed', detail: `${res.status} ${out.message ?? out.name ?? ''}`.trim() };

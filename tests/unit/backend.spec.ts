@@ -13,6 +13,7 @@
 import { createHmac } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import { expect, test } from '@playwright/test';
+import { BOOKING_NOTICE, BOOK_ERRORS, type Day } from '../../supabase/functions/_shared/booking';
 import { ERRORS, NOTICE } from '../../supabase/functions/_shared/forms';
 import { TEMPLATES } from '../../supabase/functions/_shared/whatsapp';
 
@@ -21,7 +22,7 @@ test.skip(!URL_ || !SECRET, 'no local Supabase (set SUPABASE_URL, SUPABASE_SECRE
 test.describe.configure({ mode: 'serial' });
 
 const TOKEN = 'XXXX.DUMMY.TOKEN.XXXX';
-type Mail = { to: string[]; subject: string; text: string; html: string; reply_to?: string };
+type Mail = { to: string[]; subject: string; text: string; html: string; reply_to?: string; attachments?: { filename: string; content: string; content_type: string }[] };
 const mails: Mail[] = [];
 type Wa = { to: string; type: string; template?: { name: string; components: { type: string; parameters: { text: string }[] }[] }; text?: { body: string } };
 const sent: Wa[] = [];
@@ -165,6 +166,81 @@ test('one contact sending over and over is asked to use WhatsApp, however it is 
   expect(await res.json()).toEqual({ error: ERRORS.tooMany });
 });
 
+const booking = (data: Record<string, unknown>) =>
+  JSON.stringify({ kind: 'online', name: 'Sara', phone: '0101 143 5406', brand: 'Kind', note: 'A jeans line', notice: BOOKING_NOTICE.version, source: {}, turnstile: TOKEN, ...data });
+const freeTimes = async (): Promise<Day[]> => {
+  const res = await post('book-call', JSON.stringify({ slots: true }));
+  expect(res.status).toBe(200);
+  const out = await res.json();
+  expect(out.calendar).toBe(true);
+  return out.days;
+};
+
+/** The calendar invite attached to an email, as text. */
+const invite = (m: Mail) => Buffer.from(m.attachments?.[0]?.content ?? '', 'base64').toString('utf8');
+const ics = (iso: string) => iso.replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+
+test('the booking page gets the free times; a booked time is no longer offered', async () => {
+  const days = await freeTimes();
+  expect(days.length).toBeGreaterThan(10);
+  const start = days[4].slots[0];
+  expect((await post('book-call', booking({ start, email: `first-${run}@kind.test` }))).status).toBe(200);
+  const after = (await freeTimes()).find((d) => d.date === days[4].date)!;
+  expect(after.slots).not.toContain(start);
+  // the meeting and the 15 minutes after it: the next half hour goes too
+  expect(after.slots).not.toContain(days[4].slots[1]);
+});
+
+test('a booked call is saved, and the client and staff are emailed with the calendar invite', async () => {
+  const start = (await freeTimes())[1].slots[2], email = `sara-${run}@kind.test`;
+  const res = await post('book-call', booking({ start, email: email.toUpperCase() }));
+  expect(res.status).toBe(200);
+  const out = await res.json();
+  expect(out).toMatchObject({ ok: true, meet: null });
+  const [row] = await rows('bookings', `email=eq.${email}&select=kind,starts_at,name,phone,whatsapp,brand,note,status,notice_version`);
+  expect(row).toMatchObject({ kind: 'online', name: 'Sara', phone: '0101 143 5406', whatsapp: '+201011435406', brand: 'Kind', note: 'A jeans line', status: 'new', notice_version: BOOKING_NOTICE.version });
+  expect(new Date(row.starts_at as string).toISOString()).toBe(start);
+
+  const [mine] = await mailsTo(email, 1);
+  expect(mine.subject).toBe(`Booked: online meeting with Full Circle, ${out.when}`);
+  expect(mine.text).toContain('We send it on WhatsApp before the call');
+  expect(mine.attachments?.[0]).toMatchObject({ filename: 'invite.ics', content_type: 'text/calendar; charset=utf-8; method=PUBLISH' });
+  expect(invite(mine)).toContain(`DTSTART:${ics(start)}`);
+  expect(invite(mine)).toContain('SUMMARY:Online meeting with Full Circle');
+  // the first test booked for Kind too: this booking's alert is the one with its time
+  const subject = `Online meeting booked: Kind, ${out.when}`;
+  await expect.poll(() => mails.filter((m) => m.subject === subject).length, { timeout: 15_000 }).toBe(1);
+  const alert = mails.find((m) => m.subject === subject)!;
+  expect(alert.reply_to).toBe(email);
+  expect(alert.text).toContain('Send them the video link on WhatsApp before the call.');
+  expect(invite(alert)).toContain('SUMMARY:Online meeting: Kind');
+});
+
+test('a visit carries the floor\'s address in the invite', async () => {
+  const start = (await freeTimes())[2].slots[0], email = `visit-${run}@kind.test`;
+  expect((await post('book-call', booking({ kind: 'visit', start, email }))).status).toBe(200);
+  const [mine] = await mailsTo(email, 1);
+  expect(mine.text).toContain('Full Circle, Gisr El Suez, Cairo');
+  expect(invite(mine)).toContain('LOCATION:Full Circle\\, Gisr El Suez\\, Cairo');
+});
+
+test('bookings the server must turn away save nothing', async () => {
+  const start = (await freeTimes())[3].slots[0], email = `refused-${run}@kind.test`;
+  const refused = async (body: string, status: number, json: object) => {
+    const res = await post('book-call', body);
+    expect(res.status).toBe(status);
+    expect(await res.json()).toEqual(json);
+  };
+  await refused(booking({ start, email, turnstile: 'wrong' }), 403, { error: ERRORS.robot, field: 'robot' });
+  await refused(booking({ start, email: 'sara@kind' }), 400, { error: BOOK_ERRORS.email, field: 'email' });
+  await refused(booking({ start, email, notice: 'old' }), 400, { error: ERRORS.failed });
+  // off the grid, and a time someone else has booked
+  await refused(booking({ start: new Date(new Date(start).getTime() + 10 * 60000).toISOString(), email }), 409, { error: BOOK_ERRORS.taken, field: 'slot' });
+  expect((await post('book-call', booking({ start, email: `other-${run}@kind.test` }))).status).toBe(200);
+  await refused(booking({ start, email }), 409, { error: BOOK_ERRORS.taken, field: 'slot' });
+  expect(await rows('bookings', `email=eq.${email}&select=id`)).toEqual([]);
+});
+
 test('a contact message lands and staff are emailed', async () => {
   const email = `sara-${run}@brand.test`;
   const res = await post('submit-contact', JSON.stringify({ name: 'Sara', contact: email, text: 'Hello <there>', notice: NOTICE.version, source: { referrer: 'https://google.com/' }, turnstile: TOKEN }));
@@ -188,7 +264,7 @@ test('a number counts as one contact however it is written', async () => {
 test('the publishable key reads and writes nothing', async () => {
   test.skip(!PUBLISHABLE, 'no publishable key');
   const headers = { apikey: PUBLISHABLE, 'Content-Type': 'application/json' };
-  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff', 'clients', 'client_members', 'orders', 'order_specs', 'order_decisions', 'order_events', 'stage_photos', 'photo_requests', 'order_notifications']) {
+  for (const table of ['requests', 'messages', 'contact_consents', 'notifications', 'staff', 'clients', 'client_members', 'orders', 'order_specs', 'order_decisions', 'order_events', 'stage_photos', 'photo_requests', 'order_notifications', 'bookings']) {
     const res = await fetch(`${URL_}/rest/v1/${table}?select=*`, { headers });
     expect(res.status, table).toBe(401);
   }

@@ -1,12 +1,15 @@
 -- Housekeeping: a year after they arrive, requests that did not lead to an order and messages are
--- deleted, with the log of what was sent about them; a request with an order stays, and so do the
+-- deleted, with the log of what was sent about them, and so are booked calls a year after the meeting; a request with an order stays, and so do the
 -- consent records, and so does a sign-in account that a request, a client or staff still needs.
 -- Nobody but the nightly job can run it.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(11);
 
-truncate public.requests, public.messages, public.contact_consents, public.notifications, public.clients cascade;
+truncate public.requests, public.messages, public.contact_consents, public.notifications, public.clients, public.bookings cascade;
+insert into public.bookings (kind, starts_at, ends_at, name, phone, email, brand, notice_version) values
+  ('visit', now() - interval '13 months', now() - interval '13 months' + interval '30 minutes', 'Old', '0101 143 5406', 'o@o.test', 'Old', 'v'),
+  ('online', now() - interval '11 months', now() - interval '11 months' + interval '30 minutes', 'Recent', '0101 143 5406', 'r@r.test', 'Recent', 'v');
 insert into public.requests (code, path, product, brand, contact, contact_channel, email, notice_version, created_at) values
   ('FC-9201', 'Starting', 'Tees', 'Old, no order', 'a@a.test', 'email', 'a@a.test', 'v', now() - interval '13 months'),
   ('FC-9202', 'Scaling', 'Denim', 'Old, ordered', 'b@b.test', 'email', 'b@b.test', 'v', now() - interval '13 months'),
@@ -52,6 +55,7 @@ select results_eq($$select email::text from auth.users where id::text like '0000
   $$values ('b@b.test'), ('client@x.test'), ('new@x.test'), ('staff@fc.test')$$,
   'an account a year old that nothing needs goes; one with a request, staff, a client or a recent one stays');
 select is((select count(*)::int from public.client_members where email = 'client@x.test'), 1, 'a client''s person keeps their place');
+select results_eq($$select name from public.bookings$$, $$values ('Recent')$$, 'a booked call goes a year after its meeting');
 select is((select schedule from cron.job where jobname = 'delete-expired'), '15 1 * * *', 'it runs every night');
 
 select * from finish();

@@ -27,6 +27,19 @@ export const request = {
   bad: [] as string[],
 };
 
+/** Booking a call: the calendar's free times as last fetched, the picks, the details and the outcome. */
+export const book = {
+  /** null until the calendar has answered; false when it cannot be used (WhatsApp then) */
+  calendar: null as boolean | null,
+  days: [] as { date: string; slots: string[] }[],
+  /** when the free times were fetched (ms), so a page kept open long fetches them again */
+  fetched: 0,
+  kind: '' as string, day: '', start: '',
+  name: '', phone: '', email: '', brand: '', note: '',
+  sending: false, sent: false, when: '', meet: null as string | null,
+  err: '', bad: [] as string[],
+};
+
 export const picked = () => Object.values(request.sel).filter(Boolean).length;
 
 /** The "you are the order" demo on How it works. */

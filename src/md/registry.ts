@@ -220,7 +220,8 @@ const ROUTE_LIST: MarkdownRoute[] = [
       list([
         `${b('When you request a sample:')} your brand name, your email or WhatsApp number, your picks (product, quantity, what you have, and anything else you want from us, such as branding or photos) and your notes; and, if you answer them after sending, how you heard of us and where you sell. We do not take files through the site: sketches and photos come later, on WhatsApp. With an email, we also open a sign-in for it, so you can follow the request on the tracking page.`,
         `${b('When you send a message:')} your name, your email or WhatsApp number and your message.`,
-        `${b('With either:')} the first page you opened on the site and the site or ad that sent you (for example Instagram), so we know which posts bring brands to us.`,
+        `${b('When you book a call:')} your name, your WhatsApp number, your email, your brand, what the call is about, and the time you pick.`,
+        `${b('With any of them:')} the first page you opened on the site and the site or ad that sent you (for example Instagram), so we know which posts bring brands to us.`,
         `${b('If you accept analytics cookies:')} how you use the site (the pages you open, the WhatsApp button, whether a form was sent), your device and your rough location, through Google Analytics. Not your name or contact.`,
         `${b('When you become a client:')} your sign-in to the tracking page, your orders, the decisions you approve or ask to change, and photos of your order at each stage.`,
       ]),
@@ -247,7 +248,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       'Mainly in Frankfurt, Germany. Some of the providers above also process it in the United States and elsewhere.',
       h2('How long'),
       list([
-        'Requests and messages that do not lead to an order, and a sign-in opened only for a request: one year, then deleted.',
+        'Requests and messages that do not lead to an order, and a sign-in opened only for a request: one year, then deleted. A booked call: one year after the call, then deleted.',
         'Orders and their approval records: five years.',
         'Google Analytics’ visit-by-visit data: two months. Its summary reports, which name no one, are kept longer.',
         'The record that you asked for WhatsApp updates, and the words you agreed to: for as long as we send them, and one year after.',
@@ -261,7 +262,7 @@ const ROUTE_LIST: MarkdownRoute[] = [
       h2('Security'),
       'Everything travels encrypted, and only Full Circle staff can read what you send us. If a breach affects your data, we tell you and the authorities as the law requires.',
       h2('Changes'),
-      'Last updated 8 November 2026. Every change is dated here.',
+      'Last updated 9 November 2026. Every change is dated here.',
     ],
   },
 ];

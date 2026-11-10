@@ -257,6 +257,22 @@ test('admin: a reply to the WhatsApp number waits in the inbox, and an order sho
   await expect(page.locator('tr', { hasText: 'laila@demo.test · email' }).first()).toContainText('sent');
 });
 
+test('admin: a call booked on the site waits in the inbox with its time, and is moved on like a message', async ({ page }) => {
+  const { bookings, calls } = await mockAdmin(page);
+  bookings.push({ id: 7, kind: 'online', starts_at: '2026-11-16T08:30:00Z', ends_at: '2026-11-16T09:00:00Z', name: 'Sara', phone: '0101 143 5406', whatsapp: '+201011435406', email: 'sara@kind.studio', brand: 'Kind', note: 'A jeans line', meet_url: 'https://meet.google.com/abc-defg-hij', status: 'new', source: {}, created_at: new Date().toISOString() });
+  await page.goto('/admin#/inbox/b/7');
+  await signInAdmin(page);
+  await expect(page.locator('.li', { hasText: 'Kind' })).toContainText('Online meeting · Mon 16 Nov, 10:30');
+  await expect(page.locator('#detail .kick')).toHaveText('02 — Booked call');
+  await expect(page.locator('#detail')).toContainText('A jeans line');
+  expect(await page.getByRole('link', { name: 'Open the video link' }).getAttribute('href')).toBe('https://meet.google.com/abc-defg-hij');
+  expect(await page.getByRole('link', { name: 'Message on WhatsApp' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/201011435406\?text=/);
+  await page.locator('#detail [data-act="replied"]').click();
+  await expect.poll(() => calls.find((c) => c.fn === 'bookings' && c.method === 'PATCH')?.body).toEqual({ status: 'replied' });
+  await page.locator('[data-type="b"]').click();
+  await expect(page.locator('.li')).toHaveCount(0); // the New tab: nothing booked waits now
+});
+
 test('admin: on a phone the sidebar becomes a tab bar', async ({ page }, info) => {
   test.skip(!isPhone(info), 'phones only');
   await mockAdmin(page);

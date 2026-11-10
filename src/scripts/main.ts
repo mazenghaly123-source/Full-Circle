@@ -15,6 +15,7 @@ import { makeRowFeature } from './pages/make-row';
 import { requestFeature } from './pages/request';
 import { trackFeature } from './pages/track';
 import { contactFeature } from './pages/contact';
+import { bookFeature } from './pages/book';
 import { revealFeature } from './shell/reveal';
 import { dotsFeature } from './shell/dots';
 import { imagesFeature } from './shell/images';
@@ -45,6 +46,7 @@ start([
   requestFeature,
   trackFeature,
   contactFeature,
+  bookFeature,
   revealFeature,
   dotsFeature,
   imagesFeature,
