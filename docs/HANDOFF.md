@@ -381,6 +381,26 @@ Dashboard and account tasks:
   - Don't raise the legal review again.
 - The repo on GitHub is `mazenghaly123-source/Full-Circle`.
 
+## Factory 21 from the inside (10 Nov 2026)
+
+Seen through Mazen's own account (Claude in Chrome, nothing sent); the public site was compared on 9–10 Nov.
+- **The account:** Dashboard, Order, Sample, Book, Design, Requests, Finance, Account. Everything needs a sign-up.
+- **Their 3D is two things.** A factory floor on the dashboard: an isometric white model built from boxes in three.js
+  (r185, orthographic camera), 9 stations (fabric, pattern, cutting, control, printing, sewing, QC, packaging,
+  delivery), a click flies the camera to a station, each job sits on its station in its fabric colour, and it says
+  "moved by the F21 team … not a live camera". And a garment preview in Order and Sample: 11 GLB models, drag to
+  turn, the colour changes live, prints do not show.
+- **Their order builder:** 4 stations (the piece, sampling and fit, labels and confirm, review) with fit, fabric
+  list, who supplies the fabric, sizes with a quick mix, colours, prints (9 places, 8 methods, size, artwork), a
+  guide beside every question. Sample fee 1,000 / 2,000 EGP. "Plan your next drop" counts back from Ramadan and
+  the Eids (in stores two weeks before, 21 working days of production, 14 of sampling).
+- **Their Instagram (@factory21eg):** 1,757 followers, most reels under 1,000 views; what works is a founder's
+  problem or a story, what does not is the sign-up countdown.
+- **What Mazen decided:** the order builder on our site (mock, see CLAUDE.md), production time back, the sample fee
+  on request, notifications and data download/deletion later.
+- **Proposed, no answer yet:** Track's ring becomes the 3D mark as the floor (every order of the client standing on
+  it as its garment, a tap opens that order's real photos); saving the full comparison as a file.
+
 ## Next steps
 
 1. ~~Merge PR #27~~ (merged 30 Oct, with #28, the developer role).

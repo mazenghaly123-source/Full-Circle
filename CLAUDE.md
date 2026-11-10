@@ -102,6 +102,15 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
   "Continue on WhatsApp", which opens a chat with its code ready to send.
 - The legal review of the forms and the privacy notice is done (Mazen, 15 Oct 2026). Don't raise
   it again.
+- The order builder (Mazen, 10 Nov 2026, after seeing inside Factory 21's account): he wants building the order
+  in detail on the site itself (the piece, fit, colour or wash, fabric, each print with its place, method and size,
+  sizes and pieces, labels, trims, packing), with files. The line above (no files, details on WhatsApp) was a first
+  shape only and stands until the builder ships. Mock, waiting for his word: https://claude.ai/artifact/Cd3FbnyEWSnaQy8XcGCMdb
+  (no account, ends in Request the sample; the piece is our own line figure, it turns and shows each colour and print
+  where it sits; a drop planner counts back from Ramadan and the Eids). Its fits, washes, print methods and fabric
+  choices are stand-ins until Mazen confirms ours. The sample fee stays on request, no price.
+- Later, not now (Mazen, 10 Nov 2026): notifications in the portal; download my data and delete my account (small,
+  good for trust: keep it on the list); payments and reorder in the portal.
 - Tracking portal is part of the build.
 - Analytics (Mazen, 26 Oct 2026): Google Analytics 4 (`G-XNT9FPB5RQ`, `src/data/analytics.ts`) behind a
   slim consent bar at the bottom, on the live domain only. Nothing reaches Google before Accept; the
@@ -146,13 +155,17 @@ in [docs/adr/](./docs/adr/), and the domain vocabulary in [CONTEXT.md](./CONTEXT
 - WhatsApp: +20 101 143 5406 (https://wa.me/201011435406), assumed to be the WhatsApp line.
 - Phone: +20 2 2698 7277 · Email: fullcircleworks.co@gmail.com · Instagram: @fullcircle_eg
 
-- Hours: Sunday – Thursday, 9:00 – 17:00. Replies: "we reply quickly" (no promised time).
+- Hours: Sunday – Thursday, 9:00 – 17:00 on the site and in the booking calendar. Mazen said on 10 Nov 2026 that the
+  factory works Sunday – Thursday, 9:00 – 21:00: ask him whether the site and the call times move to 21:00 before changing them.
+  Replies: "we reply quickly" (no promised time).
+- Production time (Mazen, 10 Nov 2026: it is back, "write it like theirs"): about 21 working days from the approved
+  sample, denim 4–8 weeks. So far only in the builder's mock, not on the site.
 - Registered name: Full Circle, Gisr El Suez, Cairo. Kept: requests that don't become orders one
   year, orders five years.
 
 ## Less text, nothing TBC (Mazen, 15 Oct 2026)
 Keep the site's words short; details are not needed for everything. Removed and not to come back
-unless Mazen asks: fabrics/weights per category, bulk lead times, the techniques list, the "not in
+unless Mazen asks: fabrics/weights per category, the techniques list, the "not in
 scope" list, the sample-price FAQ, stage times other than sampling's. No TBC tag is left on the
 site. The atelier and team sections are gone (24 Oct 2026). The domain is **fullcircle-co.com** (20 Oct
 2026). Still to come: a real photo of the floor for About (`about-floor`); About gets its own pass later.
