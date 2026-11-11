@@ -95,7 +95,7 @@ Cloudflare dashboard (Workers & Pages → `full-circle` → Builds).
   by Mazen in the SQL editor on 7 Nov (it holds a DELETE); the project lists it. Mazen's first test
   order (FC-2501, 30 Oct) was cleared by hand in the SQL editor and the code sequence set back to FC-2501.
 - **Edge Functions deployed** (all with the JWT check off), matching `main`:
-  - `book-call` v1 (9 Nov: Book a call on the page; checked live with { slots: true } and two refused bookings, nothing written),
+  - `book-call` v2 (9–11 Nov: Book a call on the page, dates built from their parts; checked live with { slots: true } and two refused bookings, nothing written),
   - `submit-request` v11 (8 Nov: question 05 and the answers after sending, PR #35; the files deployed were compared with the repo's), `submit-contact` v7, `invite` v8 (30 Oct: developers add staff), `notify` v6 (24–25 Oct, with the designed
     emails of PR #16; the deployed files were compared with the repo's), `send-sms` v1,
     `whatsapp-webhook` v1.
