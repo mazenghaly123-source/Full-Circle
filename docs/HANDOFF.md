@@ -401,6 +401,30 @@ Seen through Mazen's own account (Claude in Chrome, nothing sent); the public si
 - **Proposed, no answer yet:** Track's ring becomes the 3D mark as the floor (every order of the client standing on
   it as its garment, a tap opens that order's real photos); saving the full comparison as a file.
 
+## Why Factory 21 reads as ordered and we do not (11 Nov 2026)
+
+Mazen: "ours feels random, theirs is ordered and clear". Both sites were read page by page (19 of their public
+pages, 13 of ours). Nothing is built; this is the list he asked for.
+- **Their Home is an argument, ours is a catalogue.** Theirs: hook → the problem (three pains, each with its fix) →
+  the answer → real photos of the team and the floor → the tracker → numbers and client logos → four quick links →
+  the method → one closing button. Ours: hero → Starting or Scaling → What we make → How it works → What you approve
+  is what ships → Nothing ships unseen → Request a sample → Questions. It asks the visitor to choose a path before
+  saying why us, the problem lives only on About, and there is no proof at all.
+- **Every page of theirs has one skeleton** (a label, the headline, one line, numbered sections, the same closing
+  band) and the sections change ground (cream, black, orange), so each reads as a block. Ours are all dark with the
+  same heading, so they run together.
+- **Sections we lack:** the problem and the answer on Home; proof (numbers, brands, real floor and team photos);
+  a "short version" facts box (minimum, sample, production, your designs, where we are) on Home and the search
+  pages; a plain timeline (sample, production) on How it works, which is 11,779px tall with no summary; photos on
+  About (it has none); a services overview (branding, product design, tech pack, photos, ads: the parked Brand +
+  launch page).
+- **Pages we lack:** Our work, a full FAQ page, a "start a clothing brand" guide, terms, feedback and complaints
+  (in the order's page), Arabic. Not wanted: Vision, a fabric book (Mazen removed fabrics), prices.
+- **Proposed Home order, waiting for Mazen:** hero → the problem and one partner (drawn on the mark) → How it works
+  → What we make → proof (what you approve is what ships, nothing ships unseen, numbers and brands when he has
+  them) → the short version → Starting or Scaling → Questions → Request a sample.
+- **Seen in passing:** on a first visit the consent bar covers the hero's facts strip on desktop.
+
 ## Next steps
 
 1. ~~Merge PR #27~~ (merged 30 Oct, with #28, the developer role).
