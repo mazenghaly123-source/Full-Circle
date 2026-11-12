@@ -425,6 +425,26 @@ pages, 13 of ours). Nothing is built; this is the list he asked for.
   them) → the short version → Starting or Scaling → Questions → Request a sample.
 - **Seen in passing:** on a first visit the consent bar covers the hero's facts strip on desktop.
 
+## Their account against our Track (12 Nov 2026)
+
+Mazen: the portal matters most to him, and the answer must fix our own gaps, never copy theirs. A cloud session
+cannot open their account (no computer use, no Claude in Chrome there): what is known comes from the walk through
+his own account on 10 Nov, which was empty (00 jobs), so nobody has seen how a running order looks there.
+- **Theirs is a menu of tools:** Dashboard, Order, Sample, Book, Design, Requests, Finance, Account, each with an
+  empty state that points to the next step.
+- **Ours is a sign-in, a list and one order's page.** What that page does is stronger than anything seen in theirs
+  (approve or ask for changes, a photo of any stage on request, specs, the approval log). The gaps: no home (an
+  empty account is one sentence and a dead end), nothing can be started from inside (a new request, a call, the
+  same piece again), no dates on an order, booked calls do not show, no page for the person's own details.
+- **Proposed, waiting for Mazen: Track opens on a home built on the client's three questions, not on tools.**
+  *Waiting on you* (every open decision across orders, approve in one tap) → *On the floor* (all orders at once,
+  on the mark, with their real photos) → *Next* (a new request with the details already filled, "Make it again"
+  from a delivered order's signed sample, book a call, a drop date). Then, quiet: booked calls, the person's
+  details and WhatsApp updates, delivered orders with their record. Each order shows its expected sample and
+  delivery dates (set in the admin) and the name of its contact at Full Circle.
+- Not wanted from theirs: the ticker, account colours, choosing a salesperson, the guide panel. Later, as Mazen
+  said: payments, a notifications inbox, data download and deletion.
+
 ## Next steps
 
 1. ~~Merge PR #27~~ (merged 30 Oct, with #28, the developer role).
