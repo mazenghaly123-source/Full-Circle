@@ -24,9 +24,9 @@ import { NOTICE } from '../../supabase/functions/_shared/forms';
     <div>
       <form id="cForm" novalidate style="display:grid;gap:14px">
         <label class="mono dim flabel" for="cName">Your name</label>
-        <input class="field" id="cName" placeholder="Your name" autocomplete="name">
+        <input class="field" id="cName" placeholder="Your name" autocomplete="name" autocapitalize="words">
         <label class="mono dim flabel" for="cReach">Email or WhatsApp</label>
-        <input class="field" id="cReach" placeholder="Email or WhatsApp" autocomplete="email">
+        <input class="field" id="cReach" placeholder="Email or WhatsApp" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false">
         <span class="dim" id="cWaLine" hidden>{NOTICE.whatsappReply}</span>
         <label class="mono dim flabel" for="cMsg">Message</label>
         <textarea class="field" id="cMsg" placeholder="Message"></textarea>

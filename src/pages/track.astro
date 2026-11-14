@@ -20,12 +20,12 @@ const oLabels = STAGES.map((g, i) => {
       <h2 class="camp" id="tLoginH">Sign in</h2>
       <div id="tA" style="display:grid;gap:12px">
         <label class="mono dim flabel" for="tId">Email or WhatsApp number</label>
-        <input class="field" id="tId" placeholder="Email or WhatsApp number" autocomplete="username">
+        <input class="field" id="tId" placeholder="Email or WhatsApp number" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">
         <button class="btn btn-red" id="tSendCode">Send me a code</button>
       </div>
       <div id="tB" hidden style="display:grid;gap:12px">
         <label class="mono dim flabel" for="tCode">6-digit code</label>
-        <input class="field" id="tCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" style="font-family:var(--f-mono);letter-spacing:0.4em;font-size:22px">
+        <input class="field" id="tCode" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code" enterkeyhint="go" style="font-family:var(--f-mono);letter-spacing:0.4em;font-size:22px">
         <button class="btn btn-red" id="tVerify">Sign in</button>
         <button class="btn" id="tBack" style="padding:6px 0;justify-self:start;text-decoration:underline;text-underline-offset:4px">Use a different email or number</button>
       </div>

@@ -73,3 +73,14 @@ test('built CSS keeps every rule of the source CSS', async ({ page }, info) => {
   expect(prefixed(built)).toBeGreaterThanOrEqual(prefixed(source));
   expect(prefixed(built)).toBeGreaterThanOrEqual((built.match(/[^-]backdrop-filter\s*:/g) ?? []).length);
 });
+
+// A tap leaves :hover stuck on until the next tap elsewhere, so hover looks are for a real pointer
+// only; a finger gets the :active press states instead (global.css, "the page answers a finger").
+test('every :hover rule sits in the real-pointer media query', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'not viewport-dependent; run once');
+  await page.setContent('<!doctype html><body></body>');
+  const rules = await collect(page, readFileSync('src/styles/global.css', 'utf8'));
+  // a reduced-motion rule may name :hover to switch a hover movement off
+  const loose = Object.keys(rules).filter((k) => k.includes(':hover') && !/@media [^{]*\(hover: ?hover\) and \(pointer: ?fine\)|prefers-reduced-motion/.test(k));
+  expect(loose).toEqual([]);
+});

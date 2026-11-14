@@ -26,7 +26,7 @@ then `npx playwright test -c pw.local.config.ts …`. For `scripts/test-db-local
 |---|---|---|
 | `main` | **Everything:** phases 1–4, phase 5's search and sharing, WhatsApp from the system number, the redesign (see *In progress*) and the designed emails | Live |
 | `claude/practical-gauss-hadquv` | The working branch (29–30 Oct): the Turnstile site key (PR #24), the garment figure (PRs #25, #26), keeping Supabase awake (PR #27) | PR #27 open when this was written; restart it from `main` for new work once merged |
-| `claude/tender-rubin-ahjc3t` | Design, Build, Launch on Home (PR #22), the request form's quantity (PR #23) | Merged to `main`, safe to delete |
+| `claude/tender-rubin-ahjc3t` | Restarted from `main` on 14 Nov: Emil Kowalski's motion and phone skills, and the touch pass (see *In progress*) | The working branch on 14 Nov |
 | `claude/leather-imports` | Leather with the jackets, imported fabrics at a competitive price (PR #21, 27 Oct) | Merged to `main`, safe to delete |
 | `claude/phase-3-portal`, `claude/phase-4-admin`, `claude/phase-5-seo`, `claude/phase-4-whatsapp` | Phases 3–5 and WhatsApp (PRs #8 → #11) | Merged to `main` (23 Oct), safe to delete |
 | `claude/keen-gates-vu1na0` | One unmerged commit (13 Oct): enables Cloudflare's Claude Code plugin in `.claude/settings.json`. Everything else on it is merged (PRs #1, #2) | Optional, can be dropped |
@@ -210,6 +210,15 @@ site's look.
   (both use data the site already has). Mazen liked Factory 21's 3D factory floor most: ours is
   the Circle Floor, on Track, not a copy.
 
+- **Phones, the touch pass (14 Nov, Mazen: "buttons, animation and scrolling should feel designed for mobile"):**
+  14 skills from `emilkowalski/skills` are in `.claude/skills` (`mobile-native`, `gestures`, `animate`,
+  `review-animations` and others). Done with `mobile-native`: hover looks only for a real pointer, a press
+  state on everything tappable, 44px targets around small links, no tap delay or tap flash, keyboards that
+  fit the fields, gutters that clear the notch sideways. No pixel moved at rest (parity passes). **Not
+  checked on a real phone:** Mazen tries it on his. **Next, if he wants more:** a motion pass with
+  `improve-animations` (the reveal, menu and wipe timings on phones), swipe gestures (`gestures`), and
+  installing the site to the home screen (a manifest and icons); the Home category row has no press state
+  yet (its size follows the scroll).
 - **Book a call on the page (9 Nov, Mazen, after Factory 21's `/book`):** Cal.com was tried and dropped (it opens
   its own page), then Google Calendar (its setup was too much for Mazen). The site keeps its own calendar:
   `book-call` offers Sunday – Thursday 9:00 – 17:00 Cairo, 30 minutes with 15 between, 3 hours to 3 weeks ahead,
@@ -400,3 +409,4 @@ Dashboard and account tasks:
 - `tdd` for backend changes (database functions, Edge Functions).
 - `artifact-design` (through the Artifact tool) when Mazen does want a mock.
 - `writing-for-agents` when editing CLAUDE.md or this file.
+- `mobile-native`, `gestures`, `review-animations` and `improve-animations` for how the site feels on a phone.

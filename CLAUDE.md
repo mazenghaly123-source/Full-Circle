@@ -169,6 +169,11 @@ site. The atelier and team sections are gone (24 Oct 2026). The domain is **full
   earlier ones). Edit rules in place and append new ones under *production additions*. Write
   `-webkit-backdrop-filter` before `backdrop-filter`; `tests/css.spec.ts` checks the minifier kept
   every rule.
+- Touch (14 Nov 2026): every `:hover` rule sits in `@media (hover:hover) and (pointer:fine)`, because a tap
+  leaves hover stuck on (`tests/css.spec.ts` fails on a loose one). A finger gets a `:active` press state
+  instead, and small links a 44px target, in *the page answers a finger* under *production additions*:
+  a new tappable element gets both. A control that starts from `all:unset` is added to that block's
+  `touch-action` list. None of it was tried on a real phone from a cloud session.
 - Browser scripts load once (Astro ClientRouter). Each feature in `src/scripts/` is a `Feature`
   (`core/lifecycle.ts`): `mount(signal)` binds to the live page and stops when the signal aborts;
   `prepare(doc)` writes carried-over state into the incoming page before it shows. The prototype

@@ -39,13 +39,13 @@ import { PRIVACY } from '../data/backend';
         <div id="bkRows"><div class="srow"><span class="dim">How</span><span class="empty" id="bkKind">—</span></div><div class="srow"><span class="dim">When</span><span class="empty" id="bkWhen">—</span></div></div>
         <div class="form-box" style="display:grid;gap:12px">
           <label class="mono dim flabel" for="bName">Your name</label>
-          <input class="field" id="bName" placeholder="Your name" autocomplete="name">
+          <input class="field" id="bName" placeholder="Your name" autocomplete="name" autocapitalize="words">
           <label class="mono dim flabel" for="bPhone">WhatsApp</label>
           <input class="field" id="bPhone" placeholder="WhatsApp number" autocomplete="tel" inputmode="tel">
           <label class="mono dim flabel" for="bEmail">Email</label>
-          <input class="field" id="bEmail" placeholder="Email, for the invite" autocomplete="email" inputmode="email">
+          <input class="field" id="bEmail" placeholder="Email, for the invite" autocomplete="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false">
           <label class="mono dim flabel" for="bBrand">Brand name</label>
-          <input class="field" id="bBrand" placeholder="Brand name" autocomplete="organization">
+          <input class="field" id="bBrand" placeholder="Brand name" autocomplete="organization" autocapitalize="words">
           <label class="mono dim flabel" for="bNote">What it's about (optional)</label>
           <textarea class="field" id="bNote" placeholder="The product, the quantity (optional)" style="min-height:64px"></textarea>
           <div class="ts" id="bTs"></div>
