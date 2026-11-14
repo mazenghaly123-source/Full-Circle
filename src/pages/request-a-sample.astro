@@ -27,9 +27,9 @@ import { PRIVACY } from '../data/backend';
       <div id="srows">{[...REQUEST_QUESTIONS, REQUEST_ALSO].map((q) => <div class="srow"><span class="dim">{q.summary}</span><span class="empty">—</span></div>)}</div>
       <div class="form-box" style="display:grid;gap:12px">
         <label class="mono dim flabel" for="fBrand">Brand name</label>
-        <input class="field" id="fBrand" placeholder="Brand name" autocomplete="organization">
+        <input class="field" id="fBrand" placeholder="Brand name" autocomplete="organization" autocapitalize="words">
         <label class="mono dim flabel" for="fContact">Email or WhatsApp</label>
-        <input class="field" id="fContact" placeholder="Email or WhatsApp" autocomplete="email">
+        <input class="field" id="fContact" placeholder="Email or WhatsApp" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false">
         <div class="wa-opt" id="waOpt" hidden><span class="dim">{NOTICE.whatsappReply}</span><label class="check"><input type="checkbox" id="fWaUpdates"><span>{NOTICE.whatsappUpdates}</span></label></div>
         <label class="mono dim flabel" for="fNote">Notes (optional)</label>
         <textarea class="field" id="fNote" placeholder="Anything we should know (optional)" style="min-height:64px"></textarea>

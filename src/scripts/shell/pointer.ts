@@ -11,6 +11,8 @@ addEventListener('pointermove', (e) => {
   const t = e.target as Element | null;
   hot = !!(t && t.closest && t.closest('a,button,input,textarea,summary,label,.cat,.mark3,.ph'));
 }, { passive: true });
+// iOS Safari shows a :active press state only where a touch listener exists (the press states in global.css)
+document.addEventListener('touchstart', () => {}, { passive: true });
 document.addEventListener('click', (e) => { pointer.lx = e.clientX || innerWidth / 2; pointer.ly = e.clientY || innerHeight / 2; }, true);
 
 const cursorOn = fine && !rm, cR = $('cRing'), cD = $('cDot');
